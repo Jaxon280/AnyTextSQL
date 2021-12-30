@@ -6,11 +6,14 @@
 using namespace vlex;
 
 void Codegen::add_preprocess() {
-    std::string header = "\"common.hpp\"";
-    code += "#include ";
-    code += header;
-    code += "\n\n";
+    code += "#include <string.h>\n";
+    code += "#include <string>\n";
+    code += "#include <vector>\n";
+    code += "#include \"x86intrin.h\"\n\n";
 
+    code += "#define ST_TYPE uint8_t\n";
+    code += "#define SIMD_TYPE __m128i\n";
+    code += "#define SIMD_BYTES 16\n";
     code += "#define NUMSTATES ";
     code += std::to_string(qlabels.size());
     code += "\n\n";
