@@ -1,6 +1,6 @@
+#include "common.hpp"
+#include "converter.hpp"
 #include "example/JSON/categories_dfa.hpp"
-#include "src/common.hpp"
-#include "src/converter.hpp"
 
 int main(int argc, char** argv) {
     int stateSize = 31;
@@ -15,6 +15,6 @@ int main(int argc, char** argv) {
     std::string filename = "vfa.hpp";
 
     generate_sample_dfa(dfa, stateSize);
-    VectFA vfa(dfa, acceptStates, stateSize, acceptStateSize);
+    vlex::VectFA vfa(dfa, acceptStates, stateSize, acceptStateSize);
     vfa.codegen(filename);
 }

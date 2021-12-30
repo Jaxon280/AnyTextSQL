@@ -4,7 +4,7 @@ CPPFLAGS = -std=c++17 -O3 -flto -msse4.2
 # CPPFLAGS = -std=c++17 -O0 -g -flto -msse4.2
 # DEBUGFLAGS = -Wall -Wextra
 BENCHFLAGS = -DBENCH
-INCLUDES = -I../../src
+INCLUDES = -I../../include
 FLAGS = $(CPPFLAGS) $(DEBUGFLAGS) $(BENCHFLAGS) $(INCLUDES)
 
 # Your program

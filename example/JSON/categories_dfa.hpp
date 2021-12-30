@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../src/common.hpp"
+#include "../../include/common.hpp"
 
 void generate_sample_dfa(ST_TYPE** dfa, int stateSize) {
     for (int i = 0; i < stateSize; i++)
