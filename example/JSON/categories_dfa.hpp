@@ -25,10 +25,10 @@ void generate_sample_dfa(ST_TYPE** dfa, int stateSize) {
     dfa[14][34] = 15;         // "
 
     for (int i = 2; i < 12; i++) {
-        dfa[i][34] = 2;
+        dfa[i][34] = 2;  // "
     }
-    dfa[13][34] = 2;
-    dfa[13][99] = 3;
+    dfa[13][34] = 2;  // "
+    dfa[13][99] = 3;  // c
 
     for (int i = 0; i < 128; i++) {
         if (i == 34 || i == 82 || i == 92) continue;
@@ -36,45 +36,44 @@ void generate_sample_dfa(ST_TYPE** dfa, int stateSize) {
     }
     dfa[15][34] = INIT_STATE;  // "
     dfa[15][92] = 16;          // \ //
-    dfa[15][82] = 18;          // R
+    dfa[15][82] = 17;          // R
+
     for (int i = 0; i < 128; i++) {
-        if (i == 92) continue;
-        dfa[16][i] = 15;  // ^\ //
+        dfa[16][i] = 15;
     }
-    dfa[16][92] = 17;  // \ //
-    dfa[17][46] = 15;  // .
-    for (int i = 18; i <= 26; i++) {
+    dfa[16][34] = INV_STATE;
+
+    for (int i = 17; i <= 25; i++) {
         for (int j = 0; j < 128; j++) {
-            if (j == 92) {
+            if (j == 34) {
+                dfa[i][j] = INIT_STATE;
+            } else if (j == 92) {
                 dfa[i][j] = 16;  // \ //
             } else if (j == 82) {
-                dfa[i][j] = 18;  // R
-            } else if (j == 114) {
-                dfa[i][j] = INV_STATE;
+                dfa[i][j] = 17;  // R
             } else {
                 dfa[i][j] = 15;
             }
         }
     }
-    dfa[18][101] = 19;  // e
-    dfa[19][115] = 20;  // s
-    dfa[20][116] = 21;  // t
-    dfa[21][97] = 22;   // a
-    dfa[22][117] = 23;  // u
-    dfa[23][114] = 24;  // r
-    dfa[24][97] = 25;   // a
-    dfa[25][110] = 26;  // n
-    dfa[26][116] = 27;  // t
+    dfa[17][101] = 18;  // e
+    dfa[18][115] = 19;  // s
+    dfa[19][116] = 20;  // t
+    dfa[20][97] = 21;   // a
+    dfa[21][117] = 22;  // u
+    dfa[22][114] = 23;  // r
+    dfa[23][97] = 24;   // a
+    dfa[24][110] = 25;  // n
+    dfa[25][116] = 26;  // t
     for (int i = 0; i < 128; i++) {
         if (i == 34 || i == 92) continue;
-        dfa[27][i] = 27;
+        dfa[26][i] = 26;
     }
-    dfa[27][34] = 28;  // accept
-    dfa[27][92] = 29;  // \ //
+    dfa[26][34] = 27;  // accept
+    dfa[26][92] = 28;  // \ //
+
     for (int i = 0; i < 128; i++) {
-        if (i == 92) continue;
-        dfa[29][i] = 27;
+        dfa[28][i] = 26;
     }
-    dfa[29][92] = 30;  // \ //
-    dfa[30][46] = 27;  // \ //
+    dfa[28][34] = INV_STATE;
 }
