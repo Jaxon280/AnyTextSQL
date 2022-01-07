@@ -152,7 +152,8 @@ void Codegen::add_ltable(Qlabel &label) {
         for (int i = 1; i < ASCII_SZ; i++) {
             code += "&&q";
             code += std::to_string(qlabels[label.delta->char_table[i]].state);
-            if (label.delta->startState != label.delta->char_table[i] &&
+            if ((label.delta->startState != label.delta->char_table[i] ||
+                 (!label.is_r && label.is_inc)) &&
                 label.delta->char_table[i] != INV_STATE) {
                 code += "_inc";
             }
@@ -257,9 +258,11 @@ void Codegen::add_qlabel(Qlabel &label, std::string q) {
         code += "\t\ti++;\n";
     }
 
-    code += "\tq";
-    code += q;
-    code += ":\n";
+    if (label.is_r) {
+        code += "\tq";
+        code += q;
+        code += ":\n";
+    }
 }
 
 void Codegen::add_intrisic(Qlabel &label, std::string q) {

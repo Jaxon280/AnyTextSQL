@@ -18,8 +18,9 @@ struct Qlabel {
     Delta *delta;
 
     int c_length = 0;
-    bool is_sink = false;
-    bool is_inc = false;  // delta_any or delta_c
+    bool is_sink = false;  // "i += r + |x|"
+    bool is_inc = false;   // "i++"
+    bool is_r = false;     // "i += r"
 
     bool is_accept = false;
 };

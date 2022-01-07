@@ -71,7 +71,7 @@ public:
 		static const void* trans_q1[] = {&&q2_sink, &&q2_sink, &&q2_sink, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1, &&q1};
 		static const void* trans_q2[] = {&&end, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q1_inc, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q4_inc, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q3_inc, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2, &&q2};
 		static const void* trans_q3[] = {&&end, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q0, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc};
-		static const void* trans_q4[] = {&&end, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q1_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q4, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q3_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q5_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc};
+		static const void* trans_q4[] = {&&end, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q1_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q4_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q3_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q5_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc};
 		static const void* trans_q5[] = {&&end, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q1_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q4_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q3_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q6_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc};
 		static const void* trans_q6[] = {&&end, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q1_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q4_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q3_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q7_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc};
 		static const void* trans_q7[] = {&&end, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q1_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q4_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q3_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q8_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc, &&q2_inc};
@@ -106,43 +106,33 @@ public:
 		goto *trans_q2[data[i]];
 	q3_inc:
 		i++;
-	q3:
 		goto *trans_q3[data[i]];
 	q4_inc:
 		i++;
-	q4:
 		goto *trans_q4[data[i]];
 	q5_inc:
 		i++;
-	q5:
 		goto *trans_q5[data[i]];
 	q6_inc:
 		i++;
-	q6:
 		goto *trans_q6[data[i]];
 	q7_inc:
 		i++;
-	q7:
 		goto *trans_q7[data[i]];
 	q8_inc:
 		i++;
-	q8:
 		goto *trans_q8[data[i]];
 	q9_inc:
 		i++;
-	q9:
 		goto *trans_q9[data[i]];
 	q10_inc:
 		i++;
-	q10:
 		goto *trans_q10[data[i]];
 	q11_inc:
 		i++;
-	q11:
 		goto *trans_q11[data[i]];
 	q12_inc:
 		i++;
-	q12:
 		goto *trans_q12[data[i]];
 	q13_inc:
 		i++;
@@ -153,13 +143,11 @@ public:
 		goto *trans_q13[data[i]];
 	q14_inc:
 		i++;
-	q14:
 		ctx.recentAcceptState = 14;
 		ctx.recentAcceptIndex = i;
 		goto *trans_q14[data[i]];
 	q15_inc:
 		i++;
-	q15:
 		goto *trans_q15[data[i]];
 	q0:
 		if (ctx.recentAcceptState) {

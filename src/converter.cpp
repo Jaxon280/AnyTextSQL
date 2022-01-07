@@ -102,6 +102,7 @@ void VectFA::construct_delta_ords(std::vector<Qstar> Qstar_set) {
 
         qlabels[Qs.source].kind = ORDERED;
         qlabels[Qs.source].delta = new_ord;
+        qlabels[Qs.source].is_r = true;
         qlabels[Qs.sink].is_sink = true;
         qlabels[Qs.sink].c_length = new_ord->str.size();
     }
@@ -115,6 +116,7 @@ void VectFA::construct_delta_anys(std::set<ST_TYPE> Qtilde) {
 
         qlabels[q].delta = new_any;
         qlabels[q].kind = ANY;
+        qlabels[q].is_r = true;
         for (int c = 0; c < ASCII_SZ; c++) {
             new_any->char_table[c] = dfa[q][c];
             if (dfa[q][c] != q) {
