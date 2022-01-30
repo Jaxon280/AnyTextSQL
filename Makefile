@@ -4,7 +4,7 @@ CXX = g++
 CPPFLAGS = -std=c++17 -O3 -flto
 # CPPFLAGS = -std=c++17 -O0 -g -flto -msse4.2
 # DEBUGFLAGS = -Wall -Wextra
-# BENCHFLAGS = -DBENCH
+BENCHFLAGS = -DBENCH
 INCLUDES = -I./include/
 FLAGS = $(CPPFLAGS) $(DEBUGFLAGS) $(BENCHFLAGS) $(INCLUDES)
 

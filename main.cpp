@@ -15,6 +15,19 @@ int main(int argc, char** argv) {
     std::string filename = "vfa.hpp";
 
     generate_sample_dfa(dfa, stateSize);
+
+#if (defined BENCH)
+    timeval lex1, lex2;
+    gettimeofday(&lex1, NULL);
+#endif
+
     vlex::VectFA vfa(dfa, acceptStates, stateSize, acceptStateSize);
     vfa.codegen(filename);
+
+#if (defined BENCH)
+    gettimeofday(&lex2, NULL);
+    printf(
+        "\n0 | #BENCH_Lex %lf\n\n",
+        (lex2.tv_sec - lex1.tv_sec) + (lex2.tv_usec - lex1.tv_usec) * 0.000001);
+#endif
 }
