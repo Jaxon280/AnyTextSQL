@@ -20,11 +20,8 @@ class Codegen {
     void add_cmpstr(Delta *d);
     void add_constructor();
     void add_generate_token();
-    void add_ltable(Qlabel &label);
     void add_lex();
     void add_inv();
-    void add_mmunch(Qlabel &label);
-    void add_qlabel(Qlabel &label, std::string q);
     void add_intrisic(Qlabel &label, std::string q);
     void add_trans(Qlabel &label, std::string q);
     void add_vfaClass();

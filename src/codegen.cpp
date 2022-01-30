@@ -127,46 +127,6 @@ void Codegen::add_generate_token() {
     code += "\t}\n\n";
 }
 
-void Codegen::add_ltable(Qlabel &label) {
-    std::string q = std::to_string(label.state);
-
-    code += "\t\tstatic const void* trans_q";
-    code += q;
-    code += "[] = ";
-    code += "{";
-
-    if (label.kind == ORDERED) {
-        for (int i = 0; i < 17; i++) {
-            code += "&&q";
-            code += std::to_string(qlabels[label.delta->r_table[i]].state);
-            if (i <= 16 - label.delta->str.size()) {
-                code += "_sink";
-            }
-
-            if (i != 16) {
-                code += ", ";
-            }
-        }
-    } else {
-        code += "&&end, ";
-        for (int i = 1; i < ASCII_SZ; i++) {
-            code += "&&q";
-            code += std::to_string(qlabels[label.delta->char_table[i]].state);
-            if ((label.delta->startState != label.delta->char_table[i] ||
-                 (!label.is_r && label.is_inc)) &&
-                label.delta->char_table[i] != INV_STATE) {
-                code += "_inc";
-            }
-
-            if (i != ASCII_SZ - 1) {
-                code += ", ";
-            }
-        }
-    }
-
-    code += "};\n";
-}
-
 void Codegen::add_lex() {
     code += "\tstd::vector<Token> lex() {\n";
     code += "\t\tstd::vector<Token> tokenVec;\n";
@@ -174,28 +134,52 @@ void Codegen::add_lex() {
     code += "\t\tSIMD_TYPE text;\n";
     code += "\n";
 
-    for (ST_TYPE s : states) {
-        add_ltable(qlabels[s]);
-    }
-
-    code += "\n";
-    code += "\t\tgoto q1;\n";
-
     for (auto it = std::next(states.begin()); it != states.end(); it++) {
         ST_TYPE state = *it;
         Qlabel ql = qlabels[state];
         std::string q = std::to_string(ql.state);
 
-        add_qlabel(ql, q);
-        add_mmunch(ql);
+        code += "\tq";
+        code += q;
+        code += ":\n";
+        if (ql.state == INIT_STATE) {
+            code += "\t\tif (i >= size) goto end;\n";
+        }
+        if (ql.is_accept) {
+            code += "\t\tctx.recentAcceptState = ";
+            code += std::to_string(ql.state);
+            code += ";\n";
+            code += "\t\tctx.recentAcceptIndex = i;\n";
+        }
 
         if (ql.kind != C && ql.kind != INV) {
             add_intrisic(ql, q);
         }
+
+        if (ql.kind == ORDERED || ql.kind == ANY || ql.kind == RANGES ||
+            ql.kind == CMPEQ) {
+            // add immediate
+            code += "\t\tif (r == 16) {\n";
+            code += "\t\t\ti += 16;\n";
+            code += "\t\t\tgoto q";
+            code += q;
+            code += ";\n";
+            code += "\t\t}\n";
+            code += "\t\ti += r;\n";
+        }
+
+        add_trans(ql, q);
+
+        if (ql.kind == ORDERED) {
+            code += "\t\ti += ";
+            code += std::to_string(ql.delta->str.size());
+            code += ";\n";
+        }
         if (state == INIT_STATE) {
+            code +=
+                "\t\tctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;\n";
             code += "\t\tctx.tokenStartIndex = i;\n ";
         }
-        add_trans(ql, q);
     }
 
     add_inv();
@@ -203,6 +187,65 @@ void Codegen::add_lex() {
     // code += "\t\t}\n\n";
     code += "\t\treturn tokenVec;\n";
     code += "\t}\n";
+}
+
+void Codegen::add_intrisic(Qlabel &label, std::string q) {
+    code += "\t\ttext = _mm_loadu_si128((SIMD_TYPE*)(&data[i]));\n";
+    code += "\t\tr = _mm_cmpestri(simd_datas[";
+    code += q;
+    code += "], simd_sizes[";
+    code += q;
+    if (label.kind == ORDERED) {
+        code += "], text, 16, _SIDD_CMP_EQUAL_ORDERED);\n";
+    } else if (label.kind == ANY) {
+        code += "], text, 16, _SIDD_CMP_EQUAL_ANY);\n";
+    }
+}
+
+void Codegen::add_trans(Qlabel &label, std::string q) {
+    if (label.kind == ORDERED) {
+        code += "\t\tif (r > ";
+        int length = 16 - label.delta->str.size();
+        code += std::to_string(length);
+        code += ") goto q";
+        code += q;
+        code += ";\n";
+    } else if (label.kind == ANY || label.kind == RANGES ||
+               label.kind == CMPEQ || label.kind == C) {
+        code += "\t\tswitch (data[i++]) {\n";
+
+        std::map<ST_TYPE, std::vector<int>> state2char;
+        int max = 0, argmax = 0;
+        for (int i = 0; i < label.delta->char_table.size(); i++) {
+            ST_TYPE s = label.delta->char_table[i];
+            state2char[s].push_back(i);
+            if (state2char[s].size() > max) {
+                max = state2char[s].size();
+                argmax = s;
+            }
+        }
+
+        for (const auto &[key, value] : state2char) {
+            if (key != argmax) {
+                for (int s : value) {
+                    code += "\t\t\tcase ";
+                    code += std::to_string(s);
+                    code += ":\n";
+                    code += "\t\t\t\tgoto q";
+                    code += std::to_string(qlabels[key].state);
+                    code += ";\n";
+                    code += "\t\t\t\tbreak;\n";
+                }
+            }
+        }
+        code += "\t\t\tdefault:\n";
+        code += "\t\t\t\tgoto q";
+        code += std::to_string(qlabels[argmax].state);
+        code += ";\n";
+        code += "\t\t\t\tbreak;\n";
+
+        code += "\t\t}\n";
+    }
 }
 
 void Codegen::add_inv() {
@@ -222,73 +265,6 @@ void Codegen::add_inv() {
     // omit update of tokenStartIndex
 
     code += "\t\tgoto q1;\n";
-}
-
-void Codegen::add_mmunch(Qlabel &label) {
-    if (label.state == INIT_STATE) {
-        code += "\t\tif (i >= size) goto end;\n";
-        code += "\t\tctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;\n";
-    }
-    if (label.is_accept) {
-        code += "\t\tctx.recentAcceptState = ";
-        code += std::to_string(label.state);
-        code += ";\n";
-        code += "\t\tctx.recentAcceptIndex = i;\n";
-    }
-}
-
-void Codegen::add_qlabel(Qlabel &label, std::string q) {
-    if (label.is_sink) {
-        code += "\tq";
-        code += q;
-        code += "_sink:\n";
-        code += "\t\ti += ";
-        if (label.is_inc) {
-            code += std::to_string(label.c_length - 1);
-        } else {
-            code += std::to_string(label.c_length);
-        }
-        code += ";\n";
-    }
-
-    if (label.is_inc) {
-        code += "\tq";
-        code += q;
-        code += "_inc:\n";
-        code += "\t\ti++;\n";
-    }
-
-    if (label.is_r) {
-        code += "\tq";
-        code += q;
-        code += ":\n";
-    }
-}
-
-void Codegen::add_intrisic(Qlabel &label, std::string q) {
-    code += "\t\ttext = _mm_loadu_si128((SIMD_TYPE*)(&data[i]));\n";
-    code += "\t\tr = _mm_cmpestri(simd_datas[";
-    code += q;
-    code += "], simd_sizes[";
-    code += q;
-    if (label.kind == ORDERED) {
-        code += "], text, 16, _SIDD_CMP_EQUAL_ORDERED);\n";
-    } else if (label.kind == ANY) {
-        code += "], text, 16, _SIDD_CMP_EQUAL_ANY);\n";
-    }
-    code += "\t\ti += r;\n";
-}
-
-void Codegen::add_trans(Qlabel &label, std::string q) {
-    if (label.kind == C || label.kind == ANY) {
-        code += "\t\tgoto *trans_q";
-        code += q;
-        code += "[data[i]];\n";
-    } else if (label.kind == ORDERED) {
-        code += "\t\tgoto *trans_q";
-        code += q;
-        code += "[r];\n";
-    }
 }
 
 void Codegen::add_vfaClass() {
