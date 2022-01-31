@@ -55,25 +55,18 @@ void Codegen::add_member() {
 void Codegen::add_cmpstr(Delta *d) {
     std::string q = std::to_string(qlabels[d->startState].state);
 
-    code += "\t\tconst char ";
+    code += "\t\tconst uint8_t ";
     code += "str_q";
     code += q;
     code += "[16] = ";
     code += "{";
     for (int i = 0; i < 16; i++) {
-        code += "'";
-
         if (i < d->str.size()) {
-            code += d->str[i];
-            if (d->str[i] == '\\') {
-                code += '\\';
-            }
+            code += std::to_string((int)d->str[i]);
         } else {
-            code += '\\';
-            code += '0';
+            code += std::to_string(0);
         }
 
-        code += "'";
         if (i != 15) {
             code += ", ";
         }
@@ -108,7 +101,8 @@ void Codegen::add_constructor() {
     code += "\t\ti = start;\n\n";
 
     for (ST_TYPE q : states) {
-        if (qlabels[q].kind == ORDERED || qlabels[q].kind == ANY) {
+        if (qlabels[q].kind == ORDERED || qlabels[q].kind == ANY ||
+            qlabels[q].kind == RANGES) {
             add_cmpstr(qlabels[q].delta);
         }
     }
@@ -199,6 +193,8 @@ void Codegen::add_intrisic(Qlabel &label, std::string q) {
         code += "], text, 16, _SIDD_CMP_EQUAL_ORDERED);\n";
     } else if (label.kind == ANY) {
         code += "], text, 16, _SIDD_CMP_EQUAL_ANY);\n";
+    } else if (label.kind == RANGES) {
+        code += "], text, 16, _SIDD_CMP_RANGES);\n";
     }
 }
 

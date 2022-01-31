@@ -26,6 +26,7 @@ class VectFA {
 
     void construct_delta_ords(std::vector<Qstar> Qstar_set);
 
+    int construct_delta_ranges(Delta *trans, std::vector<int> &chars);
     void construct_delta_anys(std::set<ST_TYPE> Qtilde);
 
     void construct_delta_cs(std::set<ST_TYPE> Qstar_source,

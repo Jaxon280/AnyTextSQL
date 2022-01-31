@@ -105,18 +105,57 @@ void VectFA::construct_delta_ords(std::vector<Qstar> Qstar_set) {
     }
 }
 
+int VectFA::construct_delta_ranges(Delta *trans, std::vector<int> &chars) {
+    std::vector<std::vector<int>> ranges;
+    for (int i = 0; i < chars.size(); i++) {
+        std::vector<int> range;
+        range.push_back(chars[i]);
+        while (i < chars.size() - 1 && chars[i + 1] - chars[i] == 1) {
+            range.push_back(chars[i + 1]);
+            i++;
+        }
+
+        ranges.push_back(range);
+    }
+
+    if (ranges.size() <= 8) {
+        int start, end;
+        for (std::vector<int> range : ranges) {
+            start = range[0];
+            end = range[range.size() - 1];
+            trans->str.push_back(start);
+            trans->str.push_back(end);
+        }
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 void VectFA::construct_delta_anys(std::set<ST_TYPE> Qtilde) {
     for (ST_TYPE q : Qtilde) {
-        Delta *new_any = new Delta;
-        new_any->startState = q;
-        new_any->char_table.resize(ASCII_SZ);
+        Delta *new_trans = new Delta;
+        new_trans->startState = q;
+        new_trans->char_table.resize(ASCII_SZ);
 
-        qlabels[q].delta = new_any;
-        qlabels[q].kind = ANY;
+        std::vector<int> chars;
         for (int c = 0; c < ASCII_SZ; c++) {
-            new_any->char_table[c] = dfa[q][c];
+            new_trans->char_table[c] = dfa[q][c];
             if (dfa[q][c] != q) {
-                new_any->str += (char)c;
+                chars.push_back(c);
+            }
+        }
+
+        if (chars.size() > 16) {
+            if (construct_delta_ranges(new_trans, chars)) {
+                qlabels[q].delta = new_trans;
+                qlabels[q].kind = RANGES;
+            }
+        } else {
+            for (int c : chars) {
+                new_trans->str += (char)c;
+                qlabels[q].delta = new_trans;
+                qlabels[q].kind = ANY;
             }
         }
     }
