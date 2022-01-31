@@ -2,7 +2,18 @@
 
 #include "../../include/common.hpp"
 
-void generate_sample_dfa(ST_TYPE** dfa, int stateSize) {
+void generate_categories_dfa(ST_TYPE ***dfa0, ST_TYPE **acceptStates0,
+                             int *stateSize0, int *acceptStateSize0) {
+    int stateSize = 29;
+    ST_TYPE **dfa = (ST_TYPE **)malloc(sizeof(ST_TYPE *) * stateSize);
+    for (int i = 0; i < stateSize; i++) {
+        dfa[i] = (ST_TYPE *)malloc(sizeof(ST_TYPE) * 128);
+    }
+    int acceptStateSize = 1;
+    ST_TYPE *acceptStates =
+        (ST_TYPE *)malloc(sizeof(ST_TYPE) * acceptStateSize);
+    acceptStates[0] = 27;
+
     for (int i = 0; i < stateSize; i++)
         for (int j = 0; j < ASCII_SZ; j++) dfa[i][j] = INV_STATE;
 
@@ -76,4 +87,9 @@ void generate_sample_dfa(ST_TYPE** dfa, int stateSize) {
         dfa[28][i] = 26;
     }
     dfa[28][34] = INV_STATE;
+
+    *dfa0 = dfa;
+    *acceptStates0 = acceptStates;
+    *stateSize0 = stateSize;
+    *acceptStateSize0 = acceptStateSize;
 }
