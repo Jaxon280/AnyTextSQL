@@ -1,7 +1,4 @@
-#include "../include/codegen.hpp"
-
-#include "../include/common.hpp"
-#include "../include/interface.hpp"
+#include "codegen.hpp"
 
 using namespace vlex;
 
@@ -200,6 +197,27 @@ void Codegen::add_intrisic(Qlabel &label, std::string q) {
 
 void Codegen::add_trans(Qlabel &label, std::string q) {
     if (label.kind == ORDERED) {
+        std::string back_str = label.delta->back_str;
+        int back_str_size = back_str.size();
+        if (back_str_size > 0) {
+            code += "\t\tif (";
+
+            int j = 1;
+            for (char c : back_str) {
+                if (j > 1) code += " || ";
+                code += "data[i-";
+                code += std::to_string(j);
+                code += "]!='";
+                code += back_str[back_str_size - j];
+                code += "'";
+                j++;
+            }
+
+            code += ") {\n";
+            code += "\t\t\ti++;\n";
+            code += "\t\t\tgoto q1;\n";
+            code += "\t\t}\n";
+        }
         code += "\t\tif (r > ";
         int length = 16 - label.delta->str.size();
         code += std::to_string(length);

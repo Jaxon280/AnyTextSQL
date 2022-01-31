@@ -1,27 +1,37 @@
 #include "common.hpp"
 #include "converter.hpp"
 #include "example/JSON/categories_dfa.hpp"
+#include "example/JSON/stars_dfa.hpp"
 
 int main(int argc, char** argv) {
-    int stateSize = 29;
-    ST_TYPE** dfa = (ST_TYPE**)malloc(sizeof(ST_TYPE*) * stateSize);
-    for (int i = 0; i < stateSize; i++) {
-        dfa[i] = (ST_TYPE*)malloc(sizeof(ST_TYPE) * 128);
-    }
-    int acceptStateSize = 1;
-    ST_TYPE* acceptStates = (ST_TYPE*)malloc(sizeof(ST_TYPE) * acceptStateSize);
-    acceptStates[0] = 27;
+    int stateSize;
+    int acceptStateSize;
+    ST_TYPE** dfa;
+    ST_TYPE* acceptStates;
 
     std::string filename = "vfa.hpp";
 
-    generate_sample_dfa(dfa, stateSize);
+    int fd = open(argv[1], O_RDONLY);
+    struct stat fst;
+    fstat(fd, &fst);
+    int size = sizeof(char) * fst.st_size;
+    char* data = new char[size + 1];
+    data[size] = '\0';
+
+    if (read(fd, data, fst.st_size) < 0) {
+        perror("read");
+        exit(1);
+    }
+
+    generate_categories_dfa(&dfa, &acceptStates, &stateSize, &acceptStateSize);
+    // generate_stars_dfa(&dfa, &acceptStates, &stateSize, &acceptStateSize);
 
 #if (defined BENCH)
     timeval lex1, lex2;
     gettimeofday(&lex1, NULL);
 #endif
 
-    vlex::VectFA vfa(dfa, acceptStates, stateSize, acceptStateSize);
+    vlex::VectFA vfa(dfa, acceptStates, stateSize, acceptStateSize, data, size);
     vfa.codegen(filename);
 
 #if (defined BENCH)

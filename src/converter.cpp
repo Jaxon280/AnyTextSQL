@@ -1,8 +1,4 @@
-#include "../include/converter.hpp"
-
-#include "../include/codegen.hpp"
-#include "../include/common.hpp"
-#include "../include/interface.hpp"
+#include "converter.hpp"
 
 using namespace vlex;
 
@@ -87,11 +83,16 @@ std::set<ST_TYPE> VectFA::construct_Qtilde(std::set<ST_TYPE> Qstar_source) {
     return Qtilde;
 }
 
-void VectFA::construct_delta_ords(std::vector<Qstar> Qstar_set) {
+void VectFA::construct_delta_ords(std::vector<Qstar> Qstar_set, int opt_pos) {
     for (Qstar Qs : Qstar_set) {
         Delta *new_ord = new Delta;
         new_ord->startState = Qs.source;
-        new_ord->str = Qs.str;
+        if (Qs.source == INIT_STATE) {
+            new_ord->str = Qs.str.substr(opt_pos);
+            new_ord->back_str = Qs.str.substr(0, opt_pos);
+        } else {
+            new_ord->str = Qs.str;
+        }
         for (int i = 0; i <= 16; i++) {
             if (i <= 16 - new_ord->str.size()) {
                 new_ord->r_table.push_back(Qs.sink);
@@ -180,7 +181,7 @@ void VectFA::construct_delta_cs(std::set<ST_TYPE> Qstar_source,
 }
 
 VectFA::VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize,
-               int acceptStateSize) {
+               int acceptStateSize, char *data, int size) {
     for (ST_TYPE i = INV_STATE; i < stateSize; i++) {
         states.insert(i);
     }
@@ -200,8 +201,15 @@ VectFA::VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize,
     //     }
     // }
 
+    vlex::PFA pfa(fa, stateSize, data, size, 0);
+
     std::vector<ST_TYPE> Qs = construct_Qs(stateSize);
     std::vector<Qstar> Qstars = construct_Qstars(Qs);
+
+    // construct PFA
+    pfa.construct_ordPFA(Qstars, 4, 3);
+    pfa.scan_ord(0.002);
+    int opt_pos = pfa.calc_ord();
 
     std::set<ST_TYPE> Qstar_source;
     for (Qstar Qs : Qstars) {
@@ -227,7 +235,7 @@ VectFA::VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize,
         i++;
     }
 
-    construct_delta_ords(Qstars);
+    construct_delta_ords(Qstars, opt_pos);
     // TODO: algorithm for selecting Ranges or Any
     construct_delta_anys(Qtilde);
 

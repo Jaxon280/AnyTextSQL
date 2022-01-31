@@ -3,15 +3,9 @@
 #include "codegen.hpp"
 #include "common.hpp"
 #include "interface.hpp"
+#include "pfa.hpp"
 
 namespace vlex {
-struct Qstar {
-    ST_TYPE source;
-    ST_TYPE sink;
-    std::set<ST_TYPE> states;
-    std::string str;
-};
-
 class VectFA {
     std::set<ST_TYPE> states;
     std::set<ST_TYPE> acceptStates;
@@ -24,7 +18,7 @@ class VectFA {
 
     std::set<ST_TYPE> construct_Qtilde(std::set<ST_TYPE> Qstar_source);
 
-    void construct_delta_ords(std::vector<Qstar> Qstar_set);
+    void construct_delta_ords(std::vector<Qstar> Qstar_set, int opt_pos);
 
     int construct_delta_ranges(Delta *trans, std::vector<int> &chars);
     void construct_delta_anys(std::set<ST_TYPE> Qtilde);
@@ -33,7 +27,8 @@ class VectFA {
                             std::set<ST_TYPE> Qtilde);
 
    public:
-    VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize, int acceptStateSize);
+    VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize, int acceptStateSize,
+           char *data, int size);
     int codegen(const std::string &filename);
 };
 }  // namespace vlex
