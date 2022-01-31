@@ -119,10 +119,14 @@ void PFA::scan_ord(double lr) {
 }
 
 int PFA::calc_ord() {
-    double min = 100.0;
+    const double ord_latency = 20.0;
+    const double cmp_latency = 1.0;
+
+    double min = 1000000.0;
     int argmin = 0;
     for (int j = 0; j < n_patterns; j++) {
         double prob = 0.0;
+        double score = 0.0;
         for (int k = 2; k < n_states; k++) {
             prob += (double)sum_nexts_ord[j][k] / (double)sum_all;
             // printf(
@@ -131,8 +135,9 @@ int PFA::calc_ord() {
             //     18 - k, j + 1, j + k - 1, prob);
         }
 
-        if (prob < min) {
-            min = prob;
+        score = prob * (ord_latency + j * cmp_latency);
+        if (score < min) {
+            min = score;
             argmin = j;
         }
     }
