@@ -94,15 +94,15 @@ void VectFA::construct_delta_ords(const std::vector<Qstar> &Qstar_set,
         new_ord->startState = Qs.source;
         if (Qs.source == INIT_STATE) {
             new_ord->str = Qs.str.substr(opt_pos);
-            new_ord->back_str = Qs.str.substr(0, opt_pos);
+            new_ord->backStr = Qs.str.substr(0, opt_pos);
         } else {
             new_ord->str = Qs.str;
         }
         for (int i = 0; i <= 16; i++) {
             if (i <= 16 - new_ord->str.size()) {
-                new_ord->r_table.push_back(Qs.sink);
+                new_ord->rTable.push_back(Qs.sink);
             } else {
-                new_ord->r_table.push_back(Qs.source);
+                new_ord->rTable.push_back(Qs.source);
             }
         }
 
@@ -148,11 +148,11 @@ void VectFA::construct_delta_anys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
         } else {
             Delta *new_trans = new Delta;
             new_trans->startState = q;
-            new_trans->char_table.resize(ASCII_SZ);
+            new_trans->charTable.resize(ASCII_SZ);
 
             std::vector<int> chars;
             for (int c = 0; c < ASCII_SZ; c++) {
-                new_trans->char_table[c] = dfa[q][c];
+                new_trans->charTable[c] = dfa[q][c];
                 if (dfa[q][c] != q) {
                     chars.push_back(c);
                 }
@@ -182,12 +182,12 @@ void VectFA::construct_delta_cs(const std::set<ST_TYPE> &Qstar_source,
             Qtilde.find(q) == Qtilde.end()) {
             Delta *new_c = new Delta;
             new_c->startState = q;
-            new_c->char_table.resize(ASCII_SZ);
+            new_c->charTable.resize(ASCII_SZ);
 
             qlabels[q].delta = new_c;
             qlabels[q].kind = C;
             for (int c = 0; c < ASCII_SZ; c++) {
-                new_c->char_table[c] = dfa[q][c];
+                new_c->charTable[c] = dfa[q][c];
             }
         }
     }
@@ -244,7 +244,7 @@ VectFA::VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize,
         Qlabel qlabel;
         qlabel.state = i;
         if (acceptStates.find(q) != acceptStates.end()) {
-            qlabel.is_accept = true;
+            qlabel.isAccept = true;
         }
         qlabels[q] = qlabel;
 

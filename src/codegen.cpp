@@ -136,7 +136,7 @@ void Codegen::add_lex() {
         if (ql.state == INIT_STATE) {
             code += "\t\tif (i >= size) goto end;\n";
         }
-        if (ql.is_accept) {
+        if (ql.isAccept) {
             code += "\t\tctx.recentAcceptState = ";
             code += std::to_string(ql.state);
             code += ";\n";
@@ -197,18 +197,18 @@ void Codegen::add_intrisic(Qlabel &label, std::string q) {
 
 void Codegen::add_trans(Qlabel &label, std::string q) {
     if (label.kind == ORDERED) {
-        std::string back_str = label.delta->back_str;
-        int back_str_size = back_str.size();
-        if (back_str_size > 0) {
+        std::string backStr = label.delta->backStr;
+        int backStr_size = backStr.size();
+        if (backStr_size > 0) {
             code += "\t\tif (";
 
             int j = 1;
-            for (char c : back_str) {
+            for (char c : backStr) {
                 if (j > 1) code += " || ";
                 code += "data[i-";
                 code += std::to_string(j);
                 code += "]!='";
-                code += back_str[back_str_size - j];
+                code += backStr[backStr_size - j];
                 code += "'";
                 j++;
             }
@@ -230,8 +230,8 @@ void Codegen::add_trans(Qlabel &label, std::string q) {
 
         std::map<ST_TYPE, std::vector<int>> state2char;
         int max = 0, argmax = 0;
-        for (int i = 0; i < label.delta->char_table.size(); i++) {
-            ST_TYPE s = label.delta->char_table[i];
+        for (int i = 0; i < label.delta->charTable.size(); i++) {
+            ST_TYPE s = label.delta->charTable[i];
             state2char[s].push_back(i);
             if (state2char[s].size() > max) {
                 max = state2char[s].size();

@@ -5,9 +5,9 @@
 struct Delta {
     ST_TYPE startState;
     std::string str;
-    std::string back_str;  // for delta_ord
-    std::vector<ST_TYPE> char_table;
-    std::vector<ST_TYPE> r_table;
+    std::string backStr;  // for delta_ord
+    std::vector<ST_TYPE> charTable;
+    std::vector<ST_TYPE> rTable;
 };
 
 typedef enum _simd_kind { ORDERED, ANY, RANGES, CMPEQ, C, INV } SIMDKind;
@@ -17,5 +17,5 @@ struct Qlabel {
     ST_TYPE state;
     Delta *delta;
 
-    bool is_accept = false;
+    bool isAccept = false;
 };
