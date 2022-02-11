@@ -118,7 +118,7 @@ void PFA::scan_ord(double lr) {
     sum_all = i - start;
 }
 
-int PFA::calc_ord() {
+int PFA::calc_ord() const {
     const double ord_latency = 20.0;
     const double cmp_latency = 1.0;
 
@@ -163,16 +163,23 @@ void PFA::scan(double lr) {
     }
 }
 
-void PFA::calc() {
+double PFA::calc(ST_TYPE j, ST_TYPE k) const {
+    if (sum_curs_vec[j] != 0)
+        return (double)count_mat[j][k] / (double)sum_curs_vec[j];
+    else
+        return 0.0;
+}
+
+void PFA::calc() const {
     for (int j = 0; j < numStates; j++) {
         for (int k = 0; k < numStates; k++) {
             if (sum_curs_vec[j] == 0) {
                 continue;
             }
             double prob = (double)count_mat[j][k] / (double)sum_curs_vec[j];
-            // if (prob > 0.0) {
-            //     printf("q%d -> q%d 's probability: %f\n", j, k, prob);
-            // }
+            if (prob > 0.0) {
+                printf("q%d -> q%d 's probability: %f\n", j, k, prob);
+            }
         }
     }
 }

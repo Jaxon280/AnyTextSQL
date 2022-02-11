@@ -1,18 +1,24 @@
 #include "converter.hpp"
 
+#include <iostream>
+
 using namespace vlex;
 
-std::vector<ST_TYPE> VectFA::construct_Qs(int state_sz) {
+std::vector<ST_TYPE> VectFA::construct_Qs() {
     std::vector<ST_TYPE> Qs;
-    for (ST_TYPE i = INIT_STATE; i < state_sz; i++) {
+    for (ST_TYPE q : states) {
+        // if (q == INV_STATE) continue;
+        if (q != INIT_STATE) {
+            continue;
+        }  // TODO: able to handle non-INIT State
         int next_c = 0;
         for (int j = 0; j < ASCII_SZ; j++) {
-            if (dfa[i][j] != i && i == 1) {
+            if (dfa[q][j] != q) {
                 next_c++;
                 if (next_c > 1) break;
             }
         }
-        if (next_c == 1) Qs.push_back(i);
+        if (next_c == 1) Qs.push_back(q);
     }
     return Qs;
 }
@@ -64,27 +70,26 @@ std::vector<Qstar> VectFA::construct_Qstars(std::vector<ST_TYPE> Qsource) {
     return Qstar_set;
 }
 
-std::set<ST_TYPE> VectFA::construct_Qtilde(std::set<ST_TYPE> Qstar_source) {
+std::set<ST_TYPE> VectFA::construct_Qtilde(
+    const std::set<ST_TYPE> &Qstar_source) {
     std::set<ST_TYPE> Qtilde;
 
     for (ST_TYPE q : states) {
-        int count = 0;
-        for (int c = 0; c < ASCII_SZ; c++) {
-            if (q == dfa[q][c]) {
-                count++;
+        if (q != INV_STATE && Qstar_source.find(q) == Qstar_source.end()) {
+            for (int c = 0; c < ASCII_SZ; c++) {
+                if (q == dfa[q][c]) {
+                    Qtilde.insert(q);
+                    break;
+                }
             }
-        }
-
-        if (q != INV_STATE && Qstar_source.find(q) == Qstar_source.end() &&
-            count > 1) {
-            Qtilde.insert(q);
         }
     }
     return Qtilde;
 }
 
-void VectFA::construct_delta_ords(std::vector<Qstar> Qstar_set, int opt_pos) {
-    for (Qstar Qs : Qstar_set) {
+void VectFA::construct_delta_ords(const std::vector<Qstar> &Qstar_set,
+                                  int opt_pos) {
+    for (const Qstar &Qs : Qstar_set) {
         Delta *new_ord = new Delta;
         new_ord->startState = Qs.source;
         if (Qs.source == INIT_STATE) {
@@ -106,7 +111,8 @@ void VectFA::construct_delta_ords(std::vector<Qstar> Qstar_set, int opt_pos) {
     }
 }
 
-int VectFA::construct_delta_ranges(Delta *trans, std::vector<int> &chars) {
+int VectFA::construct_delta_ranges(Delta *trans,
+                                   const std::vector<int> &chars) {
     std::vector<std::vector<int>> ranges;
     for (int i = 0; i < chars.size(); i++) {
         std::vector<int> range;
@@ -133,37 +139,44 @@ int VectFA::construct_delta_ranges(Delta *trans, std::vector<int> &chars) {
     }
 }
 
-void VectFA::construct_delta_anys(std::set<ST_TYPE> Qtilde) {
-    for (ST_TYPE q : Qtilde) {
-        Delta *new_trans = new Delta;
-        new_trans->startState = q;
-        new_trans->char_table.resize(ASCII_SZ);
-
-        std::vector<int> chars;
-        for (int c = 0; c < ASCII_SZ; c++) {
-            new_trans->char_table[c] = dfa[q][c];
-            if (dfa[q][c] != q) {
-                chars.push_back(c);
-            }
-        }
-
-        if (chars.size() > 16) {
-            if (construct_delta_ranges(new_trans, chars)) {
-                qlabels[q].delta = new_trans;
-                qlabels[q].kind = RANGES;
-            }
+void VectFA::construct_delta_anys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
+    const double p = 0.75;
+    for (auto it = Qtilde.begin(); it != Qtilde.end();) {
+        ST_TYPE q = *it;
+        if (pfa.calc(q, q) < p) {
+            it = Qtilde.erase(it);
         } else {
-            for (int c : chars) {
-                new_trans->str += (char)c;
-                qlabels[q].delta = new_trans;
-                qlabels[q].kind = ANY;
+            Delta *new_trans = new Delta;
+            new_trans->startState = q;
+            new_trans->char_table.resize(ASCII_SZ);
+
+            std::vector<int> chars;
+            for (int c = 0; c < ASCII_SZ; c++) {
+                new_trans->char_table[c] = dfa[q][c];
+                if (dfa[q][c] != q) {
+                    chars.push_back(c);
+                }
             }
+
+            if (chars.size() > 16) {
+                if (construct_delta_ranges(new_trans, chars)) {
+                    qlabels[q].delta = new_trans;
+                    qlabels[q].kind = RANGES;
+                }
+            } else {
+                for (int c : chars) {
+                    new_trans->str += (char)c;
+                    qlabels[q].delta = new_trans;
+                    qlabels[q].kind = ANY;
+                }
+            }
+            ++it;
         }
     }
 }
 
-void VectFA::construct_delta_cs(std::set<ST_TYPE> Qstar_source,
-                                std::set<ST_TYPE> Qtilde) {
+void VectFA::construct_delta_cs(const std::set<ST_TYPE> &Qstar_source,
+                                const std::set<ST_TYPE> &Qtilde) {
     for (ST_TYPE q : states) {
         if (Qstar_source.find(q) == Qstar_source.end() &&
             Qtilde.find(q) == Qtilde.end()) {
@@ -203,7 +216,7 @@ VectFA::VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize,
 
     vlex::PFA pfa(fa, stateSize, data, size, 0);
 
-    std::vector<ST_TYPE> Qs = construct_Qs(stateSize);
+    std::vector<ST_TYPE> Qs = construct_Qs();
     std::vector<Qstar> Qstars = construct_Qstars(Qs);
 
     // construct PFA
@@ -211,11 +224,14 @@ VectFA::VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize,
     pfa.scan_ord(0.002);
     int opt_pos = pfa.calc_ord();
 
+    pfa.scan(0.002);
+    // pfa.calc();
+
     std::set<ST_TYPE> Qstar_source;
-    for (Qstar Qs : Qstars) {
-        Qstar_source.insert(Qs.source);
-        for (ST_TYPE q : Qs.states) {
-            if (q != Qs.source && q != Qs.sink) {
+    for (Qstar Qst : Qstars) {
+        Qstar_source.insert(Qst.source);
+        for (ST_TYPE q : Qst.states) {
+            if (q != Qst.source && q != Qst.sink) {
                 states.erase(q);
                 dfa.erase(q);
             }
@@ -236,8 +252,7 @@ VectFA::VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize,
     }
 
     construct_delta_ords(Qstars, opt_pos);
-    // TODO: algorithm for selecting Ranges or Any
-    construct_delta_anys(Qtilde);
+    construct_delta_anys(Qtilde, pfa);
 
     construct_delta_cs(Qstar_source, Qtilde);
 

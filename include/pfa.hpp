@@ -35,8 +35,10 @@ class PFA {
     void construct_ordPFA(std::vector<vlex::Qstar> Qstars, int n_patterns0,
                           int length);
     void scan_ord(double lr);
-    int calc_ord();
+    int calc_ord() const;
+
     void scan(double lr);
-    void calc();
+    double calc(ST_TYPE j, ST_TYPE k) const;
+    void calc() const;
 };
 }  // namespace vlex
