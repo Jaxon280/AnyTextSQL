@@ -15,10 +15,10 @@ class Token {
     int tokenType = 0;
 
    public:
-    void set_literals(char *data, int start, int size) {
+    void set_literals(uint8_t *data, int start, int size) {
         char buf[size + 1];
         buf[size] = (char)0;
-        strncpy(buf, &data[start], size);
+        strncpy(buf, (char *)&data[start], size);
         str = std::string(buf);
     }
     std::string get_literals() { return str; };
@@ -39,8 +39,8 @@ class VFALexer {
     int size;
     int i;
 
-    void generate_token(std::vector<Token> &tokenVec, ST_TYPE state, char *data,
-                        int start, int end) {
+    void generate_token(std::vector<Token> &tokenVec, ST_TYPE state,
+                        uint8_t *data, int start, int end) {
         Token token;
         token.set_literals(data, start, end - start);
         // token.set_type(state);
@@ -528,7 +528,7 @@ class VFALexer {
         }
     q0:
         if (ctx.recentAcceptState) {
-            generate_token(tokenVec, ctx.recentAcceptState, (char *)data,
+            generate_token(tokenVec, ctx.recentAcceptState, (uint8_t *)data,
                            ctx.tokenStartIndex, i);
             i = ctx.recentAcceptIndex + 1;
             ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;

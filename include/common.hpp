@@ -29,6 +29,8 @@
 #define ST_TYPE uint8_t
 #define SIMD_TYPE __m128i
 #define SIMD_BYTES 16
+#define DATA_TYPE uint8_t
+#define SIZE_TYPE uint64_t
 
 #define INV_STATE 0
 #define INIT_STATE 1
