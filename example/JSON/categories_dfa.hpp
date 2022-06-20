@@ -2,8 +2,8 @@
 
 #include "../../include/common.hpp"
 
-void generate_categories_dfa(ST_TYPE ***dfa0, ST_TYPE **acceptStates0,
-                             int *stateSize0, int *acceptStateSize0) {
+void generate_dfa(ST_TYPE ***dfa0, ST_TYPE **acceptStates0, int *stateSize0,
+                  int *acceptStateSize0) {
     int stateSize = 29;
     ST_TYPE **dfa = (ST_TYPE **)malloc(sizeof(ST_TYPE *) * stateSize);
     for (int i = 0; i < stateSize; i++) {
