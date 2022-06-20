@@ -2,8 +2,13 @@
 
 using namespace vlex;
 
-PFA::PFA(ST_TYPE **dfa, int numStates, char *data, int size, int start)
-    : dfa(dfa), numStates(numStates), data(data), size(size), i(start) {
+PFA::PFA(std::vector<std::vector<ST_TYPE>> &_transTable, int _numStates,
+         DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE _start)
+    : transTable(_transTable),
+      numStates(_numStates),
+      data(_data),
+      size(_size),
+      start(_start) {
     count_mat = (int **)malloc(sizeof(int *) * numStates);
     for (int j = 0; j < numStates; j++) {
         count_mat[j] = (int *)malloc(sizeof(int) * numStates);
@@ -22,135 +27,71 @@ PFA::PFA(ST_TYPE **dfa, int numStates, char *data, int size, int start)
     }
 }
 
-void PFA::construct_ordPFA(std::vector<vlex::Qstar> Qstars, int n_patterns0,
-                           int length) {
+void PFA::scan_ords(std::vector<vlex::Qstar> Qstars) {
+    SIZE_TYPE i = start;
+
     for (vlex::Qstar Qs : Qstars) {
-        if (Qs.source == INIT_STATE) {
-            pattern += Qs.str;
-            if (length < 1) {
-                length = 1;
+        patterns.insert(std::pair<ST_TYPE, std::string>(Qs.source, Qs.str));
+        std::vector<std::vector<int>> counts = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+        count_ords.insert(std::pair<ST_TYPE, std::vector<std::vector<int>>>(
+            Qs.source, counts));
+    }
+
+    for (auto &[s, count_ord] : count_ords) {
+        std::string p = patterns[s];
+        i = start;
+        while (i < size && data[i]) {
+            if (data[i] == p[0]) {
+                count_ord[0][0]++;
+                if (data[i + 1] == p[1]) count_ord[0][1]++;
+            } else if (data[i] == p[1]) {
+                count_ord[1][0]++;
+                if (data[i + 1] == p[2]) count_ord[1][1]++;
+            } else if (data[i] == p[2]) {
+                count_ord[2][0]++;
+                if (data[i + 1] == p[3]) count_ord[2][1]++;
+            } else if (data[i] == p[3]) {
+                count_ord[3][0]++;
+                if (data[i + 1] == p[4]) count_ord[3][1]++;
             }
-            if ((n_patterns0 + length - 1) > pattern.size()) {
-                n_patterns = pattern.size() / 2;
-                length = pattern.size() / 2;
-            } else {
-                n_patterns = n_patterns0;
-            }
-        }
-    }
-    n_states = length + 2;
-
-    ord_dfa = (ST_TYPE ***)malloc(sizeof(ST_TYPE **) * n_patterns);
-    for (int j = 0; j < n_patterns; j++) {
-        ord_dfa[j] = (ST_TYPE **)malloc(sizeof(ST_TYPE *) * n_states);
-        int X = INIT_STATE;
-        std::string pat = pattern.substr(j, 4);
-        ord_dfa[j][0] = (ST_TYPE *)malloc(sizeof(ST_TYPE) * ASCII_SZ);
-        for (int l = 0; l < ASCII_SZ; l++) {
-            ord_dfa[j][0][l] = INIT_STATE;
-        }
-        ord_dfa[j][1] = (ST_TYPE *)malloc(sizeof(ST_TYPE) * ASCII_SZ);
-        for (int l = 0; l < ASCII_SZ; l++) {
-            ord_dfa[j][1][l] = INIT_STATE;
-        }
-        ord_dfa[j][INIT_STATE][(int)pat[0]] = 2;
-
-        for (int k = 2; k < n_states; k++) {
-            ord_dfa[j][k] = (ST_TYPE *)malloc(sizeof(ST_TYPE) * ASCII_SZ);
-            for (int l = 0; l < ASCII_SZ; l++) {
-                ord_dfa[j][k][l] = ord_dfa[j][X][l];
-            }
-
-            if (k != n_states - 1) {
-                ord_dfa[j][k][(int)pat[k - 1]] = k + 1;
-                X = ord_dfa[j][X][(int)pat[k - 1]];
-            }
+            i++;
         }
     }
 
-    count_ord = (int ***)malloc(sizeof(int **) * n_patterns);
-    for (int j = 0; j < n_patterns; j++) {
-        count_ord[j] = (int **)malloc(sizeof(int *) * n_states);
-        for (int k = 0; k < n_states; k++) {
-            count_ord[j][k] = (int *)malloc(sizeof(int) * n_states);
-            for (int l = 0; l < n_states; l++) {
-                count_ord[j][k][l] = 0;
-            }
-        }
-    }
-
-    sum_curs_ord = (int **)malloc(sizeof(int *) * n_patterns);
-    for (int j = 0; j < n_patterns; j++) {
-        sum_curs_ord[j] = (int *)malloc(sizeof(int) * n_states);
-        for (int k = 0; k < n_states; k++) {
-            sum_curs_ord[j][k] = 0;
-        }
-    }
-    sum_nexts_ord = (int **)malloc(sizeof(int *) * n_patterns);
-    for (int j = 0; j < n_patterns; j++) {
-        sum_nexts_ord[j] = (int *)malloc(sizeof(int) * n_states);
-        for (int k = 0; k < n_states; k++) {
-            sum_nexts_ord[j][k] = 0;
-        }
-    }
-
-    currentStates = (int *)malloc(sizeof(int) * n_patterns);
-    for (int j = 0; j < n_patterns; j++) {
-        currentStates[j] = INIT_STATE;
-    }
-}
-
-void PFA::scan_ord(double lr) {
-    int lsize = (int)size * lr + i;
-    int start = i;
-    int curS, nextS;
-    while (i < lsize && data[i]) {
-        for (int j = 0; j < n_patterns; j++) {
-            curS = currentStates[j];
-            currentStates[j] = ord_dfa[j][currentStates[j]][data[i]];
-            nextS = currentStates[j];
-            count_ord[j][curS][nextS]++;
-            sum_curs_ord[j][curS]++;
-            sum_nexts_ord[j][nextS]++;
-        }
-        i++;
-    }
     sum_all = i - start;
 }
 
-int PFA::calc_ord() const {
-    const double ord_latency = 20.0;
-    const double cmp_latency = 1.0;
+std::map<ST_TYPE, int> PFA::calc_ords() const {
+    long long min = 10000000000;
+    std::map<ST_TYPE, int> argmins;
+    for (const auto &[s, count_ord] : count_ords) {
+        int argmin = 0;
+        argmins.insert(std::pair<ST_TYPE, int>(s, argmin));
+        for (int j = 0; j < 4; j++) {
+            double prob0 = (double)(count_ord[j][0]) / (double)sum_all;
+            printf("pattern %d/4, probability[1] %f\n", j + 1, prob0);
+            double prob1 = (double)(count_ord[j][1]) / (double)sum_all;
+            printf("pattern %d/4, probability[2] %f\n", j + 1, prob1);
+            double prob =
+                (double)(count_ord[j][0] + count_ord[j][1]) / (double)sum_all;
+            printf("pattern %d/4, probability sum %f\n", j + 1, prob);
 
-    double min = 1000000.0;
-    int argmin = 0;
-    for (int j = 0; j < n_patterns; j++) {
-        double prob = 0.0;
-        double score = 0.0;
-        for (int k = 2; k < n_states; k++) {
-            prob += (double)sum_nexts_ord[j][k] / (double)sum_all;
-            // printf(
-            //     "pattern x_{i+%d} ... x_{i+16} = z_{%d} ... z_{%d} 's "
-            //     "probability: %f\n",
-            //     18 - k, j + 1, j + k - 1, prob);
-        }
-
-        score = prob * (ord_latency + j * cmp_latency);
-        if (score < min) {
-            min = score;
-            argmin = j;
+            if (count_ord[j][0] + count_ord[j][1] < min) {
+                min = count_ord[j][0] + count_ord[j][1];
+                argmins[s] = j;
+            }
         }
     }
 
-    return argmin;
+    return argmins;
 }
 
-void PFA::scan(double lr) {
-    int lsize = (int)size * lr + i;
+void PFA::scan() {
     int curS, nextS;
-    while (i < lsize && data[i]) {
+    SIZE_TYPE i = start;
+    while (i < size && data[i]) {
         curS = currentState;
-        currentState = dfa[currentState][data[i]];
+        currentState = transTable[currentState][data[i]];
         nextS = currentState;
         count_mat[curS][nextS]++;
         sum_curs_vec[curS]++;

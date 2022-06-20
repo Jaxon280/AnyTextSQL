@@ -21,10 +21,10 @@ void Codegen::add_tokenClass() {
     code += "\tstd::string str;\n";
     code += "\tint tokenType = 0;\n";
     code += "public:\n";
-    code += "\tvoid set_literals(char *data, int start, int size) {\n";
+    code += "\tvoid set_literals(uint8_t *data, int start, int size) {\n";
     code += "\t\tchar buf[size + 1];\n";
     code += "\t\tbuf[size] = (char)0;\n";
-    code += "\t\tstrncpy(buf, &data[start], size);\n";
+    code += "\t\tstrncpy(buf, (char *)&data[start], size);\n";
     code += "\t\tstr = std::string(buf);\n";
     code += "\t}\n";
     code += "\tstd::string get_literals() { return str; };\n";
@@ -43,14 +43,14 @@ void Codegen::add_member() {
     code += "\tSIMD_TYPE simd_datas[NUMSTATES];\n";
     code += "\tint simd_sizes[NUMSTATES];\n";
     code += "\n";
-    code += "\tchar *data;\n";
+    code += "\tuint8_t *data;\n";
     code += "\tint size;\n";
     code += "\tint i;\n";
     code += "\n";
 }
 
 void Codegen::add_cmpstr(Delta *d) {
-    std::string q = std::to_string(qlabels[d->startState].state);
+    std::string q = std::to_string(d->startState);
 
     code += "\t\tconst uint8_t ";
     code += "str_q";
@@ -90,17 +90,16 @@ void Codegen::add_cmpstr(Delta *d) {
 
 void Codegen::add_constructor() {
     code +=
-        "\tVFALexer(char *data, int start, int size) : data(data), "
+        "\tVFALexer(uint8_t *data, int start, int size) : data(data), "
         "size(size) {\n";
     code +=
         "\t\tctx.tokenStartIndex = start, ctx.recentAcceptIndex = 0, "
         "ctx.recentAcceptState = 0;\n";
     code += "\t\ti = start;\n\n";
 
-    for (ST_TYPE q : states) {
-        if (qlabels[q].kind == ORDERED || qlabels[q].kind == ANY ||
-            qlabels[q].kind == RANGES) {
-            add_cmpstr(qlabels[q].delta);
+    for (Qlabel &ql : qlabels) {
+        if (ql.kind == ORDERED || ql.kind == ANY || ql.kind == RANGES) {
+            add_cmpstr(ql.delta);
         }
     }
 
@@ -110,7 +109,7 @@ void Codegen::add_constructor() {
 void Codegen::add_generate_token() {
     code +=
         "\tvoid generate_token(std::vector<Token>& tokenVec, ST_TYPE "
-        "state, char *data, int start, int end) {\n";
+        "state, uint8_t *data, int start, int end) {\n";
     code += "\t\tToken token;\n";
     code += "\t\ttoken.set_literals(data, start, end - start);\n";
     code += "\t\t// token.set_type(state);\n";
@@ -125,20 +124,19 @@ void Codegen::add_lex() {
     code += "\t\tSIMD_TYPE text;\n";
     code += "\n";
 
-    for (auto it = std::next(states.begin()); it != states.end(); it++) {
-        ST_TYPE state = *it;
-        Qlabel ql = qlabels[state];
-        std::string q = std::to_string(ql.state);
+    for (int i = 0; i < qlabels.size(); i++) {
+        Qlabel ql = qlabels[i];
+        std::string q = std::to_string(i);
 
         code += "\tq";
         code += q;
         code += ":\n";
-        if (ql.state == INIT_STATE) {
+        if (i == INIT_STATE) {
             code += "\t\tif (i >= size) goto end;\n";
         }
         if (ql.isAccept) {
             code += "\t\tctx.recentAcceptState = ";
-            code += std::to_string(ql.state);
+            code += q;
             code += ";\n";
             code += "\t\tctx.recentAcceptIndex = i;\n";
         }
@@ -166,7 +164,7 @@ void Codegen::add_lex() {
             code += std::to_string(ql.delta->str.size());
             code += ";\n";
         }
-        if (state == INIT_STATE) {
+        if (i == INIT_STATE) {
             code +=
                 "\t\tctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;\n";
             code += "\t\tctx.tokenStartIndex = i;\n ";
@@ -215,7 +213,9 @@ void Codegen::add_trans(Qlabel &label, std::string q) {
 
             code += ") {\n";
             code += "\t\t\ti++;\n";
-            code += "\t\t\tgoto q1;\n";
+            code += "\t\t\tgoto q";
+            code += std::to_string(label.delta->startState);
+            code += ";\n";
             code += "\t\t}\n";
         }
         code += "\t\tif (r > ";
@@ -246,7 +246,7 @@ void Codegen::add_trans(Qlabel &label, std::string q) {
                     code += std::to_string(s);
                     code += ":\n";
                     code += "\t\t\t\tgoto q";
-                    code += std::to_string(qlabels[key].state);
+                    code += std::to_string(key);
                     code += ";\n";
                     code += "\t\t\t\tbreak;\n";
                 }
@@ -254,7 +254,7 @@ void Codegen::add_trans(Qlabel &label, std::string q) {
         }
         code += "\t\t\tdefault:\n";
         code += "\t\t\t\tgoto q";
-        code += std::to_string(qlabels[argmax].state);
+        code += std::to_string(argmax);
         code += ";\n";
         code += "\t\t\t\tbreak;\n";
 
@@ -264,7 +264,7 @@ void Codegen::add_trans(Qlabel &label, std::string q) {
 
 void Codegen::add_inv() {
     ST_TYPE state = INV_STATE;
-    std::string q = std::to_string(qlabels[state].state);
+    std::string q = std::to_string(state);
     code += "\tq";
     code += q;
     code += ":\n";
@@ -291,8 +291,8 @@ void Codegen::add_vfaClass() {
     code += "};\n";
 }
 
-Codegen::Codegen(const std::string &filename,
-                 std::map<ST_TYPE, Qlabel> &qlabels, std::set<ST_TYPE> &states)
+Codegen::Codegen(const std::string &filename, std::vector<Qlabel> &qlabels,
+                 std::set<ST_TYPE> &states)
     : filename(filename), qlabels(qlabels), states(states) {
     fd = open(filename.c_str(), O_RDWR | O_TRUNC | O_CREAT, 0644);
     if (fd < 0) {

@@ -9,7 +9,7 @@ class Codegen {
     std::string code;
     int fd;
     std::string filename;
-    std::map<ST_TYPE, Qlabel> qlabels;
+    std::vector<Qlabel> qlabels;
     std::set<ST_TYPE> states;
 
     void add_preprocess();
@@ -27,7 +27,7 @@ class Codegen {
     void add_vfaClass();
 
    public:
-    Codegen(const std::string &filename, std::map<ST_TYPE, Qlabel> &qlabels,
+    Codegen(const std::string &filename, std::vector<Qlabel> &qlabels,
             std::set<ST_TYPE> &states);
     ~Codegen();
 

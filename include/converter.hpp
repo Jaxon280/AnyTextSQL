@@ -2,15 +2,19 @@
 
 #include "codegen.hpp"
 #include "common.hpp"
+#include "dfa.hpp"
 #include "interface.hpp"
 #include "pfa.hpp"
 
+#define ORD_LENGTH 4
+
 namespace vlex {
 class VectFA {
+    std::vector<std::vector<ST_TYPE>> transTable;
     std::set<ST_TYPE> states;
     std::set<ST_TYPE> acceptStates;
-    std::map<ST_TYPE, std::vector<ST_TYPE>> dfa;
-    std::map<ST_TYPE, Qlabel> qlabels;
+    std::vector<Qlabel> qlabels;
+    std::map<ST_TYPE, ST_TYPE> old2new;
 
     std::vector<ST_TYPE> construct_Qs();
 
@@ -18,17 +22,22 @@ class VectFA {
 
     std::set<ST_TYPE> construct_Qtilde(const std::set<ST_TYPE> &Qstar_source);
 
-    void construct_delta_ords(const std::vector<Qstar> &Qstar_set, int opt_pos);
+    void construct_delta_ords(const std::vector<Qstar> &Qstar_set,
+                              std::map<ST_TYPE, int> opt_poses);
 
     int construct_delta_ranges(Delta *trans, const std::vector<int> &chars);
     void construct_delta_anys(std::set<ST_TYPE> &Qtilde, const PFA &pfa);
-
     void construct_delta_cs(const std::set<ST_TYPE> &Qstar_source,
                             const std::set<ST_TYPE> &Qtilde);
 
    public:
-    VectFA(ST_TYPE **fa, ST_TYPE *accepts, int stateSize, int acceptStateSize,
-           char *data, int size);
+    VectFA(DFA &dfa);
+    VectFA(DFA &dfa, DATA_TYPE *_data, SIZE_TYPE _size);
+    void constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE _size);
+
+    inline std::set<ST_TYPE> getStates() { return states; }
+    inline std::set<ST_TYPE> getAcceptStates() { return acceptStates; }
+    inline std::vector<Qlabel> &getQlabels() { return qlabels; }
     int codegen(const std::string &filename);
 };
 }  // namespace vlex

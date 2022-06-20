@@ -14,7 +14,6 @@ typedef enum _simd_kind { ORDERED, ANY, RANGES, CMPEQ, C, INV } SIMDKind;
 
 struct Qlabel {
     SIMDKind kind;
-    ST_TYPE state;
     Delta *delta;
 
     bool isAccept = false;
