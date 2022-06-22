@@ -42,7 +42,11 @@ DFA generate_stars_dfa() {
     trans[10][44] = 13;
     trans[12][44] = 13;
 
-    DFA dfa = DFA(trans, acceptStates, stateSize);
+    std::vector<DFA::SubMatchStates> smsVec;
+    DFA::SubMatchStates sms(9, false, 12, true);
+    smsVec.push_back(sms);
+
+    DFA dfa = DFA(trans, acceptStates, smsVec, stateSize);
     return dfa;
 }
 
@@ -125,7 +129,14 @@ DFA generate_categories_dfa() {
     }
     trans[28][34] = INV_STATE;
 
-    DFA dfa = DFA(trans, acceptStates, stateSize);
+    std::vector<DFA::SubMatchStates> smsVec;
+    // DFA::SubMatchStates sms(15, true, 26, true);
+    // smsVec.push_back(sms);
+
+    DFA::SubMatchStates sms(14, false, 27, false);
+    smsVec.push_back(sms);
+
+    DFA dfa = DFA(trans, acceptStates, smsVec, stateSize);
     return dfa;
 }
 
@@ -236,6 +247,12 @@ DFA generate_categories_stars_dfa() {
             trans[37][i] = 37;  // except "
     }
 
-    DFA dfa = DFA(trans, acceptStates, stateSize);
+    std::vector<DFA::SubMatchStates> smsVec;
+    DFA::SubMatchStates sms1(9, false, 15, false);
+    smsVec.push_back(sms1);
+    DFA::SubMatchStates sms2(29, false, 38, false);
+    smsVec.push_back(sms2);
+
+    DFA dfa = DFA(trans, acceptStates, smsVec, stateSize);
     return dfa;
 }
