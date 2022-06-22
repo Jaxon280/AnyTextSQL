@@ -16,8 +16,15 @@ class Vlex {
     void iexec();
     void exec();
 
-    inline void printTokens() {
-        for (int i = 0; i < executor->getTokenVec().size(); i++) {
+    inline void printTokens(int size) {
+        int psize;
+        if (executor->getTokenVec().size() < size) {
+            psize = executor->getTokenVec().size();
+        } else {
+            psize = size;
+        }
+        for (int i = 0; i < psize; i++) {
+            std::cout << "Token [" << i + 1 << "/" << psize << "]" << std::endl;
             std::string s;
             for (DATA_TYPE d : executor->getTokenVec()[i].get_literals()) {
                 s.push_back(d);

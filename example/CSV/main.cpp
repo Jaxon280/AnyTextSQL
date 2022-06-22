@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     vlex.construct(0.002);
     vlex.exec();
     vlex.printCount();
-    // vlex.printTokens();
+    vlex.printTokens(10);
 
 #if (defined BENCH)
     gettimeofday(&lex2, NULL);
