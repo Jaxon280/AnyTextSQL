@@ -19,13 +19,15 @@ loop:
     if (r > 16 - SIMDSizes[cur_state]) goto loop;
     i += SIMDSizes[cur_state];
     if (ctx.currentState == INIT_STATE) {
-        ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;
-        ctx.tokenStartIndex = i;
+        resetContext();
     }
     ctx.currentState = rTable[cur_state];
 }
 
 inline void Executor::cmpestri_any(ST_TYPE cur_state) {
+    if (anyStartTable[cur_state] > 0) {
+        startSubMatch(anyStartTable[cur_state]);
+    }
 loop:
     if (i >= size) return;
     SIMD_TYPE text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
@@ -36,14 +38,26 @@ loop:
         goto loop;
     }
     i += r;
+    if (anyEndTable[cur_state] > 0) {
+        endSubMatch(anyEndTable[cur_state]);
+    }
     if (ctx.currentState == INIT_STATE) {
-        ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;
-        ctx.tokenStartIndex = i;
+        resetContext();
+    }
+
+    if (charStartTable[ctx.currentState] > 0) {
+        startSubMatch(charStartTable[ctx.currentState]);
     }
     ctx.currentState = charTable[cur_state][(int)data[i++]];
+    if (charEndTable[ctx.currentState] > 0) {
+        endSubMatch(charEndTable[ctx.currentState]);
+    }
 }
 
 inline void Executor::cmpestri_ranges(ST_TYPE cur_state) {
+    if (anyStartTable[cur_state] > 0) {
+        startSubMatch(anyStartTable[cur_state]);
+    }
 loop:
     if (i >= size) return;
     SIMD_TYPE text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
@@ -54,15 +68,24 @@ loop:
         goto loop;
     }
     i += r;
+    if (anyEndTable[cur_state] > 0) {
+        endSubMatch(anyEndTable[cur_state]);
+    }
     if (ctx.currentState == INIT_STATE) {
-        ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;
-        ctx.tokenStartIndex = i;
+        resetContext();
+    }
+
+    if (charStartTable[ctx.currentState] > 0) {
+        startSubMatch(charStartTable[ctx.currentState]);
     }
     ctx.currentState = charTable[cur_state][(int)data[i++]];
+    if (charEndTable[ctx.currentState] > 0) {
+        endSubMatch(charEndTable[ctx.currentState]);
+    }
 }
 
-void Executor::generateToken(std::vector<Token> &tokenVec, ST_TYPE state,
-                             DATA_TYPE *data, SIZE_TYPE start, SIZE_TYPE end) {
+void Executor::generateToken(std::vector<Token> &tokenVec, DATA_TYPE *data,
+                             SIZE_TYPE start, SIZE_TYPE end) {
     Token token;
     token.set_literals(data, start, end - start);
     tokenVec.push_back(token);
@@ -86,21 +109,49 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     kindTable = new SIMDKind[stateSize];
     rTable = new ST_TYPE[stateSize];
 
-    for (int i = 0; i < stateSize; i++) {
-        charTable[i] = new ST_TYPE[256];
+    for (int s = 0; s < stateSize; s++) {
+        charTable[s] = new ST_TYPE[256];
 
-        kindTable[i] = qlabels[i].kind;
-        if (qlabels[i].kind == ORDERED) {
-            rTable[i] = qlabels[i].delta->rTable[0];
+        kindTable[s] = qlabels[s].kind;
+        if (qlabels[s].kind == ORDERED) {
+            rTable[s] = qlabels[s].delta->rTable[0];
             for (int j = 0; j < 256; j++) {
-                charTable[i][j] = 0;
+                charTable[s][j] = 0;
             }
         } else {
-            rTable[i] = 0;
+            rTable[s] = 0;
             for (int j = 0; j < 256; j++) {
-                charTable[i][j] = qlabels[i].delta->charTable[j];
+                charTable[s][j] = qlabels[s].delta->charTable[j];
             }
         }
+    }
+
+    anyStartTable = new int[stateSize]();
+    anyEndTable = new int[stateSize]();
+    charStartTable = new int[stateSize]();
+    charEndTable = new int[stateSize]();
+    std::vector<DFA::SubMatchStates> &subMatchStates = vfa->getSubMatches();
+    subMatchSize = subMatchStates.size();
+    int id = 1;
+    for (DFA::SubMatchStates &sms : subMatchStates) {
+        if (sms.isAnyStart) {
+            anyStartTable[sms.startState] = id;
+        } else {
+            charStartTable[sms.startState] = id;
+        }
+        if (sms.isAnyEnd) {
+            anyEndTable[sms.endState] = id;
+        } else {
+            charEndTable[sms.endState] = id;
+        }
+        id++;
+    }
+
+    end = new SubMatchNode;
+    if (id > 1) {
+        subMatches = new SubMatch[id - 1];
+    } else {
+        subMatches = nullptr;
     }
 
     SIMDDatas = new SIMD_TYPE[stateSize];
@@ -109,11 +160,11 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     for (Qlabel &it : qlabels) {
         if (it.kind == ORDERED || it.kind == ANY || it.kind == RANGES) {
             DATA_TYPE strdata[16];
-            for (int i = 0; i < 16; i++) {
-                if (i < it.delta->str.size()) {
-                    strdata[i] = (DATA_TYPE)it.delta->str[i];
+            for (int k = 0; k < 16; k++) {
+                if (k < it.delta->str.size()) {
+                    strdata[k] = (DATA_TYPE)it.delta->str[k];
                 } else {
-                    strdata[i] = 0;
+                    strdata[k] = 0;
                 }
             }
 
@@ -121,6 +172,46 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
             SIMDSizes[iter] = (int)it.delta->str.size();
         }
         iter++;
+    }
+}
+
+inline void Executor::startSubMatch(int id) {
+    if (end->id > 0) {
+        while (!startStack.empty()) {
+            if (startStack.top().id == end->id) {
+                subMatches[end->id - 1].start = startStack.top().index;
+                subMatches[end->id - 1].end = end->index;
+                break;
+            }
+            startStack.pop();
+        }
+        end->id = 0;
+    }
+    startStack.push({id, i});
+}
+
+inline void Executor::endSubMatch(int id) {
+    if (end->id > 0 && end->id != id) {
+        while (!startStack.empty()) {
+            if (startStack.top().id == end->id) {
+                subMatches[end->id - 1].start = startStack.top().index;
+                subMatches[end->id - 1].end = end->index;
+                startStack.pop();
+                break;
+            }
+            startStack.pop();
+        }
+    }
+    end->id = id;
+    end->index = i;
+}
+
+inline void Executor::resetContext() {
+    ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;
+    ctx.tokenStartIndex = i;
+    end->id = 0;
+    while (!startStack.empty()) {
+        startStack.pop();
     }
 }
 
@@ -146,16 +237,38 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
                 break;
             case C:
                 if (ctx.currentState == INIT_STATE) {
-                    ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;
-                    ctx.tokenStartIndex = i;
+                    resetContext();
+                }
+
+                if (charStartTable[ctx.currentState] > 0) {
+                    startSubMatch(charStartTable[ctx.currentState]);
                 }
                 ctx.currentState = charTable[ctx.currentState][(int)data[i++]];
+                if (charEndTable[ctx.currentState] > 0) {
+                    endSubMatch(charEndTable[ctx.currentState]);
+                }
                 break;
             default:
                 if (ctx.recentAcceptState) {
                     // todo: change it according to query plan
-                    generateToken(tokenVec, ctx.recentAcceptState, data,
-                                  ctx.tokenStartIndex, i);
+                    if (end->id > 0) {
+                        while (!startStack.empty()) {
+                            if (startStack.top().id == end->id) {
+                                subMatches[end->id - 1].start =
+                                    startStack.top().index;
+                                subMatches[end->id - 1].end = end->index;
+                            }
+                            startStack.pop();
+                        }
+                        end->id = 0;
+                    }
+
+                    for (int s = 0; s < subMatchSize; s++) {
+                        // todo: change it when no submatch
+                        generateToken(tokenVec, data, subMatches[s].start,
+                                      subMatches[s].end);
+                    }
+
                     i = ctx.recentAcceptIndex + 1;
                 }
                 ctx.currentState = INIT_STATE;

@@ -28,6 +28,16 @@ class Executor {
         SIZE_TYPE tokenStartIndex;
     };
 
+    struct SubMatchNode {
+        int id;
+        SIZE_TYPE index;
+    };
+
+    struct SubMatch {
+        SIZE_TYPE start;
+        SIZE_TYPE end;
+    };
+
     Executor::Context ctx;
     std::vector<Token> tokenVec;
     SIMD_TYPE *SIMDDatas;
@@ -35,7 +45,16 @@ class Executor {
     SIMDKind *kindTable;  // State -> Kind
     ST_TYPE *rTable;      // State -> State
     ST_TYPE **charTable;  // State * char -> State
+    int *anyStartTable;   // State -> sub id or 0
+    int *anyEndTable;     // State -> sub id or 0
+    int *charStartTable;  // State -> sub id or 0
+    int *charEndTable;    // State -> sub id or 0
     std::set<ST_TYPE> acceptStates;
+
+    std::stack<SubMatchNode> startStack;
+    SubMatchNode *end;
+    SubMatch *subMatches;  // id -> SubMatch
+    int subMatchSize;
 
     DATA_TYPE *data;
     SIZE_TYPE size;
@@ -44,8 +63,11 @@ class Executor {
     inline void cmpestri_ord(ST_TYPE cur_state);
     inline void cmpestri_any(ST_TYPE cur_state);
     inline void cmpestri_ranges(ST_TYPE cur_state);
-    void generateToken(std::vector<Token> &token_vec, ST_TYPE state,
-                       DATA_TYPE *data, SIZE_TYPE start, SIZE_TYPE end);
+    void generateToken(std::vector<Token> &token_vec, DATA_TYPE *data,
+                       SIZE_TYPE start, SIZE_TYPE end);
+    inline void startSubMatch(int id);
+    inline void endSubMatch(int id);
+    inline void resetContext();
 
    public:
     Executor();

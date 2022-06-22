@@ -14,6 +14,9 @@ class VectFA {
     std::set<ST_TYPE> states;
     std::set<ST_TYPE> acceptStates;
     std::vector<Qlabel> qlabels;
+    std::vector<DFA::SubMatchStates> subMatches;
+    std::set<ST_TYPE> charSMStates;
+    std::set<ST_TYPE> anySMStates;
     std::map<ST_TYPE, ST_TYPE> old2new;
 
     std::vector<ST_TYPE> construct_Qs();
@@ -38,6 +41,9 @@ class VectFA {
     inline std::set<ST_TYPE> getStates() { return states; }
     inline std::set<ST_TYPE> getAcceptStates() { return acceptStates; }
     inline std::vector<Qlabel> &getQlabels() { return qlabels; }
+    inline std::vector<DFA::SubMatchStates> &getSubMatches() {
+        return subMatches;
+    }
     int codegen(const std::string &filename);
 };
 }  // namespace vlex

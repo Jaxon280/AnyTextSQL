@@ -52,6 +52,7 @@ std::vector<Qstar> VectFA::construct_Qstars(std::vector<ST_TYPE> Qsource) {
                     if (N > 1) goto end_dfs;
                 }
             }
+            if (charSMStates.find(qnext) != charSMStates.end()) break;
             Qs.states.insert(qnext);
             Qs.sink = qnext;
             Qs.str += (char)cnext;
@@ -136,7 +137,7 @@ void VectFA::construct_delta_anys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
     const double p = 0.75;
     for (auto it = Qtilde.begin(); it != Qtilde.end();) {
         ST_TYPE q = *it;
-        if (pfa.calc(q, q) < p) {
+        if (pfa.calc(q, q) < p && anySMStates.find(q) == anySMStates.end()) {
             it = Qtilde.erase(it);
         } else {
             Delta *new_trans = new Delta;
@@ -200,6 +201,20 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     for (ST_TYPE s : dfa.getAcceptStates()) {
         acceptStates.insert(s);
     }
+    std::vector<DFA::SubMatchStates> &SMSs = dfa.getSubMatchStates();
+    for (DFA::SubMatchStates &sms : SMSs) {
+        if (sms.isAnyStart) {
+            anySMStates.insert(sms.startState);
+        } else {
+            charSMStates.insert(sms.startState);
+        }
+
+        if (sms.isAnyEnd) {
+            anySMStates.insert(sms.endState);
+        } else {
+            charSMStates.insert(sms.endState);
+        }
+    }
 
     // todo: add checking access to state
     // std::map<ST_TYPE, std::set<ST_TYPE>> Q_access;
@@ -240,6 +255,12 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
         qlabels.push_back(qlabel);
         old2new[q] = i;
         i++;
+    }
+
+    for (DFA::SubMatchStates sms : SMSs) {
+        DFA::SubMatchStates vsms(old2new[sms.startState], sms.isAnyStart,
+                                 old2new[sms.endState], sms.isAnyEnd);
+        subMatches.push_back(vsms);
     }
 
     construct_delta_ords(Qstars, opt_poses);
