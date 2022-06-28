@@ -140,6 +140,56 @@ DFA generate_categories_dfa() {
     return dfa;
 }
 
+DFA generate_businessid_dfa() {
+    int stateSize = 18;
+
+    std::vector<std::vector<ST_TYPE>> trans(
+        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
+    std::set<ST_TYPE> acceptStates;
+    acceptStates.insert(17);
+
+    for (int i = INIT_STATE; i < 16; i++)
+        for (int j = 0; j < 256; j++) trans[i][j] = INIT_STATE;
+
+    trans[INIT_STATE][34] = 2;  // "
+    trans[2][98] = 3;           // b
+    trans[3][117] = 4;          // u
+    trans[4][115] = 5;          // s
+    trans[5][105] = 6;          // i
+    trans[6][110] = 7;          // n
+    trans[7][101] = 8;          // e
+    trans[8][115] = 9;          // s
+    trans[9][115] = 10;         // s
+    trans[10][95] = 11;         // _
+    trans[11][105] = 12;        // i
+    trans[12][100] = 13;        // d
+    trans[13][34] = 14;         // "
+    trans[14][58] = 15;         // :
+    trans[15][34] = 16;         // "
+
+    for (int i = 2; i < 13; i++) {
+        trans[i][34] = 2;  // "
+    }
+    trans[14][34] = 2;  // "
+    trans[14][98] = 3;  // b
+
+    for (int i = 0; i < 256; i++) {
+        if (i == 34 || i == 82) continue;
+        trans[16][i] = 16;  // [^"\R]
+    }
+    trans[16][34] = 17;  // "
+
+    std::vector<DFA::SubMatchStates> smsVec;
+    // DFA::SubMatchStates sms(15, true, 26, true);
+    // smsVec.push_back(sms);
+
+    DFA::SubMatchStates sms(16, true, 16, true);
+    smsVec.push_back(sms);
+
+    DFA dfa = DFA(trans, acceptStates, smsVec, stateSize);
+    return dfa;
+}
+
 DFA generate_categories_stars_dfa() {
     int stateSize = 39;
 
