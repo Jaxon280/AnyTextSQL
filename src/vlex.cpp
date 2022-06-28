@@ -2,11 +2,12 @@
 
 using namespace vlex;
 
-Vlex::Vlex(std::string& filename, DFA& _dfa)
+Vlex::Vlex(std::string& filename, DFA& _dfa, QueryContext* _query)
     : dfa(_dfa),
       executor(new Executor()),
       ios(new ioStream(filename)),
-      vfa(new VectFA(_dfa)) {
+      vfa(new VectFA(_dfa)),
+      query(_query) {
     size = ios->getSize();
     make_partitions(size);
 }
@@ -23,6 +24,7 @@ void Vlex::construct(double lr) {
     ios->readFile(0, lsize);
     vfa->constructVFA(dfa, ios->getData(), lsize);
     executor->setVFA(vfa, 0);
+    executor->setQuery(query);
     ios->seek(0);
 
 #if (defined BENCH)

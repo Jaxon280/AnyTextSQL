@@ -9,7 +9,7 @@ void Codegen::add_preprocess() {
     code += "#include \"x86intrin.h\"\n\n";
 
     code += "#define ST_TYPE uint8_t\n";
-    code += "#define SIMD_TYPE __m128i\n";
+    code += "#define SIMD_TEXTTYPE __m128i\n";
     code += "#define SIMD_BYTES 16\n";
     code += "#define NUMSTATES ";
     code += std::to_string(qlabels.size());
@@ -40,7 +40,7 @@ void Codegen::add_member() {
     code += "\t};\n";
     code += "\n";
     code += "\tVFALexer::Context ctx;\n";
-    code += "\tSIMD_TYPE simd_datas[NUMSTATES];\n";
+    code += "\tSIMD_TEXTTYPE simd_datas[NUMSTATES];\n";
     code += "\tint simd_sizes[NUMSTATES];\n";
     code += "\n";
     code += "\tuint8_t *data;\n";
@@ -74,7 +74,7 @@ void Codegen::add_cmpstr(Delta *d) {
     code += "\t\tsimd_datas[";
     code += q;
     code += "] = ";
-    code += "_mm_loadu_si128((SIMD_TYPE*)";
+    code += "_mm_loadu_si128((SIMD_TEXTTYPE*)";
     code += "str_q";
     code += q;
     code += ");\n";
@@ -121,7 +121,7 @@ void Codegen::add_lex() {
     code += "\tstd::vector<Token> lex() {\n";
     code += "\t\tstd::vector<Token> tokenVec;\n";
     code += "\t\tint r = 0;\n";
-    code += "\t\tSIMD_TYPE text;\n";
+    code += "\t\tSIMD_TEXTTYPE text;\n";
     code += "\n";
 
     for (int i = 0; i < qlabels.size(); i++) {
@@ -179,7 +179,7 @@ void Codegen::add_lex() {
 }
 
 void Codegen::add_intrisic(Qlabel &label, std::string q) {
-    code += "\t\ttext = _mm_loadu_si128((SIMD_TYPE*)(&data[i]));\n";
+    code += "\t\ttext = _mm_loadu_si128((SIMD_TEXTTYPE*)(&data[i]));\n";
     code += "\t\tr = _mm_cmpestri(simd_datas[";
     code += q;
     code += "], simd_sizes[";

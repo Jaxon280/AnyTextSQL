@@ -5,13 +5,14 @@
 #include "dfa.hpp"
 #include "executor.hpp"
 #include "ioStream.hpp"
+#include "query.hpp"
 
 #define PARTITION_SIZE (SIZE_TYPE)(1 << 30)  // 1024MB
 
 namespace vlex {
 class Vlex {
    public:
-    Vlex(std::string& filename, DFA& _dfa);
+    Vlex(std::string& filename, DFA& _dfa, QueryContext* _query);
     void construct(double lr);
     void iexec();
     void exec();
@@ -41,6 +42,7 @@ class Vlex {
     DFA& dfa;
 
     VectFA* vfa;
+    QueryContext* query;
     Executor* executor;
     ioStream* ios;
 
