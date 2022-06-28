@@ -6,7 +6,7 @@
 #include "x86intrin.h"
 
 #define ST_TYPE uint8_t
-#define SIMD_TYPE __m128i
+#define SIMD_TEXTTYPE __m128i
 #define SIMD_BYTES 16
 #define NUMSTATES 26
 
@@ -32,7 +32,7 @@ class VFALexer {
     };
 
     VFALexer::Context ctx;
-    SIMD_TYPE simd_datas[NUMSTATES];
+    SIMD_TEXTTYPE simd_datas[NUMSTATES];
     int simd_sizes[NUMSTATES];
 
     uint8_t *data;
@@ -55,74 +55,74 @@ class VFALexer {
 
         const uint8_t str_q2[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                     0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[2] = _mm_loadu_si128((SIMD_TYPE *)str_q2);
+        simd_datas[2] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q2);
         simd_sizes[2] = 2;
 
         const uint8_t str_q3[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                     0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[3] = _mm_loadu_si128((SIMD_TYPE *)str_q3);
+        simd_datas[3] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q3);
         simd_sizes[3] = 2;
 
         const uint8_t str_q4[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                     0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[4] = _mm_loadu_si128((SIMD_TYPE *)str_q4);
+        simd_datas[4] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q4);
         simd_sizes[4] = 2;
 
         const uint8_t str_q6[16] = {0, 34, 71, 0, 0, 0, 0, 0,
                                     0, 0,  0,  0, 0, 0, 0, 0};
-        simd_datas[6] = _mm_loadu_si128((SIMD_TYPE *)str_q6);
+        simd_datas[6] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q6);
         simd_sizes[6] = 3;
 
         const uint8_t str_q11[16] = {0, 34, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[11] = _mm_loadu_si128((SIMD_TYPE *)str_q11);
+        simd_datas[11] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q11);
         simd_sizes[11] = 2;
 
         const uint8_t str_q13[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[13] = _mm_loadu_si128((SIMD_TYPE *)str_q13);
+        simd_datas[13] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q13);
         simd_sizes[13] = 2;
 
         const uint8_t str_q14[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[14] = _mm_loadu_si128((SIMD_TYPE *)str_q14);
+        simd_datas[14] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q14);
         simd_sizes[14] = 2;
 
         const uint8_t str_q15[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[15] = _mm_loadu_si128((SIMD_TYPE *)str_q15);
+        simd_datas[15] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q15);
         simd_sizes[15] = 2;
 
         const uint8_t str_q16[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[16] = _mm_loadu_si128((SIMD_TYPE *)str_q16);
+        simd_datas[16] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q16);
         simd_sizes[16] = 2;
 
         const uint8_t str_q20[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[20] = _mm_loadu_si128((SIMD_TYPE *)str_q20);
+        simd_datas[20] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q20);
         simd_sizes[20] = 2;
 
         const uint8_t str_q21[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[21] = _mm_loadu_si128((SIMD_TYPE *)str_q21);
+        simd_datas[21] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q21);
         simd_sizes[21] = 2;
 
         const uint8_t str_q22[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[22] = _mm_loadu_si128((SIMD_TYPE *)str_q22);
+        simd_datas[22] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q22);
         simd_sizes[22] = 2;
 
         const uint8_t str_q23[16] = {0, 44, 0, 0, 0, 0, 0, 0,
                                      0, 0,  0, 0, 0, 0, 0, 0};
-        simd_datas[23] = _mm_loadu_si128((SIMD_TYPE *)str_q23);
+        simd_datas[23] = _mm_loadu_si128((SIMD_TEXTTYPE *)str_q23);
         simd_sizes[23] = 2;
     }
 
     std::vector<Token> lex() {
         std::vector<Token> tokenVec;
         int r = 0;
-        SIMD_TYPE text;
+        SIMD_TEXTTYPE text;
 
     q1:
         if (i >= size) goto end;
@@ -139,7 +139,7 @@ class VFALexer {
                 break;
         }
     q2:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[2], simd_sizes[2], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -159,7 +159,7 @@ class VFALexer {
                 break;
         }
     q3:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[3], simd_sizes[3], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -179,7 +179,7 @@ class VFALexer {
                 break;
         }
     q4:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[4], simd_sizes[4], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -208,7 +208,7 @@ class VFALexer {
                 break;
         }
     q6:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[6], simd_sizes[6], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -279,7 +279,7 @@ class VFALexer {
                 break;
         }
     q11:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[11], simd_sizes[11], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -311,7 +311,7 @@ class VFALexer {
                 break;
         }
     q13:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[13], simd_sizes[13], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -331,7 +331,7 @@ class VFALexer {
                 break;
         }
     q14:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[14], simd_sizes[14], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -351,7 +351,7 @@ class VFALexer {
                 break;
         }
     q15:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[15], simd_sizes[15], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -371,7 +371,7 @@ class VFALexer {
                 break;
         }
     q16:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[16], simd_sizes[16], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -423,7 +423,7 @@ class VFALexer {
                 break;
         }
     q20:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[20], simd_sizes[20], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -443,7 +443,7 @@ class VFALexer {
                 break;
         }
     q21:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[21], simd_sizes[21], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -463,7 +463,7 @@ class VFALexer {
                 break;
         }
     q22:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[22], simd_sizes[22], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
@@ -483,7 +483,7 @@ class VFALexer {
                 break;
         }
     q23:
-        text = _mm_loadu_si128((SIMD_TYPE *)(&data[i]));
+        text = _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
         r = _mm_cmpestri(simd_datas[23], simd_sizes[23], text, 16,
                          _SIDD_CMP_EQUAL_ANY);
         if (r == 16) {
