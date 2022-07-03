@@ -279,17 +279,17 @@ DFA generate_categories_stars_dfa() {
         for (int j = 0; j < 256; j++) {
             if (j == 34)
                 trans[i][j] = 0;
-            else if (j == 80)
-                trans[i][j] = 31;  // P
+            else if (j == 82)
+                trans[i][j] = 31;  // R
             else
                 trans[i][j] = 30;
         }
     trans[31][101] = 32;  // e
-    trans[32][114] = 33;  // r
-    trans[33][115] = 34;  // s
-    trans[34][105] = 35;  // i
-    trans[35][97] = 36;   // a
-    trans[36][110] = 37;  // n
+    trans[32][115] = 33;  // s
+    trans[33][116] = 34;  // t
+    trans[34][97] = 35;   // a
+    trans[35][117] = 36;  // u
+    trans[36][114] = 37;  // r
     for (int i = 0; i < 256; i++) {
         if (i == 34)
             trans[37][i] = 38;

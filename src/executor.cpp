@@ -144,6 +144,14 @@ void Executor::setQuery(QueryContext *query) {
     }
 
     selectionVector = new int[VECEX_BYTE];
+
+    QueryContext::Projection proj = query->getProjection();
+    numProjKeys = proj.columns.size();
+
+    aggContext = query->getAggregation();
+    agg.i = 0;
+
+    limit = query->getLimit();
 }
 
 inline void Executor::cmpestri_ord(ST_TYPE cur_state) {
@@ -271,6 +279,7 @@ inline void Executor::resetContext() {
 void Executor::vmaterialize() {
     for (int s = 0; s < subMatchSize; s++) {
         // todo: not materialization for key only used in projection/aggregation
+        SIMD_256iTYPE base = _mm256_set1_epi64x((int64_t)data);
         switch (keyTypes[s]) {
             case DOUBLE:
                 for (int ti = 0; ti < VECEX_BYTE; ti++) {
@@ -291,6 +300,15 @@ void Executor::vmaterialize() {
                 }
                 break;
             case TEXT:
+                for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
+                    SIMD_128iTYPE offsets = _mm_load_si128(
+                        reinterpret_cast<SIMD_128iTYPE *>(&indexes[s][ti]));
+                    SIMD_256iTYPE adrs =
+                        _mm256_add_epi64(base, _mm256_cvtepi32_epi64(offsets));
+                    _mm256_store_si256(
+                        reinterpret_cast<SIMD_256iTYPE *>(&bufArray[s][ti]),
+                        adrs);
+                }
                 break;
             default:
                 break;
@@ -308,13 +326,21 @@ void Executor::vevalPreds() {
             prede.evaluate(&predTrees[sk], bufArray);
         } else if (predTypes[sk] == TEXT) {
             PredVEvaluator<DATA_TYPE *> prede(predMasks[sk]);
-            prede.evaluateText(&predTrees[sk], data, indexes, sizes);
+            prede.evaluateText(&predTrees[sk], bufArray, sizes);
         }
     }
 }
 
 void Executor::veval() {
     int svi = 0;
+    if (numPreds == 0) {
+        for (int i = 0; i < VECEX_BYTE; i++) {
+            selectionVector[i] = i;
+        }
+        selVecSize = VECEX_BYTE;
+        return;
+    }
+
     for (int i = 0; i < VECEX_BYTE4; i++) {
         // todo: design a predicate tree for DNF
 
@@ -412,44 +438,213 @@ inline void Executor::vselection() {
 }
 
 void Executor::projection() {
-    if (true) {
-        // no operation
-        DATA_TYPE buf[VECEX_BYTE];
-        for (int si = 0; si < selVecSize; si++) {
-            printf("| ");
-            for (int k = 0; k < 1; k++) {
-                if (keyTypes[k] == DOUBLE) {
-                    printf("%lf | ", bufArray[k][selectionVector[si]].d);
-                } else if (keyTypes[k] == INT) {
-                    printf("%ld | ", bufArray[k][selectionVector[si]].i);
-                } else if (keyTypes[k] == TEXT) {
-                    buf[sizes[k][si]] = (DATA_TYPE)0;
-                    memcpy(buf, &data[indexes[k][si]], sizes[k][si]);
-                    printf("%s | ", buf);
-                }
+    DATA_TYPE buf[VECEX_BYTE];
+
+    for (int si = 0; si < selVecSize; si++) {
+        printf("| ");
+        for (int k = 0; k < numProjKeys; k++) {
+            if (keyTypes[k] == DOUBLE) {
+                printf("%lf | ", bufArray[k][selectionVector[si]].d);
+            } else if (keyTypes[k] == INT) {
+                printf("%ld | ", bufArray[k][selectionVector[si]].i);
+            } else if (keyTypes[k] == TEXT) {
+                buf[sizes[k][si]] = (DATA_TYPE)0;
+                memcpy(buf, bufArray[k][selectionVector[si]].p,
+                       sizes[k][selectionVector[si]]);
+                printf("%s | ", buf);
             }
-            printf("\n");
         }
+        printf("\n");
+    }
+}
+
+void Executor::aggregation0() {
+    int k = aggContext->valueKeys[0].first;
+    if (aggContext->func == SUM) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            agg.d += bufArray[k][sv].d;
+        }
+    } else if (aggContext->func == COUNT) {
+        aggCount += selVecSize;
+    } else if (aggContext->func == AVG) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            agg.d += bufArray[k][sv].d;
+        }
+        aggCount += selVecSize;
+    } else if (aggContext->func == MAX) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            agg.d = ((agg.d > bufArray[k][sv].d) ? agg.d : bufArray[k][sv].d);
+        }
+    } else if (aggContext->func == MIN) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            agg.d = ((agg.d < bufArray[k][sv].d) ? agg.d : bufArray[k][sv].d);
+        }
+    }
+}
+
+void Executor::aggregation1() {
+    int k = aggContext->keys[0];
+    std::pair<int, AggFuncType> vk = aggContext->valueKeys[0];
+    int aggVSize = aggContext->valueKeys.size();
+
+    // in the most simple case...
+    if (vk.second == SUM) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            // todo: UTF-8
+            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
+                          sizes[k][sv]);
+            if (aggMap.find(s) == aggMap.end()) {
+                aggMap[s].d = bufArray[vk.first][sv].d;
+            } else {
+                aggMap[s].d += bufArray[vk.first][sv].d;
+            }
+        }
+    } else if (vk.second == AVG) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            // todo: UTF-8
+            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
+                          sizes[k][sv]);
+            if (aggMap.find(s) == aggMap.end()) {
+                aggCountMap[s] = 1;
+                aggMap[s].d = bufArray[vk.first][sv].d;
+            } else {
+                aggCountMap[s]++;
+                aggMap[s].d += bufArray[vk.first][sv].d;
+            }
+        }
+    } else if (vk.second == COUNT) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            // todo: UTF-8
+            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
+                          sizes[k][sv]);
+            if (aggMap.find(s) == aggMap.end()) {
+                aggCountMap[s] = 1;
+            } else {
+                aggCountMap[s]++;
+            }
+        }
+    } else if (vk.second == MAX) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            // todo: UTF-8
+            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
+                          sizes[k][sv]);
+            if (aggMap.find(s) != aggMap.end()) {
+                aggMap[s].d = ((aggMap[s].d > bufArray[vk.first][sv].d)
+                                   ? aggMap[s].d
+                                   : bufArray[vk.first][sv].d);
+            }
+        }
+    } else if (vk.second == MIN) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            // todo: UTF-8
+            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
+                          sizes[k][sv]);
+            if (aggMap.find(s) != aggMap.end()) {
+                aggMap[s].d = ((aggMap[s].d < bufArray[vk.first][sv].d)
+                                   ? aggMap[s].d
+                                   : bufArray[vk.first][sv].d);
+            }
+        }
+    } else if (vk.second == DISTINCT) {
+        for (int si = 0; si < selVecSize; si++) {
+            int sv = selectionVector[si];
+            // todo: UTF-8
+            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
+                          sizes[k][sv]);
+            if (aggMap.find(s) != aggMap.end()) {
+                aggCountMap[s] = 1;
+            }
+        }
+    }
+}
+
+void Executor::aggregation() {
+    int aggSize = aggContext->keys.size();
+    if (aggSize > 1) {
+        // todo: multiple keys
+    } else if (aggSize == 1) {
+        aggregation1();
     } else {
+        aggregation0();
     }
 }
 
 void Executor::queryVExec() {
     vmaterialize();
     vselection();
-    // projection();
-    count += selVecSize;
-
-    // for (int si = 0; si < selVecSize; si += 4) {
-    //     // int s = selectionVector[si];
-    //     SIMD_128iTYPE sv = _mm_load_epi32(&selectionVector[si]);
-    //     SIMD_256iTYPE b = _mm256_i32gather_epi64(bufArray[k], sv, 1);
-
-    //     // proj/aggr
-    // }
+    if (numProjKeys > 0) {
+        projection();
+    } else {
+        aggregation();
+    }
 
     tid = 0;
-    vtid++;  // debug
+}
+
+void Executor::printAggregation0() {
+    if (aggContext->func == COUNT) {
+        printf("| %ld |\n", aggCount);
+    } else if (aggContext->func == AVG) {
+        printf("| %lf |\n", agg.d / aggCount);
+    } else {
+        printf("| %lf |\n", agg.d);
+    }
+}
+
+void Executor::printAggregation1() {
+    std::unordered_map<std::string, data64>::iterator lastMapItr =
+        aggMap.begin();
+    std::unordered_map<std::string, int64_t>::iterator lastCountMapItr =
+        aggCountMap.begin();
+    if (limit) {
+        for (int li = 0; li < limit; li++) {
+            ++lastMapItr;
+            ++lastCountMapItr;
+        }
+    } else {
+        lastMapItr = aggMap.end();
+        lastCountMapItr = aggCountMap.end();
+    }
+
+    if (aggContext->valueKeys[0].second == COUNT) {
+        for (auto itr = aggCountMap.begin(); itr != lastCountMapItr; ++itr) {
+            printf("| %s | %ld |\n", itr->first.c_str(), itr->second);
+        }
+    } else if (aggContext->valueKeys[0].second == DISTINCT) {
+        for (auto itr = aggMap.begin(); itr != lastMapItr; ++itr) {
+            printf("| %s |\n", itr->first.c_str());
+        }
+    } else if (aggContext->valueKeys[0].second == AVG) {
+        for (auto itr = aggMap.begin(); itr != lastMapItr; ++itr) {
+            double c = (double)aggCountMap[itr->first];
+            printf("| %s | %lf |\n", itr->first.c_str(), (itr->second.d / c));
+        }
+    } else {
+        for (auto itr = aggMap.begin(); itr != lastMapItr; ++itr) {
+            printf("| %s | %lf |\n", itr->first.c_str(), itr->second.d);
+        }
+    }
+}
+
+void Executor::queryEndExec() {
+    if (numProjKeys > 0) {
+    } else {
+        if (aggContext->keys.size() > 1) {
+        } else if (aggContext->keys.size() == 1) {
+            printAggregation1();
+        } else {
+            printAggregation0();
+        }
+    }
 }
 
 // void Executor::materialize(int tsize) {
@@ -507,7 +702,8 @@ void Executor::queryVExec() {
 //         for (int ai = 1; ai < predANDsize; ai++) {
 //             SIMD_256TYPE maskOR = predMasks[preds[ai][0]];
 //             for (int oi = 1; oi < predORsize[ai]; oi++) {
-//                 maskOR = _mm256_or_si256(maskOR, predMasks[preds[ai][oi]]);
+//                 maskOR = _mm256_or_si256(maskOR,
+//                 predMasks[preds[ai][oi]]);
 //             }
 //             maskAND = _mm256_and_si256(maskAND, maskOR);
 //         }
@@ -648,6 +844,9 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
                         sizes[s][tid] = subMatches[s].end - subMatches[s].start;
                     }
                     tid++;
+                    if (tid == VECEX_BYTE) {
+                        queryVExec();
+                    }
 
                     i = ctx.recentAcceptIndex + 1;
                 }
@@ -659,15 +858,11 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
             ctx.recentAcceptState = ctx.currentState;
             ctx.recentAcceptIndex = i;
         }
-
-        if (tid == VECEX_BYTE) {
-            queryVExec();
-        } else if (i >= size) {
-            // queryExec(tid);
-            // todo: add non-vectorized execution
-            break;
-        }
     }
+
+    // queryExec(tid);
+    // todo: add non-vectorized execution
+    queryEndExec();
 
 #if (defined BENCH)
     gettimeofday(&lex2, NULL);
@@ -675,7 +870,4 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
         (lex2.tv_sec - lex1.tv_sec) + (lex2.tv_usec - lex1.tv_usec) * 0.000001;
     printf("#BENCH_exec: %lf s\n\n", ex_time);
 #endif
-
-    printf("count: %d\n", count);
-    printf("vec count: %d\n", vtid);
 }

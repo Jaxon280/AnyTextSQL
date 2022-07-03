@@ -2,6 +2,41 @@
 
 using namespace vlex;
 
+QueryContext generate_stars_by_category_query() {
+    QueryContext::Selection sel;
+    sel.isCNF = true;
+    sel.numPreds = 1;
+    sel.preds = {{0}};
+    sel.predTypes = {DOUBLE};
+
+    QueryContext::OpTree optree1;
+    optree1.type = DOUBLE;
+    optree1.evalType = OP;
+    optree1.opType = GREATEQ;
+    optree1.left = new QueryContext::OpTree;
+    optree1.left->evalType = VAR;
+    optree1.left->varKey = 0;
+    optree1.right = new QueryContext::OpTree;
+    optree1.right->evalType = CONST;
+    optree1.right->constData.d = 3.0;
+
+    sel.predTrees = {optree1};
+
+    QueryContext::Aggregation agg;
+    agg.keys = {1};
+    agg.valueKeys = {std::make_pair<int, AggFuncType>(0, AVG)};
+
+    QueryContext::Projection proj;
+    proj.columns = {};
+
+    std::vector<Type> types = {DOUBLE, TEXT};
+
+    int limit = 30;
+
+    QueryContext query(sel, agg, proj, limit, types);
+    return query;
+}
+
 QueryContext generate_businessid_query() {
     QueryContext::Selection sel;
     sel.isCNF = true;
@@ -21,9 +56,17 @@ QueryContext generate_businessid_query() {
 
     sel.predTrees = {optree1};
 
+    QueryContext::Aggregation agg;
+    agg.func = COUNT;
+    agg.keys = {};
+    agg.valueKeys = {std::make_pair<int, AggFuncType>(0, COUNT)};
+
+    QueryContext::Projection proj;
+    proj.columns = {};
+
     std::vector<Type> types = {TEXT};
 
-    QueryContext query(sel, types);
+    QueryContext query(sel, agg, proj, types);
     return query;
 }
 
@@ -101,67 +144,50 @@ QueryContext generate_stars_query_complicate() {
 
     sel.predTrees = {optree1, optree2, optree3, optree4, optree5, optree6};
 
+    QueryContext::Aggregation agg;
+    agg.func = COUNT;
+    agg.keys = {};
+    agg.valueKeys = {std::make_pair<int, AggFuncType>(0, COUNT)};
+
+    QueryContext::Projection proj;
+    proj.columns = {};
+
     std::vector<Type> types = {DOUBLE};
 
-    QueryContext query(sel, types);
+    QueryContext query(sel, agg, proj, types);
     return query;
 }
 
 QueryContext generate_stars_query() {
     QueryContext::Selection sel;
     sel.isCNF = true;
-    sel.numPreds = 2;
-    sel.preds = {{0, 1}};
-    sel.predTypes = {DOUBLE, DOUBLE};
+    sel.numPreds = 1;
+    sel.preds = {{0}};
+    sel.predTypes = {DOUBLE};
 
     QueryContext::OpTree optree1;
     optree1.type = DOUBLE;
     optree1.evalType = OP;
-    optree1.opType = EQUAL;
+    optree1.opType = GREATER;
     optree1.left = new QueryContext::OpTree;
     optree1.left->evalType = VAR;
     optree1.left->varKey = 0;
     optree1.right = new QueryContext::OpTree;
     optree1.right->evalType = CONST;
-    optree1.right->constData.d = 0.1;
+    optree1.right->constData.d = 4.5;
 
-    QueryContext::OpTree optree2;
-    optree2.type = DOUBLE;
-    optree2.evalType = OP;
-    optree2.opType = GREATER;
-    optree2.left = new QueryContext::OpTree;
-    optree2.left->evalType = VAR;
-    optree2.left->varKey = 0;
+    sel.predTrees = {optree1};
 
-    optree2.right = new QueryContext::OpTree;
-    optree2.right->evalType = OP;
-    optree2.right->opType = MUL;
-    optree2.right->type = DOUBLE;
-    optree2.right->left = new QueryContext::OpTree;
-    optree2.right->right = new QueryContext::OpTree;
-    optree2.right->left->evalType = VAR;
-    optree2.right->left->varKey = 0;
-    optree2.right->right->evalType = CONST;
-    optree2.right->right->constData.d = 0.5;
+    QueryContext::Aggregation agg;
+    agg.func = AVG;
+    agg.keys = {};
+    agg.valueKeys = {std::make_pair<int, AggFuncType>(0, AVG)};
 
-    // optree2.right->left = new QueryContext::OpTree;
-    // optree2.right->right = new QueryContext::OpTree;
-    // optree2.right->left->left = new QueryContext::OpTree;
-    // optree2.right->left->right = new QueryContext::OpTree;
-    // optree2.right->left->evalType = OP;
-    // optree2.right->left->opType = ADD;
-    // optree2.right->left->type = DOUBLE;
-    // optree2.right->left->left->evalType = VAR;
-    // optree2.right->left->left->varKey = 0;
-    // optree2.right->left->right->evalType = CONST;
-    // optree2.right->left->right->constData.d = 0.5;
-    // optree2.right->right->evalType = CONST;
-    // optree2.right->right->constData.d = 0.5;
-
-    sel.predTrees = {optree1, optree2};
+    QueryContext::Projection proj;
+    proj.columns = {};
 
     std::vector<Type> types = {DOUBLE};
 
-    QueryContext query(sel, types);
+    QueryContext query(sel, agg, proj, types);
     return query;
 }

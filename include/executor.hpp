@@ -80,12 +80,15 @@ class Executor {
     int *selectionVector;  // array of selected tupleid
     int selVecSize;
 
-    int numProjKeys;
-    int *projKeys;
-    Type *projTypes;
+    int numProjKeys;  // selected keys are 0, 1, ..., n - 1
 
-    int count = 0;  // for debug
-    int vtid = 0;   // for debug
+    QueryContext::Aggregation *aggContext;
+    std::unordered_map<std::string, data64> aggMap;
+    std::unordered_map<std::string, int64_t> aggCountMap;
+    data64 agg;
+    int64_t aggCount = 0;
+
+    int limit = 0;
 
     inline void cmpestri_ord(ST_TYPE cur_state);
     inline void cmpestri_any(ST_TYPE cur_state);
@@ -101,10 +104,16 @@ class Executor {
     void veval();
     void vselection();
     void projection();
+    void aggregation0();
+    void aggregation1();
+    void aggregation();
     void queryVExec();
     void materialize(int tsize);
     void selection(int tsize);
     void queryExec(int tsize);
+    void printAggregation0();
+    void printAggregation1();
+    void queryEndExec();
 
    public:
     Executor();
