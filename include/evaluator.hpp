@@ -544,8 +544,8 @@ class PredVEvaluator {
         }
     }
 
-    void evaluateText(QueryContext::OpTree *tree, DATA_TYPE *data,
-                      SIZE_TYPE **indexes, SIZE_TYPE **sizes) {
+    void evaluateText(QueryContext::OpTree *tree, data64 **bufArray,
+                      SIZE_TYPE **sizes) {
         // todo: add to comparison for string over 32 characters
         int lk = tree->left->varKey;
         switch (tree->opType) {
@@ -555,40 +555,40 @@ class PredVEvaluator {
                     for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
                         SIMD_256iTYPE vl0 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti]]));
+                                bufArray[lk][ti].p));
                         SIMD_256iTYPE vr0 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti]]));
+                                bufArray[rk][ti].p));
                         SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, vr0);
                         int64_t vi0 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v0) | (1 << 31));
 
                         SIMD_256iTYPE vl1 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 1]]));
+                                bufArray[lk][ti + 1].p));
                         SIMD_256iTYPE vr1 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti + 1]]));
+                                bufArray[rk][ti + 1].p));
                         SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, vr1);
                         int64_t vi1 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v1) | (1 << 31));
 
                         SIMD_256iTYPE vl2 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 2]]));
+                                bufArray[lk][ti + 2].p));
                         SIMD_256iTYPE vr2 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti + 2]]));
+                                bufArray[rk][ti + 2].p));
                         SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, vr2);
                         int64_t vi2 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v2) | (1 << 31));
 
                         SIMD_256iTYPE vl3 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 3]]));
+                                bufArray[lk][ti + 3].p));
                         SIMD_256iTYPE vr3 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti + 3]]));
+                                bufArray[rk][ti + 3].p));
                         SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, vr3);
                         int64_t vi3 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v3) | (1 << 31));
@@ -608,28 +608,28 @@ class PredVEvaluator {
                     for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
                         SIMD_256iTYPE vl0 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti]]));
+                                bufArray[lk][ti].p));
                         SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, cr);
                         int64_t vi0 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v0) | (1 << 31));
 
                         SIMD_256iTYPE vl1 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 1]]));
+                                bufArray[lk][ti + 1].p));
                         SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, cr);
                         int64_t vi1 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v1) | (1 << 31));
 
                         SIMD_256iTYPE vl2 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 2]]));
+                                bufArray[lk][ti + 2].p));
                         SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, cr);
                         int64_t vi2 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v2) | (1 << 31));
 
                         SIMD_256iTYPE vl3 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 3]]));
+                                bufArray[lk][ti + 3].p));
                         SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, cr);
                         int64_t vi3 = (int64_t)__builtin_ffs(
                             ~_mm256_movemask_epi8(v3) | (1 << 31));
@@ -650,10 +650,10 @@ class PredVEvaluator {
                     for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
                         SIMD_256iTYPE vl0 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti]]));
+                                bufArray[lk][ti].p));
                         SIMD_256iTYPE vr0 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti]]));
+                                bufArray[rk][ti].p));
                         SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, vr0);
                         int64_t vi0 =
                             (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v0) |
@@ -662,10 +662,10 @@ class PredVEvaluator {
 
                         SIMD_256iTYPE vl1 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 1]]));
+                                bufArray[lk][ti + 1].p));
                         SIMD_256iTYPE vr1 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti + 1]]));
+                                bufArray[rk][ti + 1].p));
                         SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, vr1);
                         int64_t vi1 =
                             (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v1) |
@@ -674,10 +674,10 @@ class PredVEvaluator {
 
                         SIMD_256iTYPE vl2 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 2]]));
+                                bufArray[lk][ti + 2].p));
                         SIMD_256iTYPE vr2 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti + 2]]));
+                                bufArray[rk][ti + 2].p));
                         SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, vr2);
                         int64_t vi2 =
                             (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v2) |
@@ -686,10 +686,10 @@ class PredVEvaluator {
 
                         SIMD_256iTYPE vl3 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 3]]));
+                                bufArray[lk][ti + 3].p));
                         SIMD_256iTYPE vr3 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[rk][ti + 3]]));
+                                bufArray[rk][ti + 3].p));
                         SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, vr3);
                         int64_t vi3 =
                             (int64_t)__builtin_ffs(
@@ -711,7 +711,7 @@ class PredVEvaluator {
                     for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
                         SIMD_256iTYPE vl0 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti]]));
+                                bufArray[lk][ti].p));
                         SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, cr);
                         int64_t vi0 =
                             (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v0) |
@@ -720,7 +720,7 @@ class PredVEvaluator {
 
                         SIMD_256iTYPE vl1 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 1]]));
+                                bufArray[lk][ti + 1].p));
                         SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, cr);
                         int64_t vi1 =
                             (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v1) |
@@ -729,7 +729,7 @@ class PredVEvaluator {
 
                         SIMD_256iTYPE vl2 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 2]]));
+                                bufArray[lk][ti + 2].p));
                         SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, cr);
                         int64_t vi2 =
                             (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v2) |
@@ -738,7 +738,7 @@ class PredVEvaluator {
 
                         SIMD_256iTYPE vl3 = _mm256_loadu_si256(
                             reinterpret_cast<SIMD_256iuTYPE *>(
-                                &data[indexes[lk][ti + 3]]));
+                                bufArray[lk][ti + 3].p));
                         SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, cr);
                         int64_t vi3 =
                             (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v3) |
