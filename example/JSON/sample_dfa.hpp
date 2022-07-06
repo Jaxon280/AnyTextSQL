@@ -306,3 +306,73 @@ DFA generate_categories_stars_dfa() {
     DFA dfa = DFA(trans, acceptStates, smsVec, stateSize);
     return dfa;
 }
+
+DFA generate_states_stars_dfa() {
+    int stateSize = 25;
+
+    std::vector<std::vector<ST_TYPE>> trans(
+        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
+    std::set<ST_TYPE> acceptStates;
+    acceptStates.insert(24);
+
+    for (int i = INIT_STATE; i < 10; i++)
+        for (int j = 0; j < 256; j++) trans[i][j] = INIT_STATE;
+
+    trans[INIT_STATE][34] = 2;  // "
+    trans[2][115] = 3;          // s
+    trans[3][116] = 4;          // t
+    trans[4][97] = 5;           // a
+    trans[5][114] = 6;          // t
+    trans[6][115] = 7;          // e
+    trans[7][34] = 8;           // "
+    trans[8][58] = 9;           // :
+    trans[9][34] = 10;          // "
+    for (int i = 2; i < 7; i++) {
+        trans[i][34] = 2;  // "
+    }
+    trans[8][34] = 2;
+    trans[8][115] = 3;
+
+    for (int j = 0; j < 256; j++) {
+        trans[10][j] = 10;
+    }
+    trans[10][34] = 11;  // "
+    trans[11][44] = 12;
+
+    for (int i = 12; i < 20; i++)
+        for (int j = 0; j < 256; j++) trans[i][j] = 12;
+    trans[12][34] = 13;   // "
+    trans[13][115] = 14;  // s
+    trans[14][116] = 15;  // t
+    trans[15][97] = 16;   // a
+    trans[16][114] = 17;  // r
+    trans[17][115] = 18;  // s
+    trans[18][34] = 19;   // "
+    trans[19][58] = 20;   // :
+
+    for (int i = 13; i < 18; i++) {
+        trans[i][34] = 13;  // "
+    }
+    trans[19][34] = 13;   // "
+    trans[19][115] = 14;  // s
+
+    for (int j = 48; j < 58; j++) {
+        trans[20][j] = 21;
+        trans[21][j] = 21;
+    }
+    trans[21][46] = 22;
+    for (int j = 48; j < 58; j++) {
+        trans[22][j] = 23;
+        trans[23][j] = 23;
+    }
+    trans[23][44] = 24;
+
+    std::vector<DFA::SubMatchStates> smsVec;
+    DFA::SubMatchStates sms1(10, true, 11, false);
+    smsVec.push_back(sms1);
+    DFA::SubMatchStates sms2(20, false, 23, true);
+    smsVec.push_back(sms2);
+
+    DFA dfa = DFA(trans, acceptStates, smsVec, stateSize);
+    return dfa;
+}

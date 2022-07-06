@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "converter.hpp"
 #include "evaluator.hpp"
+#include "hashMap.hpp"
 #include "interface.hpp"
 #include "query.hpp"
 
@@ -70,23 +71,28 @@ class Executor {
     Type *keyTypes;
 
     int numPreds;
-    int predANDsize;                  // num of AND preds
-    int *predORsize;                  // AND -> num of OR preds
-    int **preds;                      // described in CNF. AND * OR -> pred_id
-    SIMD_256iTYPE **predMasks;        // pred_id * tupleid -> mask
+    int predANDsize;  // num of AND preds
+    int *predORsize;  // AND -> num of OR preds
+    int **preds;      // described in CNF. AND * OR -> pred_id
+    // SIMD_256iTYPE **predMasks;        // pred_id * tupleid -> mask
+    uint8_t **predMasks;
+    uint16_t *mask;
     QueryContext::OpTree *predTrees;  // pred_id -> tree
     Type *predTypes;                  // pred_id -> pred type
 
-    int *selectionVector;  // array of selected tupleid
-    int selVecSize;
+    uint32_t *tupleIds;
+    uint32_t *selectionVector;  // array of selected tupleid
+    int selVecSize = 0;
 
     int numProjKeys;  // selected keys are 0, 1, ..., n - 1
 
     QueryContext::Aggregation *aggContext;
-    std::unordered_map<std::string, data64> aggMap;
-    std::unordered_map<std::string, int64_t> aggCountMap;
-    data64 agg;
-    int64_t aggCount = 0;
+
+    AggregationValueMap *aggMap;
+    AggregationCountMap *aggCountMap;
+    data64 *agg;
+    int *aggCount;
+    int aggVSize;
 
     int limit = 0;
 
@@ -118,6 +124,7 @@ class Executor {
    public:
     Executor();
     Executor(VectFA *vfa, QueryContext *query, SIZE_TYPE _start);
+    ~Executor();
     void setVFA(VectFA *vfa, SIZE_TYPE _start);
     void setQuery(QueryContext *query);
     void exec(DATA_TYPE *_data, SIZE_TYPE size);

@@ -8,6 +8,8 @@ Executor::Executor(VectFA *vfa, QueryContext *query, SIZE_TYPE _start) {
     setQuery(query);
 }
 
+Executor::~Executor() {}
+
 void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     ctx.currentState = INIT_STATE;
     ctx.tokenStartIndex = _start, ctx.recentAcceptIndex = 0,
@@ -126,10 +128,11 @@ void Executor::setQuery(QueryContext *query) {
         // todo: add to DNF
     }
 
-    predMasks = new SIMD_256iTYPE *[numPreds];
+    predMasks = new uint8_t *[numPreds];
     for (int k = 0; k < numPreds; k++) {
-        predMasks[k] = new SIMD_256iTYPE[VECEX_BYTE4];
+        predMasks[k] = new (std::align_val_t{VECEX_SIZE}) uint8_t[VECEX_BYTE4];
     }
+    mask = new (std::align_val_t{VECEX_SIZE}) uint16_t[VECEX_BYTE16];
 
     predTypes = new Type[numPreds];
     predTrees = new QueryContext::OpTree[numPreds];
@@ -143,13 +146,46 @@ void Executor::setQuery(QueryContext *query) {
         bufArray[k] = new (std::align_val_t{VECEX_SIZE}) data64[VECEX_BYTE];
     }
 
-    selectionVector = new int[VECEX_BYTE];
+    tupleIds = new (std::align_val_t{VECEX_SIZE}) uint32_t[VECEX_BYTE];
+    for (int i = 0; i < VECEX_BYTE; i++) {
+        tupleIds[i] = i;
+    }
+    selectionVector = new uint32_t[VECEX_BYTE];
 
     QueryContext::Projection proj = query->getProjection();
     numProjKeys = proj.columns.size();
 
     aggContext = query->getAggregation();
-    agg.i = 0;
+
+    aggVSize = aggContext->valueKeys.size();
+    if (aggContext->keys.size() == 1) {
+        aggMap = new AggregationValueMap(aggContext->valueKeys.size());
+        aggCountMap = new AggregationCountMap(aggContext->valueKeys.size());
+    } else if (aggContext->keys.size() == 0) {
+        agg = new data64[aggVSize];
+        aggCount = new int[aggVSize];
+        for (int vk = 0; vk < aggVSize; vk++) {
+            AggFuncType ftype = aggContext->valueKeys[vk].ftype;
+            if (aggContext->valueKeys[vk].ktype == DOUBLE) {
+                if (ftype == MIN) {
+                    agg[vk].d = DBL_MAX;
+                } else if (ftype == MAX) {
+                    agg[vk].d = -DBL_MAX;
+                } else {
+                    agg[vk].d = 0.0;
+                }
+            } else if (aggContext->valueKeys[vk].ktype == INT) {
+                if (ftype == MIN) {
+                    agg[vk].i = INT64_MAX;
+                } else if (ftype == MAX) {
+                    agg[vk].i = INT64_MIN;
+                } else {
+                    agg[vk].d = 0;
+                }
+            }
+            aggCount[vk] = 0;
+        }
+    }
 
     limit = query->getLimit();
 }
@@ -341,95 +377,36 @@ void Executor::veval() {
         return;
     }
 
-    for (int i = 0; i < VECEX_BYTE4; i++) {
+    for (int i = 0; i < VECEX_BYTE; i += 64) {
         // todo: design a predicate tree for DNF
 
         // initialize mask
-        SIMD_256iTYPE maskAND = predMasks[preds[0][0]][i];
+        SIMD_512iTYPE maskAND = _mm512_load_si512(&predMasks[preds[0][0]][i]);
         for (int oi = 1; oi < predORsize[0]; oi++) {
-            maskAND = _mm256_or_si256(maskAND, predMasks[preds[0][oi]][i]);
+            SIMD_512iTYPE mor = _mm512_load_si512(&predMasks[preds[0][oi]][i]);
+            maskAND = _mm512_or_si512(maskAND, mor);
         }
 
         for (int ai = 1; ai < predANDsize; ai++) {
-            SIMD_256iTYPE maskOR = predMasks[preds[ai][0]][i];
+            SIMD_512iTYPE maskOR =
+                _mm512_load_si512(&predMasks[preds[ai][0]][i]);
             for (int oi = 1; oi < predORsize[ai]; oi++) {
-                maskOR = _mm256_or_si256(maskOR, predMasks[preds[ai][oi]][i]);
+                SIMD_512iTYPE mand =
+                    _mm512_load_si512(&predMasks[preds[ai][oi]][i]);
+                maskOR = _mm512_or_si512(maskOR, mand);
             }
-            maskAND = _mm256_and_si256(maskAND, maskOR);
+            maskAND = _mm512_and_si512(maskAND, maskOR);
         }
-        int r = _mm256_movemask_ps((SIMD_256TYPE)maskAND);
-        if (r == 0) {
-            continue;
-        }
-        switch (r) {
-            case 0b11:
-                selectionVector[svi++] = i * 4;
-                break;
-            case 0b1100:
-                selectionVector[svi++] = i * 4 + 1;
-                break;
-            case 0b110000:
-                selectionVector[svi++] = i * 4 + 2;
-                break;
-            case 0b11000000:
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            case 0b1111:
-                selectionVector[svi++] = i * 4;
-                selectionVector[svi++] = i * 4 + 1;
-                break;
-            case 0b110011:
-                selectionVector[svi++] = i * 4;
-                selectionVector[svi++] = i * 4 + 2;
-                break;
-            case 0b111100:
-                selectionVector[svi++] = i * 4 + 1;
-                selectionVector[svi++] = i * 4 + 2;
-                break;
-            case 0b11000011:
-                selectionVector[svi++] = i * 4;
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            case 0b11001100:
-                selectionVector[svi++] = i * 4 + 1;
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            case 0b11110000:
-                selectionVector[svi++] = i * 4 + 2;
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            case 0b111111:
-                selectionVector[svi++] = i * 4;
-                selectionVector[svi++] = i * 4 + 1;
-                selectionVector[svi++] = i * 4 + 2;
-                break;
-            case 0b11001111:
-                selectionVector[svi++] = i * 4;
-                selectionVector[svi++] = i * 4 + 1;
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            case 0b11110011:
-                selectionVector[svi++] = i * 4;
-                selectionVector[svi++] = i * 4 + 2;
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            case 0b11111100:
-                selectionVector[svi++] = i * 4 + 1;
-                selectionVector[svi++] = i * 4 + 2;
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            case 0b11111111:
-                selectionVector[svi++] = i * 4;
-                selectionVector[svi++] = i * 4 + 1;
-                selectionVector[svi++] = i * 4 + 2;
-                selectionVector[svi++] = i * 4 + 3;
-                break;
-            default:
-                break;
-        }
-        // Create selection vector(SV)
+
+        _mm512_store_si512(&mask[i >> 1], maskAND);
     }
-    selVecSize = svi;
+
+    for (int i = 0; i < VECEX_BYTE16; i++) {
+        SIMD_512iTYPE tids = _mm512_load_si512(&tupleIds[i << 4]);
+        _mm512_mask_compressstoreu_epi32(&selectionVector[selVecSize], mask[i],
+                                         tids);
+        selVecSize += _popcnt32(mask[i]);
+    }
 }
 
 inline void Executor::vselection() {
@@ -459,109 +436,163 @@ void Executor::projection() {
 }
 
 void Executor::aggregation0() {
-    int k = aggContext->valueKeys[0].first;
-    if (aggContext->func == SUM) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            agg.d += bufArray[k][sv].d;
-        }
-    } else if (aggContext->func == COUNT) {
-        aggCount += selVecSize;
-    } else if (aggContext->func == AVG) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            agg.d += bufArray[k][sv].d;
-        }
-        aggCount += selVecSize;
-    } else if (aggContext->func == MAX) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            agg.d = ((agg.d > bufArray[k][sv].d) ? agg.d : bufArray[k][sv].d);
-        }
-    } else if (aggContext->func == MIN) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            agg.d = ((agg.d < bufArray[k][sv].d) ? agg.d : bufArray[k][sv].d);
+    for (int vk = 0; vk < aggVSize; vk++) {
+        int vkk = aggContext->valueKeys[vk].key;
+        AggFuncType ftype = aggContext->valueKeys[vk].ftype;
+
+        if (aggContext->func == SUM) {
+            for (int si = 0; si < selVecSize; si++) {
+                int sv = selectionVector[si];
+                agg[vk].d += bufArray[vkk][sv].d;
+            }
+        } else if (aggContext->func == COUNT) {
+            aggCount[vk] += selVecSize;
+        } else if (aggContext->func == AVG) {
+            for (int si = 0; si < selVecSize; si++) {
+                int sv = selectionVector[si];
+                agg[vk].d += bufArray[vkk][sv].d;
+            }
+            aggCount[vk] += selVecSize;
+        } else if (aggContext->func == MAX) {
+            for (int si = 0; si < selVecSize; si++) {
+                int sv = selectionVector[si];
+                agg[vk].d =
+                    ((agg[vk].d > bufArray[vkk][sv].d) ? agg[vk].d
+                                                       : bufArray[vkk][sv].d);
+            }
+        } else if (aggContext->func == MIN) {
+            for (int si = 0; si < selVecSize; si++) {
+                int sv = selectionVector[si];
+                agg[vk].d =
+                    ((agg[vk].d < bufArray[vkk][sv].d) ? agg[vk].d
+                                                       : bufArray[vkk][sv].d);
+            }
         }
     }
 }
 
 void Executor::aggregation1() {
-    int k = aggContext->keys[0];
-    std::pair<int, AggFuncType> vk = aggContext->valueKeys[0];
-    int aggVSize = aggContext->valueKeys.size();
+    int kk = aggContext->keys[0];
 
-    // in the most simple case...
-    if (vk.second == SUM) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            // todo: UTF-8
-            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
-                          sizes[k][sv]);
-            if (aggMap.find(s) == aggMap.end()) {
-                aggMap[s].d = bufArray[vk.first][sv].d;
-            } else {
-                aggMap[s].d += bufArray[vk.first][sv].d;
+    for (int vk = 0; vk < aggVSize; vk++) {
+        int vkk = aggContext->valueKeys[vk].key;
+        AggFuncType ftype = aggContext->valueKeys[vk].ftype;
+        if (ftype == COUNT) {
+            for (int si = 0; si < selVecSize; si++) {
+                int sv = selectionVector[si];
+                // todo: UTF-8
+                std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                              sizes[kk][sv]);
+                if (!aggCountMap->find(s)) {
+                    aggCountMap->assign(s, aggContext);
+                }
+                aggCountMap->count(s, vk);
             }
-        }
-    } else if (vk.second == AVG) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            // todo: UTF-8
-            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
-                          sizes[k][sv]);
-            if (aggMap.find(s) == aggMap.end()) {
-                aggCountMap[s] = 1;
-                aggMap[s].d = bufArray[vk.first][sv].d;
-            } else {
-                aggCountMap[s]++;
-                aggMap[s].d += bufArray[vk.first][sv].d;
+        } else if (ftype == DISTINCT) {
+            for (int si = 0; si < selVecSize; si++) {
+                int sv = selectionVector[si];
+                // todo: UTF-8
+                std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                              sizes[kk][sv]);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
+                }
             }
-        }
-    } else if (vk.second == COUNT) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            // todo: UTF-8
-            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
-                          sizes[k][sv]);
-            if (aggMap.find(s) == aggMap.end()) {
-                aggCountMap[s] = 1;
-            } else {
-                aggCountMap[s]++;
+        } else if (aggContext->valueKeys[vk].ktype == DOUBLE) {
+            if (ftype == SUM) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                    }
+                    aggMap->sumDouble(s, bufArray[vkk][sv].d, vk);
+                }
+            } else if (ftype == AVG) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                        aggCountMap->assign(s, aggContext);
+                    }
+                    aggMap->sumDouble(s, bufArray[vkk][sv].d, vk);
+                    aggCountMap->count(s, vk);
+                }
+            } else if (ftype == MAX) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                    }
+                    aggMap->maxDouble(s, bufArray[vkk][sv].d, vk);
+                }
+            } else if (ftype == MIN) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                    }
+                    aggMap->minDouble(s, bufArray[vkk][sv].d, vk);
+                }
             }
-        }
-    } else if (vk.second == MAX) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            // todo: UTF-8
-            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
-                          sizes[k][sv]);
-            if (aggMap.find(s) != aggMap.end()) {
-                aggMap[s].d = ((aggMap[s].d > bufArray[vk.first][sv].d)
-                                   ? aggMap[s].d
-                                   : bufArray[vk.first][sv].d);
-            }
-        }
-    } else if (vk.second == MIN) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            // todo: UTF-8
-            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
-                          sizes[k][sv]);
-            if (aggMap.find(s) != aggMap.end()) {
-                aggMap[s].d = ((aggMap[s].d < bufArray[vk.first][sv].d)
-                                   ? aggMap[s].d
-                                   : bufArray[vk.first][sv].d);
-            }
-        }
-    } else if (vk.second == DISTINCT) {
-        for (int si = 0; si < selVecSize; si++) {
-            int sv = selectionVector[si];
-            // todo: UTF-8
-            std::string s(reinterpret_cast<char *>(bufArray[k][sv].p),
-                          sizes[k][sv]);
-            if (aggMap.find(s) != aggMap.end()) {
-                aggCountMap[s] = 1;
+        } else if (aggContext->valueKeys[vk].ktype == INT) {
+            if (ftype == SUM) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                    }
+                    aggMap->sumInt(s, bufArray[vkk][sv].i, vk);
+                }
+            } else if (ftype == AVG) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                        aggCountMap->assign(s, aggContext);
+                    }
+                    aggMap->sumInt(s, bufArray[vkk][sv].i, vk);
+                    aggCountMap->count(s, vk);
+                }
+            } else if (ftype == MAX) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                    }
+                    aggMap->maxInt(s, bufArray[vkk][sv].d, vk);
+                }
+            } else if (ftype == MIN) {
+                for (int si = 0; si < selVecSize; si++) {
+                    int sv = selectionVector[si];
+                    // todo: UTF-8
+                    std::string s(reinterpret_cast<char *>(bufArray[kk][sv].p),
+                                  sizes[kk][sv]);
+                    if (!aggMap->find(s)) {
+                        aggMap->assign(s, aggContext);
+                    }
+                    aggMap->minInt(s, bufArray[vkk][sv].d, vk);
+                }
             }
         }
     }
@@ -588,50 +619,68 @@ void Executor::queryVExec() {
     }
 
     tid = 0;
+    selVecSize = 0;
 }
 
 void Executor::printAggregation0() {
-    if (aggContext->func == COUNT) {
-        printf("| %ld |\n", aggCount);
-    } else if (aggContext->func == AVG) {
-        printf("| %lf |\n", agg.d / aggCount);
-    } else {
-        printf("| %lf |\n", agg.d);
+    for (int vk = 0; vk < aggVSize; vk++) {
+        AggFuncType ftype = aggContext->valueKeys[vk].ftype;
+        if (ftype == COUNT) {
+            printf("| %d |\n", aggCount[vk]);
+        } else if (aggContext->valueKeys[vk].ktype == DOUBLE) {
+            if (ftype == AVG) {
+                printf("| %lf |\n", agg[vk].d / aggCount[vk]);
+            } else {
+                printf("| %lf |\n", agg[vk].d);
+            }
+        } else if (aggContext->valueKeys[vk].ktype == INT) {
+            if (ftype == AVG) {
+                printf("| %lf |\n", (double)agg[vk].i / aggCount[vk]);
+            } else {
+                printf("| %ld |\n", agg[vk].i);
+            }
+        }
     }
 }
 
 void Executor::printAggregation1() {
-    std::unordered_map<std::string, data64>::iterator lastMapItr =
-        aggMap.begin();
-    std::unordered_map<std::string, int64_t>::iterator lastCountMapItr =
-        aggCountMap.begin();
+    AggregationValueMap::HTType &ht = aggMap->getHashTable();
+    AggregationCountMap::HTType &cht = aggCountMap->getHashTable();
+    auto begin = ht.begin();
+    auto end = ht.begin();
     if (limit) {
-        for (int li = 0; li < limit; li++) {
-            ++lastMapItr;
-            ++lastCountMapItr;
+        for (int i = 0; i < limit; i++) {
+            ++end;
         }
     } else {
-        lastMapItr = aggMap.end();
-        lastCountMapItr = aggCountMap.end();
+        end = ht.end();
     }
 
-    if (aggContext->valueKeys[0].second == COUNT) {
-        for (auto itr = aggCountMap.begin(); itr != lastCountMapItr; ++itr) {
-            printf("| %s | %ld |\n", itr->first.c_str(), itr->second);
+    for (auto it = begin; it != end; ++it) {
+        printf("| %s |", it->first.c_str());
+        for (int vk = 0; vk < aggVSize; vk++) {
+            AggFuncType ftype = aggContext->valueKeys[vk].ftype;
+            if (aggContext->valueKeys[vk].ftype == COUNT) {
+                printf(" %d |", cht.at(it->first)[vk]);
+            } else if (aggContext->valueKeys[vk].ftype == DISTINCT) {
+                break;
+            } else if (aggContext->valueKeys[vk].ktype == DOUBLE) {
+                if (ftype == AVG) {
+                    printf(" %lf |",
+                           ht.at(it->first)[vk].d / cht.at(it->first)[vk]);
+                } else {
+                    printf(" %lf |", ht.at(it->first)[vk].d);
+                }
+            } else if (aggContext->valueKeys[vk].ktype == INT) {
+                if (ftype == AVG) {
+                    printf(" %lf |",
+                           ht.at(it->first)[vk].i / cht.at(it->first)[vk]);
+                } else {
+                    printf(" %ld |", ht.at(it->first)[vk].i);
+                }
+            }
         }
-    } else if (aggContext->valueKeys[0].second == DISTINCT) {
-        for (auto itr = aggMap.begin(); itr != lastMapItr; ++itr) {
-            printf("| %s |\n", itr->first.c_str());
-        }
-    } else if (aggContext->valueKeys[0].second == AVG) {
-        for (auto itr = aggMap.begin(); itr != lastMapItr; ++itr) {
-            double c = (double)aggCountMap[itr->first];
-            printf("| %s | %lf |\n", itr->first.c_str(), (itr->second.d / c));
-        }
-    } else {
-        for (auto itr = aggMap.begin(); itr != lastMapItr; ++itr) {
-            printf("| %s | %lf |\n", itr->first.c_str(), itr->second.d);
-        }
+        printf("\n");
     }
 }
 
@@ -646,151 +695,6 @@ void Executor::queryEndExec() {
         }
     }
 }
-
-// void Executor::materialize(int tsize) {
-//     for (int s = 0; s < subMatchSize; s++) {
-//         // todo: not materialization for key only used in
-//         projection/aggregation switch (keyTypes[s]) {
-//             case DOUBLE:
-//                 for (int ti = 0; ti < tsize; ti++) {
-//                     DATA_TYPE *buf = loadBuf(s, ti);
-//                     double d = atof((char *)buf);
-//                     bufArray[s][ti].d = d;
-//                 }
-//                 break;
-//             case INT:
-//                 for (int ti = 0; ti < tsize; ti++) {
-//                     DATA_TYPE *buf = loadBuf(s, ti);
-//                     int64_t n = (int64_t)atoi((char *)buf);
-//                     bufArray[s][ti].i = n;
-//                 }
-//                 break;
-//             case TEXT:
-//                 break;
-//             default:
-//                 break;
-//         }
-//     }
-// }
-
-// void Executor::evalPreds() {
-//     for (int sk = 0; sk < numPreds; sk++) {
-//         if (predTypes[sk] == DOUBLE) {
-//             PredEvaluator<double> prede(predMasks[sk]);
-//             prede.evaluate(&predTrees[sk], bufArray);
-//         } else if (predTypes[sk] == INT) {
-//             PredEvaluator<int64_t> prede(predMasks[sk]);
-//             prede.evaluate(&predTrees[sk], bufArray);
-//         } else if (predTypes[sk] == TEXT) {
-//             PredEvaluator<DATA_TYPE *> prede(predMasks[sk]);
-//             prede.evaluateText(&predTrees[sk], data, indexes, sizes);
-//         }
-//     }
-// }
-
-// void Executor::eval(int tsize) {
-//     int svi = 0;
-//     for (int i = 0; i < tsize; i++) {
-//         // todo: design a predicate tree for DNF
-
-//         // initialize mask
-//         SIMD_256TYPE maskAND = predMasks[preds[0][0]];
-//         for (int oi = 1; oi < predORsize[0]; oi++) {
-//             maskAND = _mm256_or_si256(maskAND, predMasks[preds[0][oi]]);
-//         }
-
-//         for (int ai = 1; ai < predANDsize; ai++) {
-//             SIMD_256TYPE maskOR = predMasks[preds[ai][0]];
-//             for (int oi = 1; oi < predORsize[ai]; oi++) {
-//                 maskOR = _mm256_or_si256(maskOR,
-//                 predMasks[preds[ai][oi]]);
-//             }
-//             maskAND = _mm256_and_si256(maskAND, maskOR);
-//         }
-//         int r = _mm256_movemask_ps(maskAND);
-//         if (r == 0) {
-//             continue;
-//         }
-//         switch (r) {
-//             case 1:
-//                 selectionVector[svi++] = i * 4;
-//                 break;
-//             case 2:
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 break;
-//             case 4:
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 break;
-//             case 8:
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             case 3:
-//                 selectionVector[svi++] = i * 4;
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 break;
-//             case 5:
-//                 selectionVector[svi++] = i * 4;
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 break;
-//             case 6:
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 break;
-//             case 9:
-//                 selectionVector[svi++] = i * 4;
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             case 10:
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             case 12:
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             case 7:
-//                 selectionVector[svi++] = i * 4;
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 break;
-//             case 11:
-//                 selectionVector[svi++] = i * 4;
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             case 13:
-//                 selectionVector[svi++] = i * 4;
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             case 14:
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             case 15:
-//                 selectionVector[svi++] = i * 4;
-//                 selectionVector[svi++] = i * 4 + 1;
-//                 selectionVector[svi++] = i * 4 + 2;
-//                 selectionVector[svi++] = i * 4 + 3;
-//                 break;
-//             default:
-//                 break;
-//         }
-//         // Create selection vector(SV)
-//     }
-//     selVecSize = svi;
-// }
-
-// inline void Executor::selection(int tsize) {
-//     evalPreds(tsize);
-//     eval(tsize);
-// }
-
-// void Executor::queryExec(int tsize) {
-//     materialize(tsize);
-//     selection(tsize);
-// }
 
 void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
     data = _data, size = _size;

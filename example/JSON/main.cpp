@@ -12,7 +12,7 @@ using namespace vlex;
 int main(int argc, char* argv[]) {
     std::string filename = std::string(argv[1]);
 
-    DFA dfa = generate_businessid_dfa();
+    DFA dfa = generate_categories_stars_dfa();
 
 #if (defined BENCH)
     double ex_time = 0.0;
@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     gettimeofday(&lex1, NULL);
 #endif
 
-    QueryContext query = generate_businessid_query();
+    QueryContext query = generate_stars_by_category_query();
 
     Vlex vlex = Vlex(filename, dfa, &query);
     vlex.construct(0.002);

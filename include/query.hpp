@@ -49,8 +49,15 @@ class QueryContext {
     };
 
     struct Aggregation {
-        std::vector<int> keys;  // if key is projected, it is seen as DISTINCT
-        std::vector<std::pair<int, AggFuncType>> valueKeys;
+        struct ValueKey {
+            int key;
+            Type ktype;
+            AggFuncType ftype;
+        };
+
+        std::vector<int> keys;
+        std::vector<ValueKey> valueKeys;
+        AggFuncType func;
     };
 
     struct Projection {
@@ -63,7 +70,7 @@ class QueryContext {
     // Sort sort;
     Aggregation agg;
     // Having having;
-    std::vector<int> projColumns;
+    Projection proj;
 
     std::vector<Type> keyTypes;
     /*
@@ -79,9 +86,20 @@ class QueryContext {
     // LIMIT -> Selection -> Sort -> Aggregation -> Having -> Projection
    public:
     QueryContext() {}
-    QueryContext(Selection _sel, std::vector<Type> _keyTypes)
-        : sel(_sel), keyTypes(_keyTypes) {}
+    QueryContext(Selection _sel, Aggregation _agg, Projection _proj,
+                 std::vector<Type> _keyTypes)
+        : sel(_sel), keyTypes(_keyTypes), agg(_agg), proj(_proj) {}
+    QueryContext(Selection _sel, Aggregation _agg, Projection _proj, int _limit,
+                 std::vector<Type> _keyTypes)
+        : sel(_sel),
+          keyTypes(_keyTypes),
+          agg(_agg),
+          proj(_proj),
+          limit(_limit) {}
     inline Selection &getSelection() { return sel; }
+    inline Projection &getProjection() { return proj; }
+    inline Aggregation *getAggregation() { return &agg; }
     inline std::vector<Type> &getKeyTypes() { return keyTypes; }
+    inline int getLimit() { return limit; }
 };
 }  // namespace vlex

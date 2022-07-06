@@ -1,7 +1,7 @@
 # Compiler
 CXX = g++
-CPPFLAGS = -std=c++17 -O3 -flto -mavx2
-DEBUGFLAGS = -std=c++17 -O0 -g -flto -mavx2 -Wall -Wextra
+CPPFLAGS = -std=c++17 -O3 -flto -mavx512f -mavx512bw -mavx512vl
+DEBUGFLAGS = -std=c++17 -O0 -g -flto -mavx512f -mavx512bw -mavx512vl -Wall -Wextra
 BENCHFLAGS = -DBENCH
 INCLUDES = -I../../include
 FLAGS = $(BENCHFLAGS) $(INCLUDES)

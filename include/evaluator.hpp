@@ -12,155 +12,153 @@ class OpVEvaluator {
 
     void evalAdd(Value *lvalue, Value *rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE vr = _mm256_load_pd(&rvalue[i]);
-                SIMD_256dTYPE v = _mm256_add_pd(vl, vr);
-                _mm256_store_pd(&output[i], v);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE vr = _mm512_load_pd(&rvalue[i]);
+                SIMD_512dTYPE v = _mm512_add_pd(vl, vr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256iTYPE vl =
-                    _mm256_load_si256((SIMD_256iTYPE *)&lvalue[i]);
-                SIMD_256iTYPE vr =
-                    _mm256_load_si256((SIMD_256iTYPE *)&rvalue[i]);
-                SIMD_256iTYPE v = _mm256_add_epi64(vl, vr);
-                _mm256_store_si256((SIMD_256iTYPE *)&output[i], v);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+                SIMD_512iTYPE vr = _mm512_load_epi64(&rvalue[i]);
+                SIMD_512iTYPE v = _mm512_add_epi64(vl, vr);
+                _mm512_store_epi64(&output[i], v);
             }
         }
     }
 
     void evalSub(Value *lvalue, Value *rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE vr = _mm256_load_pd(&rvalue[i]);
-                SIMD_256dTYPE v = _mm256_sub_pd(vl, vr);
-                _mm256_store_pd(&output[i], v);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE vr = _mm512_load_pd(&rvalue[i]);
+                SIMD_512dTYPE v = _mm512_sub_pd(vl, vr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256iTYPE vl =
-                    _mm256_load_si256((SIMD_256iTYPE *)&lvalue[i]);
-                SIMD_256iTYPE vr =
-                    _mm256_load_si256((SIMD_256iTYPE *)&rvalue[i]);
-                SIMD_256iTYPE v = _mm256_sub_epi64(vl, vr);
-                _mm256_store_si256((SIMD_256iTYPE *)&output[i], v);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+                SIMD_512iTYPE vr = _mm512_load_epi64(&rvalue[i]);
+                SIMD_512iTYPE v = _mm512_sub_epi64(vl, vr);
+                _mm512_store_epi64(&output[i], v);
             }
         }
     }
 
     void evalMul(Value *lvalue, Value *rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE vr = _mm256_load_pd(&rvalue[i]);
-                SIMD_256dTYPE v = _mm256_mul_pd(vl, vr);
-                _mm256_store_pd(&output[i], v);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE vr = _mm512_load_pd(&rvalue[i]);
+                SIMD_512dTYPE v = _mm512_mul_pd(vl, vr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            // for (int i = 0; i < VECEX_BYTE; i += 4) {
-            //     SIMD_256iTYPE vl = _mm256_load_epi64(&lvalue[i]);
-            //     SIMD_256iTYPE vr = _mm256_load_epi64(&rvalue[i]);
-            //     SIMD_256iTYPE v = _mm256_mul_epi64(vl, vr);
-            //     _mm256_store_epi64(&output[i], v);
+            // for (int i = 0; i < VECEX_BYTE; i += 8) {
+            //     SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+            //     SIMD_512iTYPE vr = _mm512_load_epi64(&rvalue[i]);
+            //     SIMD_512iTYPE v = _mm512_mul_epi64(vl, vr);
+            //     _mm512_store_epi64(&output[i], v);
             // }
-            std::cout << "error: No instruction." << std::endl;
+
+            // todo: implement mul
         }
     }
 
     void evalDiv(Value *lvalue, Value *rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE vr = _mm256_load_pd(&rvalue[i]);
-                SIMD_256dTYPE v = _mm256_div_pd(vl, vr);
-                _mm256_store_pd(&output[i], v);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE vr = _mm512_load_pd(&rvalue[i]);
+                SIMD_512dTYPE v = _mm512_div_pd(vl, vr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            // for (int i = 0; i < VECEX_BYTE; i += 4) {
-            //     SIMD_256iTYPE vl = _mm256_load_epi64(&lvalue[i]);
-            //     SIMD_256iTYPE vr = _mm256_load_epi64(&rvalue[i]);
-            //     SIMD_256iTYPE v = _mm256_div_epi64(vl, vr);
-            //     _mm256_store_epi64(&output[i], v);
+            // for (int i = 0; i < VECEX_BYTE; i += 8) {
+            //     SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+            //     SIMD_512iTYPE vr = _mm512_load_epi64(&rvalue[i]);
+            //     SIMD_512iTYPE v = _mm512_add_epi64(vl, vr);
+            //     _mm512_store_epi64(&output[i], v);
             // }
-            std::cout << "error: No instruction." << std::endl;
+
+            // todo: implement div
         }
     }
 
     void evalAddConst(Value *lvalue, Value rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            SIMD_256dTYPE cr = _mm256_set1_pd(rvalue);
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE v = _mm256_add_pd(vl, cr);
-                _mm256_store_pd(&output[i], v);
+            SIMD_512dTYPE cr = _mm512_set1_pd(rvalue);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE v = _mm512_add_pd(vl, cr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            SIMD_256iTYPE cr = _mm256_set1_epi64x(rvalue);
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256iTYPE vl =
-                    _mm256_load_si256((SIMD_256iTYPE *)&lvalue[i]);
-                SIMD_256iTYPE v = _mm256_add_epi64(vl, cr);
-                _mm256_store_si256((SIMD_256iTYPE *)&output[i], v);
+            SIMD_512iTYPE cr = _mm512_set1_epi64(rvalue);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+                SIMD_512iTYPE v = _mm512_add_epi64(vl, cr);
+                _mm512_store_epi64(&output[i], v);
             }
         }
     }
 
     void evalSubConst(Value *lvalue, Value rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            SIMD_256dTYPE cr = _mm256_set1_pd(rvalue);
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE v = _mm256_sub_pd(vl, cr);
-                _mm256_store_pd(&output[i], v);
+            SIMD_512dTYPE cr = _mm512_set1_pd(rvalue);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE v = _mm512_add_pd(vl, cr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            SIMD_256iTYPE cr = _mm256_set1_epi64x(rvalue);
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256iTYPE vl =
-                    _mm256_load_si256((SIMD_256iTYPE *)&lvalue[i]);
-                SIMD_256iTYPE v = _mm256_sub_epi64(vl, cr);
-                _mm256_store_si256((SIMD_256iTYPE *)&output[i], v);
+            SIMD_512iTYPE cr = _mm512_set1_epi64(rvalue);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+                SIMD_512iTYPE v = _mm512_sub_epi64(vl, cr);
+                _mm512_store_epi64(&output[i], v);
             }
         }
     }
 
     void evalMulConst(Value *lvalue, Value rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            SIMD_256dTYPE cr = _mm256_set1_pd(rvalue);
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE v = _mm256_mul_pd(vl, cr);
-                _mm256_store_pd(&output[i], v);
+            SIMD_512dTYPE cr = _mm512_set1_pd(rvalue);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE v = _mm512_mul_pd(vl, cr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            // SIMD_256iTYPE cr = _mm256_set1_epi64x(rvalue);
-            // for (int i = 0; i < VECEX_BYTE; i += 4) {
-            //     SIMD_256iTYPE vl = _mm256_load_epi64(&lvalue[i]);
-            //     SIMD_256iTYPE v = _mm256_mul_epi64(vl, cr);
-            //     _mm256_store_epi64(&output[i], v);
+            // SIMD_512iTYPE cr = _mm512_set1_epi64(rvalue);
+            // for (int i = 0; i < VECEX_BYTE; i += 8) {
+            //     SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+            //     SIMD_512iTYPE v = _mm512_add_epi64(vl, cr);
+            //     _mm512_store_epi64(&output[i], v);
             // }
-            std::cout << "error: No instruction." << std::endl;
+
+            // todo: implement mul
         }
     }
 
     void evalDivConst(Value *lvalue, Value rvalue, Value *output) {
         if constexpr (std::is_same_v<Value, double>) {
-            SIMD_256dTYPE cr = _mm256_set1_pd(rvalue);
-            for (int i = 0; i < VECEX_BYTE; i += 4) {
-                SIMD_256dTYPE vl = _mm256_load_pd(&lvalue[i]);
-                SIMD_256dTYPE v = _mm256_div_pd(vl, cr);
-                _mm256_store_pd(&output[i], v);
+            SIMD_512dTYPE cr = _mm512_set1_pd(rvalue);
+            for (int i = 0; i < VECEX_BYTE; i += 8) {
+                SIMD_512dTYPE vl = _mm512_load_pd(&lvalue[i]);
+                SIMD_512dTYPE v = _mm512_div_pd(vl, cr);
+                _mm512_store_pd(&output[i], v);
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            // for (int i = 0; i < VECEX_BYTE; i += 4) {
-            //     SIMD_256iTYPE vl = _mm256_load_epi64(&lvalue[i]);
-            //     SIMD_256iTYPE vr = _mm256_load_epi64(&rvalue[i]);
-            //     SIMD_256iTYPE v = _mm256_div_epi64(vl, vr);
-            //     _mm256_store_epi64(&output[i], v);
+            // SIMD_512iTYPE cr = _mm512_set1_epi64(rvalue);
+            // for (int i = 0; i < VECEX_BYTE; i += 8) {
+            //     SIMD_512iTYPE vl = _mm512_load_epi64(&lvalue[i]);
+            //     SIMD_512iTYPE v = _mm512_add_epi64(vl, cr);
+            //     _mm512_store_epi64(&output[i], v);
             // }
-            std::cout << "error: No instruction." << std::endl;
+
+            // implement div
         }
     }
 
@@ -248,134 +246,98 @@ class OpVEvaluator {
 
 template <typename Value>
 class PredVEvaluator {
-    SIMD_256iTYPE *masks;
+    uint8_t *masks;
 
     void evalVar(Value *left, Value *right, OpType op) {
         if constexpr (std::is_same_v<Value, double>) {
             switch (op) {
                 case EQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256dTYPE vr = _mm256_load_pd(&right[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, vr, _CMP_EQ_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        SIMD_512dTYPE vr = _mm512_load_pd(&right[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, vr, _CMP_EQ_OQ);
                     }
                     break;
                 case NEQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256dTYPE vr = _mm256_load_pd(&right[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, vr, _CMP_NEQ_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        SIMD_512dTYPE vr = _mm512_load_pd(&right[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, vr, _CMP_NEQ_OQ);
                     }
                     break;
                 case LESS:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256dTYPE vr = _mm256_load_pd(&right[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, vr, _CMP_LT_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        SIMD_512dTYPE vr = _mm512_load_pd(&right[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, vr, _CMP_LT_OQ);
                     }
                     break;
                 case LESSEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256dTYPE vr = _mm256_load_pd(&right[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, vr, _CMP_LE_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        SIMD_512dTYPE vr = _mm512_load_pd(&right[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, vr, _CMP_LE_OQ);
                     }
                     break;
                 case GREATEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256dTYPE vr = _mm256_load_pd(&right[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, vr, _CMP_GE_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        SIMD_512dTYPE vr = _mm512_load_pd(&right[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, vr, _CMP_GE_OQ);
                     }
                     break;
                 case GREATER:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256dTYPE vr = _mm256_load_pd(&right[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, vr, _CMP_GT_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        SIMD_512dTYPE vr = _mm512_load_pd(&right[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, vr, _CMP_GT_OQ);
                     }
+                    break;
+                default:
                     break;
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            const SIMD_256iTYPE ones = _mm256_set1_epi64x(MAX_64BYTE);
             switch (op) {
                 case EQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE vr =
-                            _mm256_load_si256((SIMD_256iTYPE *)&right[ti << 2]);
-                        SIMD_256iTYPE v = _mm256_cmpeq_epi64(vl, vr);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        SIMD_512iTYPE vr = _mm512_load_epi64(&right[ti << 3]);
+                        masks[ti] = _mm512_cmpeq_epi64_mask(vl, vr);
                     }
                     break;
                 case NEQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE vr =
-                            _mm256_load_si256((SIMD_256iTYPE *)&right[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpeq_epi64(vl, vr);
-                        SIMD_256iTYPE v = _mm256_xor_si256(r1, ones);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        SIMD_512iTYPE vr = _mm512_load_epi64(&right[ti << 3]);
+                        masks[ti] = _mm512_cmpneq_epi64_mask(vl, vr);
                     }
                     break;
                 case LESS:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE vr =
-                            _mm256_load_si256((SIMD_256iTYPE *)&right[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpgt_epi64(vl, vr);
-                        SIMD_256iTYPE r2 = _mm256_cmpeq_epi64(vl, vr);
-                        SIMD_256iTYPE v =
-                            _mm256_xor_si256(_mm256_or_si256(r1, r2), ones);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        SIMD_512iTYPE vr = _mm512_load_epi64(&right[ti << 3]);
+                        masks[ti] = _mm512_cmplt_epi64_mask(vl, vr);
                     }
                     break;
                 case LESSEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE vr =
-                            _mm256_load_si256((SIMD_256iTYPE *)&right[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpgt_epi64(vl, vr);
-                        SIMD_256iTYPE v = _mm256_xor_si256(r1, ones);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        SIMD_512iTYPE vr = _mm512_load_epi64(&right[ti << 3]);
+                        masks[ti] = _mm512_cmple_epi64_mask(vl, vr);
                     }
                     break;
                 case GREATEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE vr =
-                            _mm256_load_si256((SIMD_256iTYPE *)&right[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpgt_epi64(vl, vr);
-                        SIMD_256iTYPE r2 = _mm256_cmpeq_epi64(vl, vr);
-                        SIMD_256iTYPE v = _mm256_or_si256(r1, r2);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        SIMD_512iTYPE vr = _mm512_load_epi64(&right[ti << 3]);
+                        masks[ti] = _mm512_cmpge_epi64_mask(vl, vr);
                     }
                     break;
                 case GREATER:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE vr =
-                            _mm256_load_si256((SIMD_256iTYPE *)&right[ti << 2]);
-                        SIMD_256iTYPE v = _mm256_cmpgt_epi64(vl, vr);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        SIMD_512iTYPE vr = _mm512_load_epi64(&right[ti << 3]);
+                        masks[ti] = _mm512_cmpgt_epi64_mask(vl, vr);
                     }
                     break;
                 default:
@@ -386,116 +348,82 @@ class PredVEvaluator {
 
     void evalConst(Value *left, Value right, OpType op) {
         if constexpr (std::is_same_v<Value, double>) {
-            SIMD_256dTYPE cr = _mm256_set1_pd(right);
+            SIMD_512dTYPE cr = _mm512_set1_pd(right);
             switch (op) {
                 case EQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, cr, _CMP_EQ_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, cr, _CMP_EQ_OQ);
                     }
                     break;
                 case NEQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, cr, _CMP_NEQ_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, cr, _CMP_NEQ_OQ);
                     }
                     break;
                 case LESS:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, cr, _CMP_LT_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, cr, _CMP_LT_OQ);
                     }
                     break;
                 case LESSEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, cr, _CMP_LE_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, cr, _CMP_LE_OQ);
                     }
                     break;
                 case GREATEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, cr, _CMP_GE_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, cr, _CMP_GE_OQ);
                     }
                     break;
                 case GREATER:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256dTYPE vl = _mm256_load_pd(&left[ti << 2]);
-                        SIMD_256TYPE v =
-                            (SIMD_256TYPE)_mm256_cmp_pd(vl, cr, _CMP_GT_OQ);
-                        _mm256_store_si256(&masks[ti], (SIMD_256iTYPE)v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512dTYPE vl = _mm512_load_pd(&left[ti << 3]);
+                        masks[ti] = _mm512_cmp_pd_mask(vl, cr, _CMP_GT_OQ);
                     }
-                    break;
-                default:
                     break;
             }
         } else if constexpr (std::is_same_v<Value, int64_t>) {
-            SIMD_256iTYPE cr = _mm256_set1_epi64x(right);
-            const SIMD_256iTYPE ones = _mm256_set1_epi64x(MAX_64BYTE);
+            SIMD_512iTYPE cr = _mm512_set1_epi64(right);
             switch (op) {
                 case EQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE v = _mm256_cmpeq_epi64(vl, cr);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        masks[ti] = _mm512_cmpeq_epi64_mask(vl, cr);
                     }
                     break;
                 case NEQUAL:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpeq_epi64(vl, cr);
-                        SIMD_256iTYPE v = _mm256_xor_si256(r1, ones);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        masks[ti] = _mm512_cmpneq_epi64_mask(vl, cr);
                     }
                     break;
                 case LESS:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpgt_epi64(vl, cr);
-                        SIMD_256iTYPE r2 = _mm256_cmpeq_epi64(vl, cr);
-                        SIMD_256iTYPE v =
-                            _mm256_xor_si256(_mm256_or_si256(r1, r2), ones);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        masks[ti] = _mm512_cmplt_epi64_mask(vl, cr);
                     }
                     break;
                 case LESSEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpgt_epi64(vl, cr);
-                        SIMD_256iTYPE v = _mm256_xor_si256(r1, ones);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        masks[ti] = _mm512_cmple_epi64_mask(vl, cr);
                     }
                     break;
                 case GREATEQ:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE r1 = _mm256_cmpgt_epi64(vl, cr);
-                        SIMD_256iTYPE r2 = _mm256_cmpeq_epi64(vl, cr);
-                        SIMD_256iTYPE v = _mm256_or_si256(r1, r2);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        masks[ti] = _mm512_cmpge_epi64_mask(vl, cr);
                     }
                     break;
                 case GREATER:
-                    for (int ti = 0; ti < VECEX_BYTE4; ti++) {
-                        SIMD_256iTYPE vl =
-                            _mm256_load_si256((SIMD_256iTYPE *)&left[ti << 2]);
-                        SIMD_256iTYPE v = _mm256_cmpgt_epi64(vl, cr);
-                        _mm256_store_si256(&masks[ti], v);
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        SIMD_512iTYPE vl = _mm512_load_epi64(&left[ti << 3]);
+                        masks[ti] = _mm512_cmpgt_epi64_mask(vl, cr);
                     }
                     break;
                 default:
@@ -505,7 +433,7 @@ class PredVEvaluator {
     }
 
    public:
-    PredVEvaluator(SIMD_256iTYPE *_masks) : masks(_masks) {}
+    PredVEvaluator(uint8_t *_masks) : masks(_masks) {}
     void evaluate(QueryContext::OpTree *tree, data64 **bufArray) {
         Value *lvalue;
         if (tree->left->evalType == OP) {
@@ -548,210 +476,94 @@ class PredVEvaluator {
                       SIZE_TYPE **sizes) {
         // todo: add to comparison for string over 32 characters
         int lk = tree->left->varKey;
+        int buf[8];
         switch (tree->opType) {
             case 0:
                 if (tree->right->evalType == VAR) {
                     int rk = tree->right->varKey;
-                    for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
-                        SIMD_256iTYPE vl0 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti].p));
-                        SIMD_256iTYPE vr0 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti].p));
-                        SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, vr0);
-                        int64_t vi0 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v0) | (1 << 31));
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        for (int tii = 0; tii < 8; tii++) {
+                            SIMD_256iTYPE vl = _mm256_loadu_si256(
+                                reinterpret_cast<SIMD_256iuTYPE *>(
+                                    bufArray[lk][tii].p));
+                            SIMD_256iTYPE vr = _mm256_loadu_si256(
+                                reinterpret_cast<SIMD_256iuTYPE *>(
+                                    bufArray[rk][tii].p));
+                            uint32_t v = _mm256_cmpeq_epi8_mask(vl, vr);
+                            buf[tii] = __builtin_ffs(~v | (1 << 31));
+                        }
 
-                        SIMD_256iTYPE vl1 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 1].p));
-                        SIMD_256iTYPE vr1 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti + 1].p));
-                        SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, vr1);
-                        int64_t vi1 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v1) | (1 << 31));
-
-                        SIMD_256iTYPE vl2 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 2].p));
-                        SIMD_256iTYPE vr2 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti + 2].p));
-                        SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, vr2);
-                        int64_t vi2 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v2) | (1 << 31));
-
-                        SIMD_256iTYPE vl3 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 3].p));
-                        SIMD_256iTYPE vr3 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti + 3].p));
-                        SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, vr3);
-                        int64_t vi3 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v3) | (1 << 31));
-
-                        SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2, vi3);
-
-                        SIMD_128iTYPE size = _mm_load_si128(
-                            reinterpret_cast<SIMD_128iTYPE *>(&sizes[lk][ti]));
-                        SIMD_256iTYPE size64 = _mm256_cvtepi32_epi64(size);
-                        SIMD_256iTYPE m = _mm256_cmpgt_epi64(v, size64);
-                        _mm256_store_si256(&masks[ti >> 2], m);
+                        // SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2,
+                        // vi3);
+                        SIMD_256iTYPE v = _mm256_load_epi32(buf);
+                        SIMD_256iTYPE size =
+                            _mm256_load_epi32(&sizes[lk][ti << 3]);
+                        masks[ti] = _mm256_cmpgt_epi32_mask(v, size);
                     }
                 } else {
                     SIMD_256iTYPE cr =
                         _mm256_loadu_si256(reinterpret_cast<SIMD_256iuTYPE *>(
                             tree->right->constData.p));
-                    for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
-                        SIMD_256iTYPE vl0 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti].p));
-                        SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, cr);
-                        int64_t vi0 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v0) | (1 << 31));
 
-                        SIMD_256iTYPE vl1 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 1].p));
-                        SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, cr);
-                        int64_t vi1 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v1) | (1 << 31));
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        for (int tii = 0; tii < 8; tii++) {
+                            SIMD_256iTYPE vl = _mm256_loadu_si256(
+                                reinterpret_cast<SIMD_256iuTYPE *>(
+                                    bufArray[lk][tii].p));
+                            uint32_t v = _mm256_cmpeq_epi8_mask(vl, cr);
+                            buf[tii] = __builtin_ffs(~v | (1 << 31));
+                        }
 
-                        SIMD_256iTYPE vl2 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 2].p));
-                        SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, cr);
-                        int64_t vi2 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v2) | (1 << 31));
-
-                        SIMD_256iTYPE vl3 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 3].p));
-                        SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, cr);
-                        int64_t vi3 = (int64_t)__builtin_ffs(
-                            ~_mm256_movemask_epi8(v3) | (1 << 31));
-
-                        SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2, vi3);
-
-                        SIMD_128iTYPE size = _mm_load_si128(
-                            reinterpret_cast<SIMD_128iTYPE *>(&sizes[lk][ti]));
-                        SIMD_256iTYPE size64 = _mm256_cvtepi32_epi64(size);
-                        SIMD_256iTYPE m = _mm256_cmpgt_epi64(v, size64);
-                        _mm256_store_si256(&masks[ti >> 2], m);
+                        // SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2,
+                        // vi3);
+                        SIMD_256iTYPE v = _mm256_load_epi32(buf);
+                        SIMD_256iTYPE size =
+                            _mm256_load_epi32(&sizes[lk][ti << 3]);
+                        masks[ti] = _mm256_cmpgt_epi32_mask(v, size);
                     }
                 }
                 break;
             case 12:
                 if (tree->right->evalType == VAR) {
                     int rk = tree->right->varKey;
-                    for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
-                        SIMD_256iTYPE vl0 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti].p));
-                        SIMD_256iTYPE vr0 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti].p));
-                        SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, vr0);
-                        int64_t vi0 =
-                            (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v0) |
-                                                   (1 << 31)) -
-                            1;
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        for (int tii = 0; tii < 8; tii++) {
+                            SIMD_256iTYPE vl = _mm256_loadu_si256(
+                                reinterpret_cast<SIMD_256iuTYPE *>(
+                                    bufArray[lk][tii].p));
+                            SIMD_256iTYPE vr = _mm256_loadu_si256(
+                                reinterpret_cast<SIMD_256iuTYPE *>(
+                                    bufArray[rk][tii].p));
+                            uint32_t v = _mm256_cmpneq_epi8_mask(vl, vr);
+                            buf[tii] = __builtin_ffs(~v | (1 << 31));
+                        }
 
-                        SIMD_256iTYPE vl1 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 1].p));
-                        SIMD_256iTYPE vr1 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti + 1].p));
-                        SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, vr1);
-                        int64_t vi1 =
-                            (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v1) |
-                                                   (1 << 31)) -
-                            1;
-
-                        SIMD_256iTYPE vl2 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 2].p));
-                        SIMD_256iTYPE vr2 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti + 2].p));
-                        SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, vr2);
-                        int64_t vi2 =
-                            (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v2) |
-                                                   (1 << 31)) -
-                            1;
-
-                        SIMD_256iTYPE vl3 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 3].p));
-                        SIMD_256iTYPE vr3 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[rk][ti + 3].p));
-                        SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, vr3);
-                        int64_t vi3 =
-                            (int64_t)__builtin_ffs(
-                                (~_mm256_movemask_epi8(v3) | (1 << 31))) -
-                            1;
-
-                        SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2, vi3);
-
-                        SIMD_128iTYPE size = _mm_load_si128(
-                            reinterpret_cast<SIMD_128iTYPE *>(&sizes[lk][ti]));
-                        SIMD_256iTYPE size64 = _mm256_cvtepi32_epi64(size);
-                        SIMD_256iTYPE m = _mm256_cmpgt_epi64(size64, v);
-                        _mm256_store_si256(&masks[ti >> 2], m);
+                        // SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2,
+                        // vi3);
+                        SIMD_256iTYPE v = _mm256_load_epi32(buf);
+                        SIMD_256iTYPE size =
+                            _mm256_load_epi32(&sizes[lk][ti << 3]);
+                        masks[ti] = _mm256_cmpgt_epi32_mask(v, size);
                     }
                 } else {
                     SIMD_256iTYPE cr =
                         _mm256_loadu_si256(reinterpret_cast<SIMD_256iuTYPE *>(
                             tree->right->constData.p));
-                    for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
-                        SIMD_256iTYPE vl0 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti].p));
-                        SIMD_256iTYPE v0 = _mm256_cmpeq_epi8(vl0, cr);
-                        int64_t vi0 =
-                            (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v0) |
-                                                   (1 << 31)) -
-                            1;
+                    for (int ti = 0; ti < VECEX_BYTE8; ti++) {
+                        for (int tii = 0; tii < 8; tii++) {
+                            SIMD_256iTYPE vl = _mm256_loadu_si256(
+                                reinterpret_cast<SIMD_256iuTYPE *>(
+                                    bufArray[lk][tii].p));
+                            uint32_t v = _mm256_cmpneq_epi8_mask(vl, cr);
+                            buf[tii] = __builtin_ffs(~v | (1 << 31));
+                        }
 
-                        SIMD_256iTYPE vl1 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 1].p));
-                        SIMD_256iTYPE v1 = _mm256_cmpeq_epi8(vl1, cr);
-                        int64_t vi1 =
-                            (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v1) |
-                                                   (1 << 31)) -
-                            1;
-
-                        SIMD_256iTYPE vl2 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 2].p));
-                        SIMD_256iTYPE v2 = _mm256_cmpeq_epi8(vl2, cr);
-                        int64_t vi2 =
-                            (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v2) |
-                                                   (1 << 31)) -
-                            1;
-
-                        SIMD_256iTYPE vl3 = _mm256_loadu_si256(
-                            reinterpret_cast<SIMD_256iuTYPE *>(
-                                bufArray[lk][ti + 3].p));
-                        SIMD_256iTYPE v3 = _mm256_cmpeq_epi8(vl3, cr);
-                        int64_t vi3 =
-                            (int64_t)__builtin_ffs(~_mm256_movemask_epi8(v3) |
-                                                   (1 << 31)) -
-                            1;
-
-                        SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2, vi3);
-
-                        SIMD_128iTYPE size = _mm_load_si128(
-                            reinterpret_cast<SIMD_128iTYPE *>(&sizes[lk][ti]));
-                        SIMD_256iTYPE size64 = _mm256_cvtepi32_epi64(size);
-                        SIMD_256iTYPE m = _mm256_cmpgt_epi64(size64, v);
-                        _mm256_store_si256(&masks[ti >> 2], m);
+                        // SIMD_256iTYPE v = _mm256_set_epi64x(vi0, vi1, vi2,
+                        // vi3);
+                        SIMD_256iTYPE v = _mm256_load_epi32(buf);
+                        SIMD_256iTYPE size =
+                            _mm256_load_epi32(&sizes[lk][ti << 3]);
+                        masks[ti] = _mm256_cmpgt_epi32_mask(v, size);
                     }
                 }
                 break;

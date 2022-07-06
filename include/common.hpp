@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fcntl.h>
+#include <float.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,11 +41,16 @@
 #define SIMD_256iuTYPE __m256i_u
 #define SIMD_256iTYPE __m256i
 #define SIMD_256dTYPE __m256d
+#define SIMD_512iuTYPE __m512i_u
+#define SIMD_512dTYPE __m512d
+#define SIMD_512iTYPE __m512i
 
-#define VECEX_BYTE 1024
+#define VECEX_BYTE 512
 #define VECEX_BYTE4 VECEX_BYTE >> 2
 #define VECEX_BYTE8 VECEX_BYTE >> 3
-#define VECEX_SIZE 256  // AVX2
+#define VECEX_BYTE16 VECEX_BYTE >> 4
+#define VECEX_BYTE32 VECEX_BYTE >> 5
+#define VECEX_SIZE 512  // AVX-512
 #define VECEX_TYPE __m256
 #define VECEX_TYPEI __m256i
 #define VECEX_TYPED __m256d
