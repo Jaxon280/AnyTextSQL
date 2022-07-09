@@ -7,7 +7,10 @@ extern int yylex();
 extern int yyerror();
 %}
 %code requires {
-#include "tree.h"
+#include "query_tree.h"
+}
+%code {
+Node *query_root;
 }
 %union
 {
@@ -32,7 +35,7 @@ extern int yyerror();
 
 /* line: SELECT statements FROM identifiers WHERE conds GROUP BY identifiers ORDER BY identifiers LIMIT NUMBER */
 
-line: SELECT statements from_clauses {$$ = buildClauseNode(PROJ_NODE, $3, $2);};
+line: SELECT statements from_clauses {query_root = buildClauseNode(PROJ_NODE, $3, $2);};
 
 from_clauses: FROM identifiers selection_clauses {$$ = buildClauseNode(FROM_NODE, $3, $2);};
 
@@ -183,14 +186,4 @@ int yyerror(char *s){
   /*printf("\tERROR IN LINE %4d\n", yylval+1);
   */
 	return *s;
-}
-int main() {
-    while (true) {
-        printf("\n> ");
-        if (yyparse()) {
-            fprintf(stderr, "Error\n");
-            return 1;
-        }
-    }
-    return 0;
 }

@@ -52,7 +52,7 @@ int lineno=0;
     yylval.str = strdup(yytext);
     return IDENTIFIER;
 }
-[+-]?(0|[1-9][0-9]*)(\.[0-9]+)([Ee][+\-]?(0|[1-9][0-9]*))? {
+[+-]?(0|[1-9][0-9]*)(\.[0-9]+)([Ee][+-]?(0|[1-9][0-9]*))? {
     double temp;
     sscanf(yytext, "%lf", &temp);
     yylval.dvalue = temp;
