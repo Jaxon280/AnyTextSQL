@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "y.tab.h"
+#include "query.h"
 extern int yylex();
 extern int yyerror();
 %}

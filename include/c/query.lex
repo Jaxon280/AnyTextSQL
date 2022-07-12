@@ -1,8 +1,8 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include "y.tab.h"
-#include "tree.h"
+#include "query.h"
+#include "query_tree.h"
 int lineno=0;
 %}
 %option noyywrap

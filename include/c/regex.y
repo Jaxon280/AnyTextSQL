@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "y.tab.h"
+#include "regex.h"
 extern int yylex();
-extern int yyerror();
+extern int yyerror(char *s);
 %}
 %code requires {
 #include "regex_tree.h"
@@ -98,8 +98,6 @@ range: CHAR '-' CHAR { $$ = build_range_charsets($1, $3); };
 %%
 int yyerror(char *s){
     printf("ERROR: %s\n\n",s);
-  /*printf("\tERROR IN LINE %4d\n", yylval+1);
-  */
 	return *s;
 }
 
@@ -120,10 +118,4 @@ void debug(NFA *nfa) {
             printf("Transition[%d] start: %d, end: %d, char: %c\n", ti, nfa->transVec[ti].start, nfa->transVec[ti].end, (char)nfa->transVec[ti].c);
         }
     }
-}
-
-int main() {
-    yyparse();
-    debug(regex_root);
-    return 0;
 }
