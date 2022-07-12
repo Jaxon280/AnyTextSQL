@@ -5,7 +5,7 @@
 
 #include "x86intrin.h"
 
-#define ST_TYPE uint8_t
+#define DFA_ST_TYPE uint8_t
 #define SIMD_TEXTTYPE __m128i
 #define SIMD_BYTES 16
 #define NUMSTATES 26
@@ -26,7 +26,7 @@ class Token {
 
 class VFALexer {
     struct Context {
-        ST_TYPE recentAcceptState;
+        DFA_ST_TYPE recentAcceptState;
         int recentAcceptIndex;
         int tokenStartIndex;
     };
@@ -39,7 +39,7 @@ class VFALexer {
     int size;
     int i;
 
-    void generate_token(std::vector<Token> &tokenVec, ST_TYPE state,
+    void generate_token(std::vector<Token> &tokenVec, DFA_ST_TYPE state,
                         uint8_t *data, int start, int end) {
         Token token;
         token.set_literals(data, start, end - start);

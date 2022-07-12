@@ -29,6 +29,7 @@
 
 #include "x86intrin.h"
 
+#define DFA_ST_TYPE int
 #define ST_TYPE uint8_t
 #define SIMD_TEXTTYPE __m128i
 #define SIMD_BYTES 16

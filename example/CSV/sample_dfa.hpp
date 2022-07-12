@@ -5,9 +5,9 @@ using namespace vlex;
 DFA generate_reviewtext_dfa() {
     int stateSize = 22;
 
-    std::vector<std::vector<ST_TYPE>> trans(
-        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
-    std::set<ST_TYPE> acceptStates;
+    std::vector<std::vector<DFA_ST_TYPE>> trans(
+        stateSize, std::vector<DFA_ST_TYPE>(256, INV_STATE));
+    std::set<DFA_ST_TYPE> acceptStates;
     acceptStates.insert(20);
 
     for (int i = 0; i < stateSize; i++)

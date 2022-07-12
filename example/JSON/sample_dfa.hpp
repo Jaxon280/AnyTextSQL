@@ -5,9 +5,9 @@ using namespace vlex;
 DFA generate_stars_dfa() {
     int stateSize = 14;
 
-    std::vector<std::vector<ST_TYPE>> trans(
-        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
-    std::set<ST_TYPE> acceptStates;
+    std::vector<std::vector<DFA_ST_TYPE>> trans(
+        stateSize, std::vector<DFA_ST_TYPE>(256, INV_STATE));
+    std::set<DFA_ST_TYPE> acceptStates;
     acceptStates.insert(13);
 
     for (int i = INIT_STATE; i < 9; i++)
@@ -53,9 +53,9 @@ DFA generate_stars_dfa() {
 DFA generate_categories_dfa() {
     int stateSize = 29;
 
-    std::vector<std::vector<ST_TYPE>> trans(
-        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
-    std::set<ST_TYPE> acceptStates;
+    std::vector<std::vector<DFA_ST_TYPE>> trans(
+        stateSize, std::vector<DFA_ST_TYPE>(256, INV_STATE));
+    std::set<DFA_ST_TYPE> acceptStates;
     acceptStates.insert(27);
 
     for (int i = INIT_STATE; i < 15; i++)
@@ -143,9 +143,9 @@ DFA generate_categories_dfa() {
 DFA generate_businessid_dfa() {
     int stateSize = 18;
 
-    std::vector<std::vector<ST_TYPE>> trans(
-        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
-    std::set<ST_TYPE> acceptStates;
+    std::vector<std::vector<DFA_ST_TYPE>> trans(
+        stateSize, std::vector<DFA_ST_TYPE>(256, INV_STATE));
+    std::set<DFA_ST_TYPE> acceptStates;
     acceptStates.insert(17);
 
     for (int i = INIT_STATE; i < 16; i++)
@@ -193,9 +193,9 @@ DFA generate_businessid_dfa() {
 DFA generate_categories_stars_dfa() {
     int stateSize = 39;
 
-    std::vector<std::vector<ST_TYPE>> trans(
-        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
-    std::set<ST_TYPE> acceptStates;
+    std::vector<std::vector<DFA_ST_TYPE>> trans(
+        stateSize, std::vector<DFA_ST_TYPE>(256, INV_STATE));
+    std::set<DFA_ST_TYPE> acceptStates;
     acceptStates.insert(38);
 
     for (int i = INIT_STATE; i < 9; i++)
@@ -310,9 +310,9 @@ DFA generate_categories_stars_dfa() {
 DFA generate_states_stars_dfa() {
     int stateSize = 25;
 
-    std::vector<std::vector<ST_TYPE>> trans(
-        stateSize, std::vector<ST_TYPE>(256, INV_STATE));
-    std::set<ST_TYPE> acceptStates;
+    std::vector<std::vector<DFA_ST_TYPE>> trans(
+        stateSize, std::vector<DFA_ST_TYPE>(256, INV_STATE));
+    std::set<DFA_ST_TYPE> acceptStates;
     acceptStates.insert(24);
 
     for (int i = INIT_STATE; i < 10; i++)

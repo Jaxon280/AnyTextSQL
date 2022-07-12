@@ -10,13 +10,13 @@
 
 #include "categories_dfa.hpp"
 
-#define ST_TYPE uint8_t
+#define DFA_ST_TYPE uint8_t
 
 int main(int argc, char* argv[]) {
     int stateSize;
     int acceptStateSize;
-    ST_TYPE** dfa;
-    ST_TYPE* acceptStates;
+    DFA_ST_TYPE** dfa;
+    DFA_ST_TYPE* acceptStates;
 
     int fd = open(argv[1], O_RDONLY);
     struct stat fst;
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     }
 
     generate_dfa(&dfa, &acceptStates, &stateSize, &acceptStateSize);
-    ST_TYPE curState = 1;
+    DFA_ST_TYPE curState = 1;
     size_t i = 0;
     int count = 0;
     int recentAcceptState = 0, recentAcceptIndex = 0;

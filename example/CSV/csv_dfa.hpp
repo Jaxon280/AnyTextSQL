@@ -2,16 +2,17 @@
 
 #include "../../include/common.hpp"
 
-void generate_dfa(ST_TYPE ***dfa0, ST_TYPE **acceptStates0, int *stateSize0,
-                  int *acceptStateSize0) {
+void generate_dfa(DFA_ST_TYPE ***dfa0, DFA_ST_TYPE **acceptStates0,
+                  int *stateSize0, int *acceptStateSize0) {
     int stateSize = 26;
-    ST_TYPE **dfa = (ST_TYPE **)malloc(sizeof(ST_TYPE *) * stateSize);
+    DFA_ST_TYPE **dfa =
+        (DFA_ST_TYPE **)malloc(sizeof(DFA_ST_TYPE *) * stateSize);
     for (int i = 0; i < stateSize; i++) {
-        dfa[i] = (ST_TYPE *)malloc(sizeof(ST_TYPE) * 256);
+        dfa[i] = (DFA_ST_TYPE *)malloc(sizeof(DFA_ST_TYPE) * 256);
     }
     int acceptStateSize = 1;
-    ST_TYPE *acceptStates =
-        (ST_TYPE *)malloc(sizeof(ST_TYPE) * acceptStateSize);
+    DFA_ST_TYPE *acceptStates =
+        (DFA_ST_TYPE *)malloc(sizeof(DFA_ST_TYPE) * acceptStateSize);
     acceptStates[0] = 17;
 
     for (int i = 0; i < stateSize; i++)
