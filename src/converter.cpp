@@ -187,10 +187,22 @@ void VectFA::construct_delta_cs(const std::set<ST_TYPE> &Qstar_source,
     }
 }
 
-VectFA::VectFA(DFA &_dfa) { transTable = _dfa.getTransTable(); }
+VectFA::VectFA(DFA &_dfa) {
+    DFA::TransTable dfaTable = _dfa.getTransTable();
+    for (int si = 0; si < _dfa.getNumStates(); si++) {
+        for (int sc = 0; sc < ASCII_SZ; sc++) {
+            transTable[si][sc] = (ST_TYPE)dfaTable[si][sc];
+        }
+    }
+}
 
 VectFA::VectFA(DFA &_dfa, DATA_TYPE *_data, SIZE_TYPE _size) {
-    transTable = _dfa.getTransTable();
+    DFA::TransTable dfaTable = _dfa.getTransTable();
+    for (int si = 0; si < _dfa.getNumStates(); si++) {
+        for (int sc = 0; sc < ASCII_SZ; sc++) {
+            transTable[si][sc] = (ST_TYPE)dfaTable[si][sc];
+        }
+    }
     constructVFA(_dfa, _data, _size);
 }
 
@@ -201,7 +213,7 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     for (ST_TYPE s : dfa.getAcceptStates()) {
         acceptStates.insert(s);
     }
-    std::vector<DFA::SubMatchStates> &SMSs = dfa.getSubMatchStates();
+    std::vector<DFA::SubMatchStates> &SMSs = dfa.getSubMatches();
     for (DFA::SubMatchStates &sms : SMSs) {
         if (sms.isAnyStart) {
             anySMStates.insert(sms.startState);
