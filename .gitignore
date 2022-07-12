@@ -2,6 +2,9 @@
 *.json
 *.csv
 *.txt
+*.o
+*.out
+*.output
 ~/.vscode
 /example/experimental
 vfa_*.hpp
