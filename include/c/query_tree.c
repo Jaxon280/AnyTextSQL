@@ -1,4 +1,4 @@
-#include "tree.h"
+#include "query_tree.h"
 
 Node *buildClauseNode(ClauseType cltype, Node *child, Node *brother) {
     Node *n = (Node *)malloc(sizeof(Node));

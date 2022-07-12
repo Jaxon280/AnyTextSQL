@@ -22,10 +22,10 @@ NFA *regex_root;
 	char *str;
     uint8_t *charsets; // size: 256
 };
-%token <cvalue> CHAR
-%token <ivalue> CNUM
-%token <str> '*' '(' ')' '.' '[' ']' '+' '-' '|' '%' '?' '^' SUBMATCH
-%token <nfa> ALPH CAPT DIGIT INT DOUBLE TEXT
+%token <cvalue> CHAR_TK
+%token <ivalue> CNUM_TK
+%token <str> '*' '(' ')' '.' '[' ']' '+' '-' '|' '%' '?' '^' SUBMATCH_TK
+%token <nfa> ALPH_TK CAPT_TK DIGIT_TK INT_TK DOUBLE_TK TEXT_TK
 %type <nfa> regex union simple_re concat basic_re star plus select elementary_re int double text count
 %type <charsets> charset setitems setitem range
 
@@ -61,25 +61,25 @@ plus: elementary_re '+' { $$ = build_plus_NFA($1);};
 select: elementary_re '?' { $$ = build_select_NFA($1);};
 
 elementary_re: '(' regex ')' { $$ = $2; }
-    | '(' SUBMATCH regex ')' { $$ = build_submatch_NFA($3, $2); }
+    | '(' SUBMATCH_TK regex ')' { $$ = build_submatch_NFA($3, $2); }
     | '.' { $$ = build_wildcard_NFA(); }
-    | DIGIT { $$ = build_digit_NFA(); }
-    | ALPH { $$ = build_alph_NFA(); }
-    | CAPT { $$ = build_capt_NFA(); }
-    | CHAR { $$ = build_NFA($1); }
+    | DIGIT_TK { $$ = build_digit_NFA(); }
+    | ALPH_TK { $$ = build_alph_NFA(); }
+    | CAPT_TK { $$ = build_capt_NFA(); }
+    | CHAR_TK { $$ = build_NFA($1); }
     | int { $$ = $1; }
     | double { $$ = $1; }
     | text { $$ = $1; }
     | charset { $$ = build_charsets_NFA($1); }
     ;
 
-int: INT { $$ = build_INT(); };
+int: INT_TK { $$ = build_INT(); };
 
-double: DOUBLE { $$ = build_DOUBLE(); };
+double: DOUBLE_TK { $$ = build_DOUBLE(); };
 
-text: TEXT { $$ = build_TEXT(); };
+text: TEXT_TK { $$ = build_TEXT(); };
 
-count: elementary_re CNUM { $$ = build_num_NFA($1, $2); };
+count: elementary_re CNUM_TK { $$ = build_num_NFA($1, $2); };
 
 charset: '[' setitems ']' { $$ = $2; }
     | '[' '^' setitems ']' { $$ = negate_charsets($3); }
@@ -90,10 +90,10 @@ setitems: setitem { $$ = $1; }
     ;
 
 setitem: range { $$ = $1; }
-    | CHAR { $$ = build_c_charsets($1); }
+    | CHAR_TK { $$ = build_c_charsets($1); }
     ;
 
-range: CHAR '-' CHAR { $$ = build_range_charsets($1, $3); };
+range: CHAR_TK '-' CHAR_TK { $$ = build_range_charsets($1, $3); };
 
 %%
 int yyerror(char *s){

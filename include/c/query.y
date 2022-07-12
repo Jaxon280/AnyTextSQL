@@ -19,15 +19,15 @@ Node *query_root;
     int ivalue;
 	char *str;
 };
-%token <dvalue> DOUBLE
-%token <ivalue> INT
-%token <str> IDENTIFIER STRING '=' '*' ',' ';' '(' ')' '.' '+' '-' '/' '%'
-%token SELECT SUM COUNT AVG MIN MAX DISTINCT AS FROM WHERE AND OR IS NOT NIL BETWEEN REGEXP LIKE EQ NOTEQ LESS GREAT LESSEQ GREATEQ GROUP BY ORDER LIMIT
+%token <dvalue> DOUBLE_TK
+%token <ivalue> INT_TK
+%token <str> IDENTIFIER_TK STRING_TK '=' '*' ',' ';' '(' ')' '.' '+' '-' '/' '%'
+%token SELECT_TK SUM_TK COUNT_TK AVG_TK MIN_TK MAX_TK DISTINCT_TK AS_TK FROM_TK WHERE_TK AND_TK OR_TK IS_TK NOT_TK NIL_TK BETWEEN_TK REGEXP_TK LIKE_TK EQ_TK NOTEQ_TK LESS_TK GREAT_TK LESSEQ_TK GREATEQ_TK GROUP_TK BY_TK ORDER_TK LIMIT_TK
 /* HAVING TRUE FALSE */
 %type <node> expression cexpression select_expression statement statements identifier identifiers number conds cond ccond string_pred untyped_pred pred null_pred cpred integer string line from_clauses selection_clauses agg_clauses sort_clauses limit_clauses
 
-%left AND OR
-%left EQ NOTEQ LESS LESSEQ GREAT GREATEQ IS LIKE REGEXP
+%left AND_TK OR_TK
+%left EQ_TK NOTEQ_TK LESS_TK LESSEQ_TK GREAT_TK GREATEQ_TK IS_TK LIKE_TK REGEXP_TK
 %left '+''-'
 %left '*''/'
 
@@ -35,81 +35,81 @@ Node *query_root;
 
 /* line: SELECT statements FROM identifiers WHERE conds GROUP BY identifiers ORDER BY identifiers LIMIT NUMBER */
 
-line: SELECT statements from_clauses {query_root = buildClauseNode(PROJ_NODE, $3, $2);};
+line: SELECT_TK statements from_clauses {query_root = buildClauseNode(PROJ_NODE, $3, $2);};
 
-from_clauses: FROM identifiers selection_clauses {$$ = buildClauseNode(FROM_NODE, $3, $2);};
+from_clauses: FROM_TK identifiers selection_clauses {$$ = buildClauseNode(FROM_NODE, $3, $2);};
 
 selection_clauses: agg_clauses {$$ = $1;}
-    | WHERE conds agg_clauses {$$ = buildClauseNode(SEL_NODE, $3, $2);}
+    | WHERE_TK conds agg_clauses {$$ = buildClauseNode(SEL_NODE, $3, $2);}
     ;
 
 agg_clauses: sort_clauses {$$ = $1;}
-    | GROUP BY identifiers sort_clauses {$$ = buildClauseNode(AGG_NODE, $4, $3);}
+    | GROUP_TK BY_TK identifiers sort_clauses {$$ = buildClauseNode(AGG_NODE, $4, $3);}
     ;
 
 sort_clauses: limit_clauses {$$ = $1;}
-    | ORDER BY identifiers limit_clauses {$$ = buildClauseNode(SORT_NODE, $4, $3);}
+    | ORDER_TK BY_TK identifiers limit_clauses {$$ = buildClauseNode(SORT_NODE, $4, $3);}
     ;
 
 limit_clauses: ';' {$$ = buildClauseNode(NULL_NODE, NULL, NULL);}
-    | LIMIT integer ';' {$$ = buildClauseNode(LIM_NODE, $2, NULL);}
+    | LIMIT_TK integer ';' {$$ = buildClauseNode(LIM_NODE, $2, NULL);}
     ;
 
-pred: expression EQ cexpression {$$ = buildPredNode(EQ_NODE, $1, $3);}
-    | cexpression EQ expression {$$ = buildPredNode(EQ_NODE, $1, $3);}
-    | expression NOTEQ cexpression {$$ = buildPredNode(NEQ_NODE, $1, $3);}
-    | cexpression NOTEQ expression {$$ = buildPredNode(NEQ_NODE, $1, $3);}
-    | expression LESSEQ expression {$$ = buildPredNode(LESSEQ_NODE, $1, $3);}
-    | expression LESSEQ cexpression {$$ = buildPredNode(LESSEQ_NODE, $1, $3);}
-    | cexpression LESSEQ expression {$$ = buildPredNode(LESSEQ_NODE, $1, $3);}
-    | expression LESS expression {$$ = buildPredNode(LESS_NODE, $1, $3);}
-    | expression LESS cexpression {$$ = buildPredNode(LESS_NODE, $1, $3);}
-    | cexpression LESS expression {$$ = buildPredNode(LESS_NODE, $1, $3);}
-    | expression GREATEQ expression {$$ = buildPredNode(GREATEQ_NODE, $1, $3);}
-    | expression GREATEQ cexpression {$$ = buildPredNode(GREATEQ_NODE, $1, $3);}
-    | cexpression GREATEQ expression {$$ = buildPredNode(GREATEQ_NODE, $1, $3);}
-    | expression GREAT expression {$$ = buildPredNode(GREATER_NODE, $1, $3);}
-    | expression GREAT cexpression {$$ = buildPredNode(GREATER_NODE, $1, $3);}
-    | cexpression GREAT expression {$$ = buildPredNode(GREATER_NODE, $1, $3);}
-    | expression BETWEEN cexpression AND cexpression {$$ = buildCondNode(AND_NODE, buildPredNode(LESSEQ_NODE, $3, $1), buildPredNode(GREATEQ_NODE, $5, $1));}
+pred: expression EQ_TK cexpression {$$ = buildPredNode(EQ_NODE, $1, $3);}
+    | cexpression EQ_TK expression {$$ = buildPredNode(EQ_NODE, $1, $3);}
+    | expression NOTEQ_TK cexpression {$$ = buildPredNode(NEQ_NODE, $1, $3);}
+    | cexpression NOTEQ_TK expression {$$ = buildPredNode(NEQ_NODE, $1, $3);}
+    | expression LESSEQ_TK expression {$$ = buildPredNode(LESSEQ_NODE, $1, $3);}
+    | expression LESSEQ_TK cexpression {$$ = buildPredNode(LESSEQ_NODE, $1, $3);}
+    | cexpression LESSEQ_TK expression {$$ = buildPredNode(LESSEQ_NODE, $1, $3);}
+    | expression LESS_TK expression {$$ = buildPredNode(LESS_NODE, $1, $3);}
+    | expression LESS_TK cexpression {$$ = buildPredNode(LESS_NODE, $1, $3);}
+    | cexpression LESS_TK expression {$$ = buildPredNode(LESS_NODE, $1, $3);}
+    | expression GREATEQ_TK expression {$$ = buildPredNode(GREATEQ_NODE, $1, $3);}
+    | expression GREATEQ_TK cexpression {$$ = buildPredNode(GREATEQ_NODE, $1, $3);}
+    | cexpression GREATEQ_TK expression {$$ = buildPredNode(GREATEQ_NODE, $1, $3);}
+    | expression GREAT_TK expression {$$ = buildPredNode(GREATER_NODE, $1, $3);}
+    | expression GREAT_TK cexpression {$$ = buildPredNode(GREATER_NODE, $1, $3);}
+    | cexpression GREAT_TK expression {$$ = buildPredNode(GREATER_NODE, $1, $3);}
+    | expression BETWEEN_TK cexpression AND_TK cexpression {$$ = buildCondNode(AND_NODE, buildPredNode(LESSEQ_NODE, $3, $1), buildPredNode(GREATEQ_NODE, $5, $1));}
     ;
 
-string_pred: identifier LIKE string {$$ = buildPredNode(LIKE_NODE, $1, $3);}
-    | identifier REGEXP string {$$ = buildPredNode(REGEXP_NODE, $1, $3);}
+string_pred: identifier LIKE_TK string {$$ = buildPredNode(LIKE_NODE, $1, $3);}
+    | identifier REGEXP_TK string {$$ = buildPredNode(REGEXP_NODE, $1, $3);}
     /* | identifier IN '[' strings ']' {$$ = buildPredNode();} */
     /* | identifier NOT IN '[' strings ']' {$$ = buildPredNode();} */
     ;
 
-null_pred: identifier IS NIL {$$ = buildNullPredNode(EQ_NODE, $1, NULL);}
-    | identifier IS NOT NIL {$$ = buildNullPredNode(NEQ_NODE, $1, NULL);}
+null_pred: identifier IS_TK NIL_TK {$$ = buildNullPredNode(EQ_NODE, $1, NULL);}
+    | identifier IS_TK NOT_TK NIL_TK {$$ = buildNullPredNode(NEQ_NODE, $1, NULL);}
     ;
 
-untyped_pred: expression EQ expression {$$ = buildTPredNode(EQ_NODE, $1, $3);}
-    | expression NOTEQ expression {$$ = buildTPredNode(NEQ_NODE, $1, $3);}
+untyped_pred: expression EQ_TK expression {$$ = buildTPredNode(EQ_NODE, $1, $3);}
+    | expression NOTEQ_TK expression {$$ = buildTPredNode(NEQ_NODE, $1, $3);}
     ;
 
-cpred: cexpression EQ cexpression {$$ = evalConstPred(EQ_NODE, $1, $3);}
-    | cexpression NOTEQ cexpression {$$ = evalConstPred(NEQ_NODE, $1, $3);}
-    | cexpression LESSEQ cexpression {$$ = evalConstPred(LESSEQ_NODE, $1, $3);}
-    | cexpression LESS cexpression {$$ = evalConstPred(LESS_NODE, $1, $3);}
-    | cexpression GREATEQ cexpression {$$ = evalConstPred(GREATEQ_NODE, $1, $3);}
-    | cexpression GREAT cexpression {$$ = evalConstPred(GREATER_NODE, $1, $3);}
-    | cexpression BETWEEN cexpression AND cexpression {$$ = evalConstCond(AND_NODE, evalConstPred(LESSEQ_NODE, $3, $1), evalConstPred(GREATEQ_NODE, $5, $1));}
+cpred: cexpression EQ_TK cexpression {$$ = evalConstPred(EQ_NODE, $1, $3);}
+    | cexpression NOTEQ_TK cexpression {$$ = evalConstPred(NEQ_NODE, $1, $3);}
+    | cexpression LESSEQ_TK cexpression {$$ = evalConstPred(LESSEQ_NODE, $1, $3);}
+    | cexpression LESS_TK cexpression {$$ = evalConstPred(LESS_NODE, $1, $3);}
+    | cexpression GREATEQ_TK cexpression {$$ = evalConstPred(GREATEQ_NODE, $1, $3);}
+    | cexpression GREAT_TK cexpression {$$ = evalConstPred(GREATER_NODE, $1, $3);}
+    | cexpression BETWEEN_TK cexpression AND_TK cexpression {$$ = evalConstCond(AND_NODE, evalConstPred(LESSEQ_NODE, $3, $1), evalConstPred(GREATEQ_NODE, $5, $1));}
     ;
 
 ccond: '(' ccond ')' {$$ = $2;}
-    | ccond AND ccond {$$ = evalConstCond(AND_NODE, $1, $3);}
-    | ccond OR ccond {$$ = evalConstCond(OR_NODE, $1, $3);}
+    | ccond AND_TK ccond {$$ = evalConstCond(AND_NODE, $1, $3);}
+    | ccond OR_TK ccond {$$ = evalConstCond(OR_NODE, $1, $3);}
     | cpred {$$ = $1;}
     ;
 
 cond: '(' cond ')' {$$ = $2;}
-    | cond AND cond {$$ = buildCondNode(AND_NODE, $1, $3);}
-    | cond OR cond {$$ = buildCondNode(OR_NODE, $1, $3);}
-    | cond AND ccond {$$ = buildCondNode(AND_NODE, $1, $3);}
-    | cond OR ccond {$$ = buildCondNode(OR_NODE, $1, $3);}
-    | ccond AND cond {$$ = buildCondNode(AND_NODE, $1, $3);}
-    | ccond OR cond {$$ = buildCondNode(OR_NODE, $1, $3);}
+    | cond AND_TK cond {$$ = buildCondNode(AND_NODE, $1, $3);}
+    | cond OR_TK cond {$$ = buildCondNode(OR_NODE, $1, $3);}
+    | cond AND_TK ccond {$$ = buildCondNode(AND_NODE, $1, $3);}
+    | cond OR_TK ccond {$$ = buildCondNode(OR_NODE, $1, $3);}
+    | ccond AND_TK cond {$$ = buildCondNode(AND_NODE, $1, $3);}
+    | ccond OR_TK cond {$$ = buildCondNode(OR_NODE, $1, $3);}
     | pred {$$ = $1;}
     | string_pred {$$ = $1;}
     | untyped_pred {$$ = $1;}
@@ -146,15 +146,15 @@ expression: '(' expression ')' {$$ = $2;}
     ;
 
 select_expression: expression
-    | SUM '(' identifier ')' {$$ = buildFuncNode(SUM_NODE, $3, NULL);}
-    | COUNT '(' identifier ')' {$$ = buildFuncNode(COUNT_NODE, $3, NULL);}
-    | AVG '(' identifier ')' {$$ = buildFuncNode(AVG_NODE, $3, NULL);}
-    | MIN '(' identifier ')' {$$ = buildFuncNode(MIN_NODE, $3, NULL);}
-    | MAX '(' identifier ')' {$$ = buildFuncNode(MAX_NODE, $3, NULL);}
-    | DISTINCT '(' identifier ')' {$$ = buildFuncNode(DISTINCT_NODE, $3, NULL);}
+    | SUM_TK '(' identifier ')' {$$ = buildFuncNode(SUM_NODE, $3, NULL);}
+    | COUNT_TK '(' identifier ')' {$$ = buildFuncNode(COUNT_NODE, $3, NULL);}
+    | AVG_TK '(' identifier ')' {$$ = buildFuncNode(AVG_NODE, $3, NULL);}
+    | MIN_TK '(' identifier ')' {$$ = buildFuncNode(MIN_NODE, $3, NULL);}
+    | MAX_TK '(' identifier ')' {$$ = buildFuncNode(MAX_NODE, $3, NULL);}
+    | DISTINCT_TK '(' identifier ')' {$$ = buildFuncNode(DISTINCT_NODE, $3, NULL);}
     ;
 
-statement: select_expression AS identifier {$$ = buildExprNode(AS_NODE, $1, $3);}
+statement: select_expression AS_TK identifier {$$ = buildExprNode(AS_NODE, $1, $3);}
     | select_expression {$$ = $1;}
     ;
 
@@ -167,17 +167,17 @@ identifiers: identifier {$$ = buildStNode($1, NULL);}
     ;
 
 identifier: '*' {$$ = buildIdentNode(NULL, true);}
-    | IDENTIFIER {$$ = buildIdentNode($1, false);}
+    | IDENTIFIER_TK {$$ = buildIdentNode($1, false);}
     ;
 
-number: INT {$$ = buildIntNode($1);}
-    | DOUBLE {$$ = buildDoubleNode($1);}
+number: INT_TK {$$ = buildIntNode($1);}
+    | DOUBLE_TK {$$ = buildDoubleNode($1);}
     ;
 
-integer: INT {$$ = buildIntNode($1);}
+integer: INT_TK {$$ = buildIntNode($1);}
     ;
 
-string: STRING {$$ = buildStringNode($1);}
+string: STRING_TK {$$ = buildStringNode($1);}
     ;
 
 %%

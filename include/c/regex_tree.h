@@ -9,7 +9,7 @@
 #define EPSILON -1
 #define ASCII_SZ 128
 
-typedef enum pattern_type { INT_TYPE, DOUBLE_TYPE, TEXT_TYPE } PatternType;
+typedef enum pattern_type { INT_PT, DOUBLE_PT, TEXT_PT } PatternType;
 
 typedef struct submatch {
     int start;

@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_REGEX_H_INCLUDED
-# define YY_YY_REGEX_H_INCLUDED
+#ifndef YY_YY_QUERY_H_INCLUDED
+# define YY_YY_QUERY_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -40,54 +40,98 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 10 "regex.y" /* yacc.c:1909  */
+#line 9 "query.y" /* yacc.c:1909  */
 
-#include "regex_tree.h"
+#include "query_tree.h"
 
-#line 48 "regex.h" /* yacc.c:1909  */
+#line 48 "query.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    CHAR_TK = 258,
-    CNUM_TK = 259,
-    SUBMATCH_TK = 260,
-    ALPH_TK = 261,
-    CAPT_TK = 262,
-    DIGIT_TK = 263,
-    INT_TK = 264,
-    DOUBLE_TK = 265,
-    TEXT_TK = 266
+    DOUBLE_TK = 258,
+    INT_TK = 259,
+    IDENTIFIER_TK = 260,
+    STRING_TK = 261,
+    SELECT_TK = 262,
+    SUM_TK = 263,
+    COUNT_TK = 264,
+    AVG_TK = 265,
+    MIN_TK = 266,
+    MAX_TK = 267,
+    DISTINCT_TK = 268,
+    AS_TK = 269,
+    FROM_TK = 270,
+    WHERE_TK = 271,
+    AND_TK = 272,
+    OR_TK = 273,
+    IS_TK = 274,
+    NOT_TK = 275,
+    NIL_TK = 276,
+    BETWEEN_TK = 277,
+    REGEXP_TK = 278,
+    LIKE_TK = 279,
+    EQ_TK = 280,
+    NOTEQ_TK = 281,
+    LESS_TK = 282,
+    GREAT_TK = 283,
+    LESSEQ_TK = 284,
+    GREATEQ_TK = 285,
+    GROUP_TK = 286,
+    BY_TK = 287,
+    ORDER_TK = 288,
+    LIMIT_TK = 289
   };
 #endif
 /* Tokens.  */
-#define CHAR_TK 258
-#define CNUM_TK 259
-#define SUBMATCH_TK 260
-#define ALPH_TK 261
-#define CAPT_TK 262
-#define DIGIT_TK 263
-#define INT_TK 264
-#define DOUBLE_TK 265
-#define TEXT_TK 266
+#define DOUBLE_TK 258
+#define INT_TK 259
+#define IDENTIFIER_TK 260
+#define STRING_TK 261
+#define SELECT_TK 262
+#define SUM_TK 263
+#define COUNT_TK 264
+#define AVG_TK 265
+#define MIN_TK 266
+#define MAX_TK 267
+#define DISTINCT_TK 268
+#define AS_TK 269
+#define FROM_TK 270
+#define WHERE_TK 271
+#define AND_TK 272
+#define OR_TK 273
+#define IS_TK 274
+#define NOT_TK 275
+#define NIL_TK 276
+#define BETWEEN_TK 277
+#define REGEXP_TK 278
+#define LIKE_TK 279
+#define EQ_TK 280
+#define NOTEQ_TK 281
+#define LESS_TK 282
+#define GREAT_TK 283
+#define LESSEQ_TK 284
+#define GREATEQ_TK 285
+#define GROUP_TK 286
+#define BY_TK 287
+#define ORDER_TK 288
+#define LIMIT_TK 289
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 17 "regex.y" /* yacc.c:1909  */
+#line 16 "query.y" /* yacc.c:1909  */
 
-    NFA *nfa;
+    Node *node;
+	double dvalue;
     int ivalue;
-    uint8_t ucvalue; // todo: UTF-8
-    char cvalue;
 	char *str;
-    uint8_t *charsets; // size: 256
 
-#line 91 "regex.h" /* yacc.c:1909  */
+#line 135 "query.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -100,4 +144,4 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_REGEX_H_INCLUDED  */
+#endif /* !YY_YY_QUERY_H_INCLUDED  */

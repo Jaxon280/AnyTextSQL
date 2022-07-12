@@ -9,9 +9,9 @@ int lineno=0;
 %option noyywrap
 %option noinput nounput
 %%
-"INT"                 return INT;
-"DOUBLE"              return DOUBLE;
-"TEXT"                return TEXT;
+"INT"                 return INT_TK;
+"DOUBLE"              return DOUBLE_TK;
+"TEXT"                return TEXT_TK;
 "*"                   return *yytext;
 "."                   return *yytext;
 "("                   return *yytext;
@@ -25,9 +25,9 @@ int lineno=0;
 "?"                   return *yytext;
 "^"                   return *yytext;
 "@"                   return *yytext;
-"\\w"                  return ALPH;
-"\\W"                  return CAPT;
-"\\d"                  return DIGIT;
+"\\w"                  return ALPH_TK;
+"\\W"                  return CAPT_TK;
+"\\d"                  return DIGIT_TK;
 
 "{"[1-9][0-9]*"}" {
     char buf[128];
@@ -41,13 +41,13 @@ int lineno=0;
     int temp;
     sscanf(rst, "%d", &temp);
     yylval.ivalue = temp;
-    return CNUM;
+    return CNUM_TK;
 }
 
 ([ !"#&',/0-9:;<=>A-Z_`a-z\{\}~]|\\[@$%\(\)*+-.?\[\]\^\|]) {
     int size = strlen(yytext);
     yylval.cvalue = yytext[size - 1];
-    return CHAR;
+    return CHAR_TK;
 }
 
 "?P<"[a-zA-Z][a-zA-Z0-9_]*">" {
@@ -60,7 +60,7 @@ int lineno=0;
     buf2[size] = '\0';
 
     yylval.str = strdup(buf2);
-    return SUBMATCH;
+    return SUBMATCH_TK;
 }
 
 \n			{lineno++; return 0;}

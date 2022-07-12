@@ -31,7 +31,7 @@ NFA *copy_NFA(NFA *n) {
 }
 
 NFA *build_NFA(char c) {
-    NFA *nfa = construct_NFA(1, TEXT_TYPE);
+    NFA *nfa = construct_NFA(1, TEXT_PT);
     nfa->initState = 0;
     nfa->acceptState = 1;
     nfa->stateSize = 2;
@@ -53,7 +53,7 @@ NFA *build_charsets_NFA(uint8_t *chsets) {
         }
     }
 
-    NFA *nfa = construct_NFA(tsize, TEXT_TYPE);
+    NFA *nfa = construct_NFA(tsize, TEXT_PT);
     nfa->initState = 0;
     nfa->acceptState = 1;
     nfa->stateSize = 2;
@@ -74,7 +74,7 @@ NFA *build_charsets_NFA(uint8_t *chsets) {
 }
 
 NFA *build_wildcard_NFA() {
-    NFA *nfa = construct_NFA(ASCII_SZ, TEXT_TYPE);
+    NFA *nfa = construct_NFA(ASCII_SZ, TEXT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -90,7 +90,7 @@ NFA *build_wildcard_NFA() {
 }
 
 NFA *build_digit_NFA() {
-    NFA *nfa = construct_NFA(10, INT_TYPE);
+    NFA *nfa = construct_NFA(10, INT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -106,7 +106,7 @@ NFA *build_digit_NFA() {
 }
 
 NFA *build_alph_NFA() {
-    NFA *nfa = construct_NFA(26, TEXT_TYPE);
+    NFA *nfa = construct_NFA(26, TEXT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -122,7 +122,7 @@ NFA *build_alph_NFA() {
 }
 
 NFA *build_capt_NFA() {
-    NFA *nfa = construct_NFA(26, TEXT_TYPE);
+    NFA *nfa = construct_NFA(26, TEXT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -154,7 +154,7 @@ NFA *build_INT() {
     NFA *nfa8 = build_union_NFA(nfa3, nfa7);
 
     NFA *nfa = build_concat_NFA(nfa2, nfa8);
-    nfa->type = INT_TYPE;
+    nfa->type = INT_PT;
     return nfa;
 }
 
@@ -206,7 +206,7 @@ NFA *build_DOUBLE() {
     NFA *nfa26 = build_concat_NFA(nfa13, nfa25);
 
     NFA *nfa = build_concat_NFA(nfa9, nfa26);
-    nfa->type = DOUBLE_TYPE;
+    nfa->type = DOUBLE_PT;
 
     return nfa;
 }
@@ -232,7 +232,7 @@ NFA *build_TEXT() {
     NFA *nfa8 = build_NFA('\'');
     NFA *nfa9 = build_concat_NFA(nfa1, nfa7);
     NFA *nfa = build_concat_NFA(nfa9, nfa8);
-    nfa->type = TEXT_TYPE;
+    nfa->type = TEXT_PT;
 
     return nfa;
 }
@@ -294,13 +294,13 @@ NFA *build_concat_NFA(NFA *n1, NFA *n2) {
     n1->acceptState = n1ssize + n2->acceptState;
     n1->isAnyStart = n1->isAnyStart;
     n1->isAnyEnd = n2->isAnyEnd;
-    if (n1->type == TEXT_TYPE || n2->type == TEXT_TYPE ||
-        (n1->type == DOUBLE_TYPE && n2->type == DOUBLE_TYPE)) {
-        n1->type = TEXT_TYPE;
-    } else if (n1->type == INT_TYPE && n2->type == INT_TYPE) {
-        n1->type = INT_TYPE;
+    if (n1->type == TEXT_PT || n2->type == TEXT_PT ||
+        (n1->type == DOUBLE_PT && n2->type == DOUBLE_PT)) {
+        n1->type = TEXT_PT;
+    } else if (n1->type == INT_PT && n2->type == INT_PT) {
+        n1->type = INT_PT;
     } else {
-        n1->type = DOUBLE_TYPE;
+        n1->type = DOUBLE_PT;
     }
     destroy_NFA(n2);
     return n1;
@@ -310,7 +310,7 @@ NFA *build_union_NFA(NFA *n1, NFA *n2) {
     int n1tsize = n1->transSize, n2tsize = n2->transSize,
         n1ssize = n1->stateSize, n2ssize = n2->stateSize;
 
-    NFA *nfa = construct_NFA(n1tsize + n2tsize + 4, TEXT_TYPE);
+    NFA *nfa = construct_NFA(n1tsize + n2tsize + 4, TEXT_PT);
     nfa->transSize = n1tsize + n2tsize + 4;
     nfa->stateSize = n1ssize + n2ssize + 2;
     nfa->initState = 0;
@@ -370,8 +370,8 @@ NFA *build_star_NFA(NFA *n) {
     n->isAnyStart = true;
     n->isAnyEnd = true;
 
-    if (n->type == DOUBLE_TYPE) {
-        n->type = TEXT_TYPE;
+    if (n->type == DOUBLE_PT) {
+        n->type = TEXT_PT;
     }
     return n;
 }
@@ -429,8 +429,8 @@ NFA *build_num_NFA(NFA *n, int num) {
     }
 
     n->acceptState = ssize * (num - 1) + n->acceptState;
-    if (n->type == DOUBLE_TYPE) {
-        n->type = TEXT_TYPE;
+    if (n->type == DOUBLE_PT) {
+        n->type = TEXT_PT;
     }
 
     return n;
