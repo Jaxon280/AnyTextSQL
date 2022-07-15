@@ -18,7 +18,7 @@ Put header file that defines DFA table in `~/example`
 - [x] Lexer & parser for regular expression (yacc and lex)
 - [x] Converter from regular expression into NFA
 - [x] Converter from NFA into DFA
-- [x] Converter from NFA into DFA
+- [x] Converter from DFA into VFA
 - [x] Probabilistic Finite Automata 
 
 **Query Runtime**
