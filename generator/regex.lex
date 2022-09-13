@@ -21,9 +21,9 @@ using rtoken = regex_yytokentype;
 
 %%
 
-"INT"                 return rtoken::RINT_TK;
-"DOUBLE"              return rtoken::RDOUBLE_TK;
-"TEXT"                return rtoken::RTEXT_TK;
+("INT"|"int")                 return rtoken::RINT_TK;
+("DOUBLE"|"double")              return rtoken::RDOUBLE_TK;
+("TEXT"|"text")                return rtoken::RTEXT_TK;
 "*"                   return *yytext;
 "."                   return *yytext;
 "("                   return *yytext;
