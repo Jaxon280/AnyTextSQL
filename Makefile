@@ -16,7 +16,7 @@ CPP_CODES = $(wildcard src/*.cpp) main.cpp
 CPP_PROGRAM = $(basename $(CPP_CODES))
 # CPP_OBJS = $(addprefix build/, $(addsuffix .o, $(CPP_PROGRAM)))
 
-PROGRAM = vlex
+PROGRAM = vlex.exe
 
 GEN = rparser rlexer qparser qlexer
 
@@ -28,7 +28,7 @@ $(PROGRAM): $(CPP_CODES)
 
 debug: $(CPP_CODES)
 	$(MAKE) $(GEN)
-	$(CC) $(FLAGS) $(DEBUGFLAGS) $^ -o vlex_debug
+	$(CC) $(FLAGS) $(DEBUGFLAGS) $^ -o vlex_debug.exe
 
 rparser: generator/regex.ypp
 	bison -d -oregexParser.cpp generator/regex.ypp
