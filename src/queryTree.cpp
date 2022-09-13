@@ -5,7 +5,11 @@ StatementList *buildWildCard(bool isCount) {
     stmtList->next = NULL;
     Statement *stmt = new Statement;
     stmt->isWildCard = true;
-    stmt->isProjection = !isCount;
+    if (isCount) {
+        stmt->httype = COUNT_HT;
+    } else {
+        stmt->httype = NONE_HT;
+    }
     stmtList->stmt = stmt;
     return stmtList;
 }
@@ -17,11 +21,11 @@ StatementList *buildStatements(StatementList *stmts, Statement *stmt) {
     return stmtList;
 }
 
-Statement *buildStatement(OpTree *left, char *right, bool isProj) {
+Statement *buildStatement(OpTree *left, char *right) {
     Statement *stmt = new Statement;
     stmt->expr = left;
     stmt->name = right;
-    stmt->isProjection = isProj;
+    stmt->httype = left->httype;
     stmt->isWildCard = false;
     return stmt;
 }
@@ -38,6 +42,7 @@ OpTree *buildOp(OpType op, OpTree *left, OpTree *right) {
     opt->evalType = OP;
     opt->left = left;
     opt->right = right;
+    opt->httype = intersectionHTType(left->httype, right->httype);
     opt->opType = op;
     return opt;
 }
@@ -47,6 +52,13 @@ OpTree *buildAggFunc(AggFuncType ftype, char *ident) {
     opt->left = NULL, opt->right = NULL;
     opt->evalType = AGGFUNC;
     opt->ftype = ftype;
+    if (ftype == COUNT) {
+        opt->httype = COUNT_HT;
+    } else if (ftype == AVG) {
+        opt->httype = BOTH_HT;
+    } else {
+        opt->httype = VALUE_HT;
+    }
     opt->varKey = std::string(ident, strlen(ident));
     return opt;
 }
@@ -55,6 +67,7 @@ OpTree *buildVar(char *ident) {
     OpTree *opt = new OpTree;
     opt->left = NULL, opt->right = NULL;
     opt->evalType = VAR;
+    opt->httype = NONE_HT;
     opt->varKey = std::string(ident, strlen(ident));
     return opt;
 }
@@ -63,6 +76,7 @@ OpTree *buildConstString(char *svalue) {
     OpTree *opt = new OpTree;
     opt->left = NULL, opt->right = NULL;
     opt->evalType = CONST;
+    opt->httype = NONE_HT;
     opt->constData.p = (uint8_t *)svalue;
     opt->type = TEXT;
     return opt;
@@ -72,6 +86,7 @@ OpTree *buildConstInt(int ivalue) {
     OpTree *opt = new OpTree;
     opt->left = NULL, opt->right = NULL;
     opt->evalType = CONST;
+    opt->httype = NONE_HT;
     opt->constData.i = ivalue;
     opt->type = INT;
     return opt;
@@ -146,6 +161,7 @@ OpTree *evalConstPred(OpType opt, OpTree *left, OpTree *right) {
     OpTree *op = new OpTree;
     op->left = NULL, op->right = NULL;
     op->evalType = CONST;
+    op->httype = NONE_HT;
     op->type = BOOL;
     int li, ri;
     double ld, rd;
@@ -197,6 +213,7 @@ OpTree *evalConstCond(CondType ctype, OpTree *left, OpTree *right) {
     OpTree *op = new OpTree;
     op->left = NULL, op->right = NULL;
     op->evalType = CONST;
+    op->httype = NONE_HT;
     op->type = BOOL;
     if (ctype == AND) {
         op->constData.i = left->constData.i && right->constData.i;
@@ -211,6 +228,7 @@ OpTree *evalConstExpr(OpType opt, OpTree *left, OpTree *right) {
     OpTree *op = new OpTree;
     op->left = NULL, op->right = NULL;
     op->evalType = CONST;
+    op->httype = NONE_HT;
     int li, ri;
     double ld, rd;
 

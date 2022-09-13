@@ -1541,25 +1541,25 @@ yyreduce:
 
   case 18:
 #line 89 "generator/query.ypp" /* yacc.c:1646  */
-    {(yyval.stmt) = buildStatement((yyvsp[0].opt), NULL, false);}
+    {(yyval.stmt) = buildStatement((yyvsp[0].opt), NULL);}
 #line 1546 "queryParser.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
 #line 90 "generator/query.ypp" /* yacc.c:1646  */
-    {(yyval.stmt) = buildStatement((yyvsp[-2].opt), (yyvsp[0].svalue), false);}
+    {(yyval.stmt) = buildStatement((yyvsp[-2].opt), (yyvsp[0].svalue));}
 #line 1552 "queryParser.cpp" /* yacc.c:1646  */
     break;
 
   case 20:
 #line 93 "generator/query.ypp" /* yacc.c:1646  */
-    {(yyval.stmt) = buildStatement((yyvsp[0].opt), NULL, true);}
+    {(yyval.stmt) = buildStatement((yyvsp[0].opt), NULL);}
 #line 1558 "queryParser.cpp" /* yacc.c:1646  */
     break;
 
   case 21:
 #line 94 "generator/query.ypp" /* yacc.c:1646  */
-    {(yyval.stmt) = buildStatement((yyvsp[-2].opt), (yyvsp[0].svalue), true);}
+    {(yyval.stmt) = buildStatement((yyvsp[-2].opt), (yyvsp[0].svalue));}
 #line 1564 "queryParser.cpp" /* yacc.c:1646  */
     break;
 

@@ -22,6 +22,12 @@ typedef enum _op_type {
 typedef enum _op_eval_type { OP, VAR, CONST, AGGFUNC } OpEvalType;
 typedef enum _pred_eval_type { COND, PRED, CPRED } PredEvalType;
 typedef enum _cond_type { DEFAULT, AND, OR, NOT } CondType;
+typedef enum _hashtable_type {
+    NONE_HT,
+    COUNT_HT,
+    VALUE_HT,
+    BOTH_HT
+} HashTableType;
 typedef enum _aggregate_function_type {
     DISTINCT,
     COUNT,
@@ -34,6 +40,7 @@ typedef enum _aggregate_function_type {
 struct OpTree {
     OpEvalType evalType;
     vlex::Type type;
+    HashTableType httype;
 
     OpTree *left;   // only for OP
     OpTree *right;  // only for OP
@@ -63,7 +70,7 @@ struct Statement {
     OpTree *expr;
     char *name;
 
-    bool isProjection;  // distinguish COUNT(*) and *
+    HashTableType httype;
     bool isWildCard;
 };
 
@@ -82,6 +89,26 @@ struct StringList {
     char *str;
     StringList *next;
 };
+
+inline HashTableType intersectionHTType(HashTableType a, HashTableType b) {
+    if (a == NONE_HT) {
+        return b;
+    } else if (a == COUNT_HT) {
+        if (b == VALUE_HT || b == BOTH_HT) {
+            return BOTH_HT;
+        } else {
+            return COUNT_HT;
+        }
+    } else if (a == VALUE_HT) {
+        if (b == COUNT_HT || b == BOTH_HT) {
+            return BOTH_HT;
+        } else {
+            return VALUE_HT;
+        }
+    } else {
+        return BOTH_HT;
+    }
+}
 
 class QueryContext {
    private:

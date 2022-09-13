@@ -159,7 +159,7 @@ void Executor::setQuery(QueryContext *query) {
     StatementList *stmts = query->getStatements();
     for (StatementList *s = stmts; s != NULL; s = s->next) {
         stmtVec.push_back(*s->stmt);
-        if (!s->stmt->isProjection) {
+        if (s->stmt->httype != NONE_HT) {
             // extract aggregate function
             OpTree *op;
             std::queue<OpTree *> bfsQueue;
@@ -180,12 +180,7 @@ void Executor::setQuery(QueryContext *query) {
                 bfsQueue.pop();
             }
         }
-    }
-
-    if (aggContext.size() == 0) {
-        isProj = true;
-    } else {
-        isProj = false;
+        httype = intersectionHTType(s->stmt->httype, httype);
     }
 
     gKeyVec = query->getGKeys();
@@ -1046,8 +1041,8 @@ void Executor::aggregation1() {
         } else if (aggContext[vk].type == DOUBLE) {
             if (ftype == SUM) {
                 std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
-                if (!aggCountMap->find(s)) {
-                    aggCountMap->assign(s);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
                 }
                 aggMap->sumDouble(s, tuple[vkk].d, vk);
             } else if (ftype == AVG) {
@@ -1074,8 +1069,8 @@ void Executor::aggregation1() {
         } else if (aggContext[vk].type == INT) {
             if (ftype == SUM) {
                 std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
-                if (!aggCountMap->find(s)) {
-                    aggCountMap->assign(s);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
                 }
                 aggMap->sumInt(s, tuple[vkk].i, vk);
             } else if (ftype == AVG) {
@@ -1118,7 +1113,7 @@ void Executor::queryExec() {
     materialize();
 
     if (selection()) {
-        if (isProj) {
+        if (httype == NONE_HT) {
             projection();
         } else {
             aggregation();
@@ -1141,42 +1136,96 @@ void Executor::printAggregation0() {
 }
 
 void Executor::printAggregation1() {
-    AggregationValueMap::HTType &ht = aggMap->getHashTable();
+    AggregationValueMap::HTType &vht = aggMap->getHashTable();
     AggregationCountMap::HTType &cht = aggCountMap->getHashTable();
-    auto begin = ht.begin();
-    auto end = ht.begin();
-    if (limit && limit <= ht.size()) {
-        for (int i = 0; i < limit; i++) {
-            ++end;
+    auto vbegin = vht.begin();
+    auto vend = vht.begin();
+    auto cbegin = cht.begin();
+    auto cend = cht.begin();
+
+    if (httype == COUNT_HT) {
+        if (limit && limit <= cht.size()) {
+            for (int i = 0; i < limit; i++) {
+                ++cend;
+            }
+        } else {
+            cend = cht.end();
         }
-    } else {
-        end = ht.end();
+    } else if (httype == VALUE_HT || httype == BOTH_HT) {
+        if (limit && limit <= vht.size()) {
+            for (int i = 0; i < limit; i++) {
+                ++vend;
+            }
+        } else {
+            vend = vht.end();
+        }
     }
 
-    for (auto it = begin; it != end; ++it) {
-        printf("|");
-        for (Statement &stmt : stmtVec) {
-            if (stmt.isProjection) {
-                printf(" %s |", it->first.c_str());
-            } else {
-                if (stmt.expr->type == INT) {
-                    printf(" %ld |",
-                           evalFunc1Op<int64_t>(stmt.expr, ht.at(it->first),
-                                                cht.at(it->first)));
-                } else if (stmt.expr->type == DOUBLE) {
-                    printf(" %lf |",
-                           evalFunc1Op<double>(stmt.expr, ht.at(it->first),
-                                               cht.at(it->first)));
+    if (httype == COUNT_HT) {
+        for (auto it = cbegin; it != cend; ++it) {
+            printf("|");
+            for (Statement &stmt : stmtVec) {
+                if (stmt.httype == NONE_HT) {
+                    printf(" %s |", it->first.c_str());
                 } else {
+                    if (stmt.expr->type == INT) {
+                        printf(" %ld |",
+                               evalFunc1Op<int64_t>(stmt.expr, NULL,
+                                                    cht.at(it->first)));
+                    } else if (stmt.expr->type == DOUBLE) {
+                        printf(" %lf |",
+                               evalFunc1Op<double>(stmt.expr, NULL,
+                                                   cht.at(it->first)));
+                    }
                 }
             }
+            printf("\n");
         }
-        printf("\n");
+    } else if (httype == VALUE_HT || httype == BOTH_HT) {
+        for (auto it = vbegin; it != vend; ++it) {
+            printf("|");
+            for (Statement &stmt : stmtVec) {
+                if (stmt.httype == NONE_HT) {
+                    printf(" %s |", it->first.c_str());
+                } else {
+                    if (stmt.expr->type == INT) {
+                        int64_t avi = 0;
+                        if (stmt.httype == COUNT_HT) {
+                            avi = evalFunc1Op<int64_t>(stmt.expr, NULL,
+                                                       cht.at(it->first));
+                        } else if (stmt.httype == VALUE_HT) {
+                            avi = evalFunc1Op<int64_t>(stmt.expr,
+                                                       vht.at(it->first), NULL);
+                        } else if (stmt.httype == BOTH_HT) {
+                            avi = evalFunc1Op<int64_t>(stmt.expr,
+                                                       vht.at(it->first),
+                                                       cht.at(it->first));
+                        }
+                        printf(" %ld |", avi);
+                    } else if (stmt.expr->type == DOUBLE) {
+                        double avd = 0.0;
+                        if (stmt.httype == COUNT_HT) {
+                            avd = evalFunc1Op<double>(stmt.expr, NULL,
+                                                      cht.at(it->first));
+                        } else if (stmt.httype == VALUE_HT) {
+                            avd = evalFunc1Op<double>(stmt.expr,
+                                                      vht.at(it->first), NULL);
+                        } else if (stmt.httype == BOTH_HT) {
+                            avd = evalFunc1Op<double>(stmt.expr,
+                                                      vht.at(it->first),
+                                                      cht.at(it->first));
+                        }
+                        printf(" %lf |", avd);
+                    }
+                }
+            }
+            printf("\n");
+        }
     }
 }
 
 void Executor::queryEndExec() {
-    if (isProj) {
+    if (httype == NONE_HT) {
     } else {
         if (gKeyVec.size() > 1) {
         } else if (gKeyVec.size() == 1) {

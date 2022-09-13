@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.hpp"
-#include "dataConverter.hpp"
 #include "hashMap.hpp"
 #include "scanner/converter.hpp"
 #include "scanner/interface.hpp"
@@ -84,8 +83,8 @@ class Executor {
     Type *keyTypes;
 
     // SELECT clause
-    bool isProj;
     std::vector<Statement> stmtVec;
+    HashTableType httype = NONE_HT;
 
     // WHERE clause
 #if (defined VECEXEC)
