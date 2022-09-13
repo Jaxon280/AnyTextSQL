@@ -1,4 +1,4 @@
-#include "converter.hpp"
+#include "scanner/converter.hpp"
 
 #include <iostream>
 
@@ -189,8 +189,12 @@ void VectFA::construct_delta_cs(const std::set<ST_TYPE> &Qstar_source,
 
 VectFA::VectFA(DFA &_dfa) {
     DFA::TransTable dfaTable = _dfa.getTransTable();
-    for (int si = 0; si < _dfa.getNumStates(); si++) {
-        for (int sc = 0; sc < ASCII_SZ; sc++) {
+    int ssize = _dfa.getNumStates();
+
+    transTable.resize(ssize);
+    for (int si = 0; si < ssize; si++) {
+        transTable[si].resize(UNICODE_SZ);
+        for (int sc = 0; sc < UNICODE_SZ; sc++) {
             transTable[si][sc] = (ST_TYPE)dfaTable[si][sc];
         }
     }
@@ -198,8 +202,12 @@ VectFA::VectFA(DFA &_dfa) {
 
 VectFA::VectFA(DFA &_dfa, DATA_TYPE *_data, SIZE_TYPE _size) {
     DFA::TransTable dfaTable = _dfa.getTransTable();
-    for (int si = 0; si < _dfa.getNumStates(); si++) {
-        for (int sc = 0; sc < ASCII_SZ; sc++) {
+    int ssize = _dfa.getNumStates();
+
+    transTable.resize(ssize);
+    for (int si = 0; si < ssize; si++) {
+        transTable[si].resize(UNICODE_SZ);
+        for (int sc = 0; sc < UNICODE_SZ; sc++) {
             transTable[si][sc] = (ST_TYPE)dfaTable[si][sc];
         }
     }
@@ -270,8 +278,9 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     }
 
     for (DFA::SubMatchStates sms : SMSs) {
-        DFA::SubMatchStates vsms(old2new[sms.startState], sms.isAnyStart,
-                                 old2new[sms.endState], sms.isAnyEnd);
+        DFA::SubMatchStates vsms(sms.id, sms.type, old2new[sms.startState],
+                                 sms.isAnyStart, old2new[sms.endState],
+                                 sms.isAnyEnd);
         subMatches.push_back(vsms);
     }
 

@@ -1,4 +1,4 @@
-#include "codegen.hpp"
+#include "scanner/codegen.hpp"
 
 using namespace vlex;
 

@@ -1,4 +1,6 @@
-#include "executor.hpp"
+#include "executor/executor.hpp"
+
+#include "general/clock.hpp"
 
 using namespace vlex;
 
@@ -51,24 +53,24 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     charEndTable = new int[stateSize]();
     std::vector<DFA::SubMatchStates> &subMatchStates = vfa->getSubMatches();
     subMatchSize = subMatchStates.size();
-    int id = 1;
+    keyTypes = new Type[subMatchSize];
     for (DFA::SubMatchStates &sms : subMatchStates) {
+        keyTypes[sms.id] = sms.type;
         if (sms.isAnyStart) {
-            anyStartTable[sms.startState] = id;
+            anyStartTable[sms.startState] = sms.id + 1;
         } else {
-            charStartTable[sms.startState] = id;
+            charStartTable[sms.startState] = sms.id + 1;
         }
         if (sms.isAnyEnd) {
-            anyEndTable[sms.endState] = id;
+            anyEndTable[sms.endState] = sms.id + 1;
         } else {
-            charEndTable[sms.endState] = id;
+            charEndTable[sms.endState] = sms.id + 1;
         }
-        id++;
     }
 
     end = new SubMatchNode;
-    if (id > 1) {
-        subMatches = new SubMatch[id - 1];
+    if (subMatchSize > 0) {
+        subMatches = new SubMatch[subMatchSize];
     } else {
         subMatches = nullptr;
     }
@@ -95,78 +97,108 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     }
 }
 
+// void Executor::setVQuery(QueryContext *query) {
+// indexes = new SIZE_TYPE *[subMatchSize];
+// sizes = new SIZE_TYPE *[subMatchSize];
+// for (int k = 0; k < subMatchSize; k++) {
+//     indexes[k] = new (std::align_val_t{VECEX_SIZE});
+//     sizes[k] = new (std::align_val_t{VECEX_SIZE}) SIZE_TYPE[VECEX_BYTE];
+// }
+
+// bufArray = new data64 *[subMatchSize];
+// for (int k = 0; k < subMatchSize; k++) {
+//     bufArray[k] = new (std::align_val_t{VECEX_SIZE}) data64[VECEX_BYTE];
+// }
+
+// predMasks = new uint8_t *[numPreds];
+// for (int k = 0; k < numPreds; k++) {
+//     predMasks[k] = new (std::align_val_t{VECEX_SIZE}) uint8_t[VECEX_BYTE4];
+// }
+// mask = new (std::align_val_t{VECEX_SIZE}) uint16_t[VECEX_BYTE16];
+
+// tupleIds = new (std::align_val_t{VECEX_SIZE}) int[VECEX_BYTE];
+// for (int i = 0; i < VECEX_BYTE; i++) {
+//     tupleIds[i] = i;
+// }
+// selectionVector = new int[VECEX_BYTE];
+
+// QueryContext::Selection &sel = query->getSelection();
+// isCNF = sel.isCNF;
+// numPreds = sel.numPreds;
+// if (isCNF) {
+//     predANDsize = sel.preds.size();
+//     predORsize = new int[predANDsize];
+//     for (int ai = 0; ai < predANDsize; ai++) {
+//         predORsize[ai] = sel.preds[ai].size();
+//     }
+//     preds = new int *[predANDsize];
+//     for (int ai = 0; ai < predANDsize; ai++) {
+//         preds[ai] = new int[predORsize[ai]];
+//         for (int oi = 0; oi < predORsize[ai]; oi++) {
+//             preds[ai][oi] = sel.preds[ai][oi];
+//         }
+//     }
+// } else {
+//     // todo: add to DNF
+// }
+
+// predTypes = new Type[numPreds];
+// predTrees = new QueryContext::OpTree[numPreds];
+// for (int k = 0; k < numPreds; k++) {
+//     predTypes[k] = sel.predTypes[k];
+//     predTrees[k] = sel.predTrees[k];
+// }
+// }
+
 void Executor::setQuery(QueryContext *query) {
-    keyTypes = new Type[subMatchSize];
-    for (int i = 0; i < subMatchSize; i++) {
-        keyTypes[i] = query->getKeyTypes()[i];
-    }
-    // todo: where to get key type information?
+    ptree = query->getPredTree();
 
-    indexes = new SIZE_TYPE *[subMatchSize];
-    sizes = new SIZE_TYPE *[subMatchSize];
-    for (int k = 0; k < subMatchSize; k++) {
-        indexes[k] = new (std::align_val_t{VECEX_SIZE}) SIZE_TYPE[VECEX_BYTE];
-        sizes[k] = new (std::align_val_t{VECEX_SIZE}) SIZE_TYPE[VECEX_BYTE];
-    }
+    tuple = new data64[subMatchSize];
+    tsize = new SIZE_TYPE[subMatchSize];
 
-    QueryContext::Selection &sel = query->getSelection();
-    numPreds = sel.numPreds;
-    if (sel.isCNF) {
-        predANDsize = sel.preds.size();
-        predORsize = new int[predANDsize];
-        for (int ai = 0; ai < predANDsize; ai++) {
-            predORsize[ai] = sel.preds[ai].size();
-        }
-        preds = new int *[predANDsize];
-        for (int ai = 0; ai < predANDsize; ai++) {
-            preds[ai] = new int[predORsize[ai]];
-            for (int oi = 0; oi < predORsize[ai]; oi++) {
-                preds[ai][oi] = sel.preds[ai][oi];
+    StatementList *stmts = query->getStatements();
+    for (StatementList *s = stmts; s != NULL; s = s->next) {
+        stmtVec.push_back(*s->stmt);
+        if (!s->stmt->isProjection) {
+            // extract aggregate function
+            OpTree *op;
+            std::queue<OpTree *> bfsQueue;
+            bfsQueue.push(s->stmt->expr);
+            while (!bfsQueue.empty()) {
+                op = bfsQueue.front();
+                if (op->evalType == OP) {
+                    bfsQueue.push(op->left);
+                    bfsQueue.push(op->right);
+                } else if (op->evalType == AGGFUNC) {
+                    Aggregation agc;
+                    agc.type = op->type;
+                    agc.ftype = op->ftype;
+                    agc.keyId = op->varKeyId;
+                    aggContext.push_back(agc);
+                    op->aggId = aggContext.size() - 1;
+                }
+                bfsQueue.pop();
             }
         }
+    }
+
+    if (aggContext.size() == 0) {
+        isProj = true;
     } else {
-        // todo: add to DNF
+        isProj = false;
     }
 
-    predMasks = new uint8_t *[numPreds];
-    for (int k = 0; k < numPreds; k++) {
-        predMasks[k] = new (std::align_val_t{VECEX_SIZE}) uint8_t[VECEX_BYTE4];
-    }
-    mask = new (std::align_val_t{VECEX_SIZE}) uint16_t[VECEX_BYTE16];
-
-    predTypes = new Type[numPreds];
-    predTrees = new QueryContext::OpTree[numPreds];
-    for (int k = 0; k < numPreds; k++) {
-        predTypes[k] = sel.predTypes[k];
-        predTrees[k] = sel.predTrees[k];
-    }
-
-    bufArray = new data64 *[subMatchSize];
-    for (int k = 0; k < subMatchSize; k++) {
-        bufArray[k] = new (std::align_val_t{VECEX_SIZE}) data64[VECEX_BYTE];
-    }
-
-    tupleIds = new (std::align_val_t{VECEX_SIZE}) uint32_t[VECEX_BYTE];
-    for (int i = 0; i < VECEX_BYTE; i++) {
-        tupleIds[i] = i;
-    }
-    selectionVector = new uint32_t[VECEX_BYTE];
-
-    QueryContext::Projection proj = query->getProjection();
-    numProjKeys = proj.columns.size();
-
-    aggContext = query->getAggregation();
-
-    aggVSize = aggContext->valueKeys.size();
-    if (aggContext->keys.size() == 1) {
-        aggMap = new AggregationValueMap(aggContext->valueKeys.size());
-        aggCountMap = new AggregationCountMap(aggContext->valueKeys.size());
-    } else if (aggContext->keys.size() == 0) {
+    gKeyVec = query->getGKeys();
+    int aggVSize = aggContext.size();
+    if (gKeyVec.size() == 1) {
+        aggMap = new AggregationValueMap(aggVSize);
+        aggCountMap = new AggregationCountMap(aggVSize);
+    } else if (gKeyVec.size() == 0) {
         agg = new data64[aggVSize];
         aggCount = new int[aggVSize];
         for (int vk = 0; vk < aggVSize; vk++) {
-            AggFuncType ftype = aggContext->valueKeys[vk].ftype;
-            if (aggContext->valueKeys[vk].ktype == DOUBLE) {
+            AggFuncType ftype = aggContext[vk].ftype;
+            if (aggContext[vk].type == DOUBLE) {
                 if (ftype == MIN) {
                     agg[vk].d = DBL_MAX;
                 } else if (ftype == MAX) {
@@ -174,7 +206,7 @@ void Executor::setQuery(QueryContext *query) {
                 } else {
                     agg[vk].d = 0.0;
                 }
-            } else if (aggContext->valueKeys[vk].ktype == INT) {
+            } else if (aggContext[vk].type == INT) {
                 if (ftype == MIN) {
                     agg[vk].i = INT64_MAX;
                 } else if (ftype == MAX) {
@@ -185,7 +217,7 @@ void Executor::setQuery(QueryContext *query) {
             }
             aggCount[vk] = 0;
         }
-    }
+    }  // todo: multiple keys
 
     limit = query->getLimit();
 }
@@ -312,37 +344,74 @@ inline void Executor::resetContext() {
     }
 }
 
-void Executor::vmaterialize() {
+#if (defined VECEXEC)
+
+void Executor::materialize(int tid) {
+    DATA_TYPE buf[128];
     for (int s = 0; s < subMatchSize; s++) {
-        // todo: not materialization for key only used in projection/aggregation
-        SIMD_256iTYPE base = _mm256_set1_epi64x((int64_t)data);
+        uint32_t start = subMatches[s].start;
+        uint32_t size = subMatches[s].end - subMatches[s].start;
         switch (keyTypes[s]) {
             case DOUBLE:
+                memcpy(buf, &data[start], size);
+                buf[size] = (DATA_TYPE)0;
+                bufArray[s][tid].d = atof((char *)buf);
+                // bufArray[s][tid].d = fatod(&data[start]);
+                break;
+            case INT:
+                memcpy(buf, &data[start], size);
+                buf[size] = (DATA_TYPE)0;
+                bufArray[s][tid].i = (int64_t)atoi((char *)buf);
+                // bufArray[s][tid].i = fatoi(&data[start], size);
+                break;
+            case TEXT:
+                bufArray[s][tid].p = data + start;
+                sizes[s][tid] = size;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void Executor::vmaterialize() {
+    for (int s = 0; s < subMatchSize; s++) {
+        SIMD_512iTYPE base = _mm512_set1_epi64(reinterpret_cast<int64_t>(data));
+        DATA_TYPE buf[128];
+        switch (keyTypes[s]) {
+            case DOUBLE:
+#if (defined VUNROLL)
+#pragma unroll(4)
+#endif
                 for (int ti = 0; ti < VECEX_BYTE; ti++) {
-                    DATA_TYPE buf[sizes[s][ti] + 1];
-                    buf[sizes[s][ti]] = (DATA_TYPE)0;
                     memcpy(buf, &data[indexes[s][ti]], sizes[s][ti]);
+                    buf[sizes[s][ti]] = (DATA_TYPE)0;
                     double d = atof((char *)buf);
                     bufArray[s][ti].d = d;
                 }
                 break;
             case INT:
+#if (defined VUNROLL)
+#pragma unroll(4)
+#endif
                 for (int ti = 0; ti < VECEX_BYTE; ti++) {
-                    DATA_TYPE buf[sizes[s][ti] + 1];
-                    buf[sizes[s][ti]] = (DATA_TYPE)0;
                     memcpy(buf, &data[indexes[s][ti]], sizes[s][ti]);
+                    buf[sizes[s][ti]] = (DATA_TYPE)0;
                     int64_t n = (int64_t)atoi((char *)buf);
                     bufArray[s][ti].i = n;
                 }
                 break;
             case TEXT:
-                for (int ti = 0; ti < VECEX_BYTE; ti += 4) {
-                    SIMD_128iTYPE offsets = _mm_load_si128(
-                        reinterpret_cast<SIMD_128iTYPE *>(&indexes[s][ti]));
-                    SIMD_256iTYPE adrs =
-                        _mm256_add_epi64(base, _mm256_cvtepi32_epi64(offsets));
-                    _mm256_store_si256(
-                        reinterpret_cast<SIMD_256iTYPE *>(&bufArray[s][ti]),
+#if (defined VUNROLL)
+#pragma unroll(4)
+#endif
+                for (int ti = 0; ti < VECEX_BYTE; ti += 8) {
+                    SIMD_256iTYPE offsets = _mm256_load_si256(
+                        reinterpret_cast<SIMD_256iTYPE *>(&indexes[s][ti]));
+                    SIMD_512iTYPE adrs =
+                        _mm512_add_epi64(base, _mm512_cvtepi32_epi64(offsets));
+                    _mm512_store_si512(
+                        reinterpret_cast<SIMD_512iTYPE *>(&bufArray[s][ti]),
                         adrs);
                 }
                 break;
@@ -377,30 +446,66 @@ void Executor::veval() {
         return;
     }
 
-    for (int i = 0; i < VECEX_BYTE; i += 64) {
-        // todo: design a predicate tree for DNF
+#if (defined VUNROLL)
+#pragma unroll(4)
+#endif
+    if (isCNF) {
+        for (int i = 0; i < VECEX_BYTE; i += 64) {
+            // todo: design a predicate tree for DNF
 
-        // initialize mask
-        SIMD_512iTYPE maskAND = _mm512_load_si512(&predMasks[preds[0][0]][i]);
-        for (int oi = 1; oi < predORsize[0]; oi++) {
-            SIMD_512iTYPE mor = _mm512_load_si512(&predMasks[preds[0][oi]][i]);
-            maskAND = _mm512_or_si512(maskAND, mor);
-        }
-
-        for (int ai = 1; ai < predANDsize; ai++) {
-            SIMD_512iTYPE maskOR =
-                _mm512_load_si512(&predMasks[preds[ai][0]][i]);
-            for (int oi = 1; oi < predORsize[ai]; oi++) {
-                SIMD_512iTYPE mand =
-                    _mm512_load_si512(&predMasks[preds[ai][oi]][i]);
-                maskOR = _mm512_or_si512(maskOR, mand);
+            // initialize mask
+            SIMD_512iTYPE maskAND =
+                _mm512_load_si512(&predMasks[preds[0][0]][i]);
+            for (int oi = 1; oi < predORsize[0]; oi++) {
+                SIMD_512iTYPE mor =
+                    _mm512_load_si512(&predMasks[preds[0][oi]][i]);
+                maskAND = _mm512_or_si512(maskAND, mor);
             }
-            maskAND = _mm512_and_si512(maskAND, maskOR);
-        }
 
-        _mm512_store_si512(&mask[i >> 1], maskAND);
+            for (int ai = 1; ai < predANDsize; ai++) {
+                SIMD_512iTYPE maskOR =
+                    _mm512_load_si512(&predMasks[preds[ai][0]][i]);
+                for (int oi = 1; oi < predORsize[ai]; oi++) {
+                    SIMD_512iTYPE mand =
+                        _mm512_load_si512(&predMasks[preds[ai][oi]][i]);
+                    maskOR = _mm512_or_si512(maskOR, mand);
+                }
+                maskAND = _mm512_and_si512(maskAND, maskOR);
+            }
+
+            _mm512_store_si512(&mask[i >> 1], maskAND);
+        }
+    } else {
+        for (int i = 0; i < VECEX_BYTE; i += 64) {
+            // todo: design a predicate tree for DNF
+
+            // initialize mask
+            SIMD_512iTYPE maskOR =
+                _mm512_load_si512(&predMasks[preds[0][0]][i]);
+            for (int oi = 1; oi < predORsize[0]; oi++) {
+                SIMD_512iTYPE mand =
+                    _mm512_load_si512(&predMasks[preds[0][oi]][i]);
+                maskOR = _mm512_and_si512(maskOR, mand);
+            }
+
+            for (int ai = 1; ai < predANDsize; ai++) {
+                SIMD_512iTYPE maskAND =
+                    _mm512_load_si512(&predMasks[preds[ai][0]][i]);
+                for (int oi = 1; oi < predORsize[ai]; oi++) {
+                    SIMD_512iTYPE mor =
+                        _mm512_load_si512(&predMasks[preds[ai][oi]][i]);
+                    maskAND = _mm512_and_si512(maskAND, mor);
+                }
+                maskOR = _mm512_or_si512(maskOR, maskAND);
+            }
+
+            _mm512_store_si512(&mask[i >> 1], maskOR);
+        }
     }
 
+#if (defined VUNROLL)
+#pragma unroll(4)
+#endif
     for (int i = 0; i < VECEX_BYTE16; i++) {
         SIMD_512iTYPE tids = _mm512_load_si512(&tupleIds[i << 4]);
         _mm512_mask_compressstoreu_epi32(&selectionVector[selVecSize], mask[i],
@@ -414,18 +519,18 @@ inline void Executor::vselection() {
     veval();
 }
 
-void Executor::projection() {
+void Executor::vprojection() {
     DATA_TYPE buf[VECEX_BYTE];
 
     for (int si = 0; si < selVecSize; si++) {
         printf("| ");
-        for (int k = 0; k < numProjKeys; k++) {
+        for (int k = 0; k < numProjs; k++) {
             if (keyTypes[k] == DOUBLE) {
                 printf("%lf | ", bufArray[k][selectionVector[si]].d);
             } else if (keyTypes[k] == INT) {
                 printf("%ld | ", bufArray[k][selectionVector[si]].i);
             } else if (keyTypes[k] == TEXT) {
-                buf[sizes[k][si]] = (DATA_TYPE)0;
+                buf[sizes[k][selectionVector[si]]] = (DATA_TYPE)0;
                 memcpy(buf, bufArray[k][selectionVector[si]].p,
                        sizes[k][selectionVector[si]]);
                 printf("%s | ", buf);
@@ -435,7 +540,7 @@ void Executor::projection() {
     }
 }
 
-void Executor::aggregation0() {
+void Executor::vaggregation0() {
     for (int vk = 0; vk < aggVSize; vk++) {
         int vkk = aggContext->valueKeys[vk].key;
         AggFuncType ftype = aggContext->valueKeys[vk].ftype;
@@ -471,7 +576,7 @@ void Executor::aggregation0() {
     }
 }
 
-void Executor::aggregation1() {
+void Executor::vaggregation1() {
     int kk = aggContext->keys[0];
 
     for (int vk = 0; vk < aggVSize; vk++) {
@@ -580,7 +685,7 @@ void Executor::aggregation1() {
                     if (!aggMap->find(s)) {
                         aggMap->assign(s, aggContext);
                     }
-                    aggMap->maxInt(s, bufArray[vkk][sv].d, vk);
+                    aggMap->maxInt(s, bufArray[vkk][sv].i, vk);
                 }
             } else if (ftype == MIN) {
                 for (int si = 0; si < selVecSize; si++) {
@@ -591,15 +696,415 @@ void Executor::aggregation1() {
                     if (!aggMap->find(s)) {
                         aggMap->assign(s, aggContext);
                     }
-                    aggMap->minInt(s, bufArray[vkk][sv].d, vk);
+                    aggMap->minInt(s, bufArray[vkk][sv].i, vk);
                 }
             }
         }
     }
 }
 
-void Executor::aggregation() {
+inline void Executor::vaggregation() {
     int aggSize = aggContext->keys.size();
+    if (aggSize > 1) {
+        // todo: multiple keys
+    } else if (aggSize == 1) {
+        vaggregation1();
+    } else {
+        vaggregation0();
+    }
+}
+
+inline void Executor::queryVExec() {
+    if (tid != VECEX_BYTE) return;
+
+    vselection();
+    if (numProjs > 0) {
+        vprojection();
+    } else {
+        vaggregation();
+    }
+
+    tid = 0;
+    selVecSize = 0;
+}
+
+#else
+void Executor::materialize() {
+    DATA_TYPE buf[128];
+    for (int s = 0; s < subMatchSize; s++) {
+        uint32_t start = subMatches[s].start;
+        uint32_t size = subMatches[s].end - subMatches[s].start;
+        switch (keyTypes[s]) {
+            case DOUBLE:
+                memcpy(buf, &data[start], size);
+                buf[size] = (DATA_TYPE)0;
+                tuple[s].d = atof((char *)buf);
+                // tuple[s].d = fatod(&data[start]);
+                break;
+            case INT:
+                memcpy(buf, &data[start], size);
+                buf[size] = (DATA_TYPE)0;
+                tuple[s].i = (int64_t)atoi((char *)buf);
+                // tuple[s].i = fatoi(&data[start], size);
+                break;
+            case TEXT:
+                tuple[s].p = data + start;
+                tsize[s] = size;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+template <typename Value>
+Value Executor::evalFunc1Op(OpTree *tree, data64 *vhtv, int *chtv) {
+    if (tree->evalType == OP) {
+        if (tree->opType == ADD) {
+            return evalFunc1Op<Value>(tree->left, vhtv, chtv) +
+                   evalFunc1Op<Value>(tree->right, vhtv, chtv);
+        } else if (tree->opType == SUB) {
+            return evalFunc1Op<Value>(tree->left, vhtv, chtv) -
+                   evalFunc1Op<Value>(tree->right, vhtv, chtv);
+        } else if (tree->opType == MUL) {
+            return evalFunc1Op<Value>(tree->left, vhtv, chtv) *
+                   evalFunc1Op<Value>(tree->right, vhtv, chtv);
+        } else if (tree->opType == DIV) {
+            return evalFunc1Op<Value>(tree->left, vhtv, chtv) /
+                   evalFunc1Op<Value>(tree->right, vhtv, chtv);
+        }
+    } else if (tree->evalType == AGGFUNC) {
+        if (tree->ftype == COUNT) {
+            return static_cast<Value>(chtv[tree->aggId]);
+        } else if (tree->type == DOUBLE) {
+            if (tree->ftype == AVG) {
+                return static_cast<Value>(vhtv[tree->aggId].d /
+                                          chtv[tree->aggId]);
+            } else {
+                return static_cast<Value>(vhtv[tree->aggId].d);
+            }
+        } else if (tree->type == INT) {
+            if (tree->ftype == AVG) {
+                return static_cast<Value>(vhtv[tree->aggId].i /
+                                          chtv[tree->aggId]);
+            } else {
+                return static_cast<Value>(vhtv[tree->aggId].i);
+            }
+        }
+    } else {
+        return evalOp<Value>(tree);
+    }
+}
+
+template <typename Value>
+Value Executor::evalOp(OpTree *tree) {
+    if (tree->evalType == OP) {
+        if (tree->opType == ADD) {
+            return evalOp<Value>(tree->left) + evalOp<Value>(tree->right);
+        } else if (tree->opType == SUB) {
+            return evalOp<Value>(tree->left) - evalOp<Value>(tree->right);
+        } else if (tree->opType == MUL) {
+            return evalOp<Value>(tree->left) * evalOp<Value>(tree->right);
+        } else if (tree->opType == DIV) {
+            return evalOp<Value>(tree->left) / evalOp<Value>(tree->right);
+        }
+    } else if (tree->evalType == VAR) {
+        if (tree->type == DOUBLE) {
+            return static_cast<Value>(tuple[tree->varKeyId].d);
+        } else if (tree->type == INT) {
+            return static_cast<Value>(tuple[tree->varKeyId].i);
+        }
+    } else if (tree->evalType == AGGFUNC) {
+        // in keynum == 0 case
+        if (tree->ftype == COUNT) {
+            return static_cast<Value>(aggCount[tree->aggId]);
+        } else if (tree->ftype == AVG) {
+            if (tree->type == DOUBLE) {
+                return static_cast<Value>(
+                    agg[tree->aggId].d /
+                    static_cast<double>(aggCount[tree->aggId]));
+            } else if (tree->type == INT) {
+                return static_cast<Value>(
+                    static_cast<double>(agg[tree->aggId].i) /
+                    static_cast<double>(aggCount[tree->aggId]));
+            }
+        } else {
+            if (tree->type == DOUBLE) {
+                return static_cast<Value>(agg[tree->aggId].d);
+            } else if (tree->type == INT) {
+                return static_cast<Value>(agg[tree->aggId].i);
+            }
+        }
+    } else {
+        if (tree->type == DOUBLE) {
+            return static_cast<Value>(tree->constData.d);
+        } else if (tree->type == INT) {
+            return static_cast<Value>(tree->constData.i);
+        }
+    }
+}
+
+bool Executor::evalPred(OpTree *tree) {
+    if (tree->type == DOUBLE) {
+        double lvalue = tuple[tree->left->varKeyId].d;
+        double rvalue = evalOp<double>(tree->right);
+        if (tree->opType == EQUAL && lvalue == rvalue)
+            return true;
+        else if (tree->opType == NEQUAL && lvalue != rvalue)
+            return true;
+        else if (tree->opType == LESS && lvalue < rvalue)
+            return true;
+        else if (tree->opType == LESSEQ && lvalue <= rvalue)
+            return true;
+        else if (tree->opType == GREATEQ && lvalue >= rvalue)
+            return true;
+        else if (tree->opType == GREATER && lvalue > rvalue)
+            return true;
+        else
+            return false;
+    } else if (tree->type == INT) {
+        int64_t lvalue = tuple[tree->left->varKeyId].i;
+        int64_t rvalue = evalOp<int64_t>(tree->right);
+        if (tree->opType == EQUAL && lvalue == rvalue)
+            return true;
+        else if (tree->opType == NEQUAL && lvalue != rvalue)
+            return true;
+        else if (tree->opType == LESS && lvalue < rvalue)
+            return true;
+        else if (tree->opType == LESSEQ && lvalue <= rvalue)
+            return true;
+        else if (tree->opType == GREATEQ && lvalue >= rvalue)
+            return true;
+        else if (tree->opType == GREATER && lvalue > rvalue)
+            return true;
+        else
+            return false;
+    } else if (tree->type == TEXT) {
+        if (tree->right->evalType == VAR) {
+            if (tree->opType == EQUAL) {
+                SIMD_512iTYPE l =
+                    _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
+                SIMD_512iTYPE r =
+                    _mm512_loadu_epi8(tuple[tree->right->varKeyId].p);
+                uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
+                if (__builtin_ffsll(~m | ((uint64_t)1 << 63)) >
+                    tsize[tree->left->varKeyId]) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (tree->opType == NEQUAL) {
+                SIMD_512iTYPE l =
+                    _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
+                SIMD_512iTYPE r =
+                    _mm512_loadu_epi8(tuple[tree->right->varKeyId].p);
+                uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
+                if (__builtin_ffsll(m | ((uint64_t)1 << 63)) >
+                    tsize[tree->left->varKeyId]) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else if (tree->right->evalType == CONST) {
+            if (tree->opType == EQUAL) {
+                SIMD_512iTYPE r = _mm512_loadu_epi8(tree->right->constData.p);
+                SIMD_512iTYPE l =
+                    _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
+                uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
+                if (__builtin_ffsll(~m | ((uint64_t)1 << 63)) >
+                    tsize[tree->left->varKeyId]) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (tree->opType == NEQUAL) {
+                SIMD_512iTYPE r = _mm512_loadu_epi8(tree->right->constData.p);
+                SIMD_512iTYPE l =
+                    _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
+                uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
+                if (__builtin_ffsll(m | ((uint64_t)1 << 63)) >
+                    tsize[tree->left->varKeyId]) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                // if (re2::RE2::FullMatch(
+                //         re2::StringPiece((char
+                //         *)tuple[tree->left->varKeyId].p,
+                //                          32),
+                //         pt1, &s, &t)) {
+                //     return true;
+                // } else {
+                //     return false;
+                // }
+                // if (std::regex_search(
+                //         std::string((char *)tuple[tree->left->varKey].p, 32),
+                //         pattern[tree->left->varKey])) {
+                //     return true;
+                // } else {
+                //     return false;
+                // }
+            }
+        }
+    }
+    return false;
+}
+
+bool Executor::evalCond(PredTree *ptree) {
+    bool l, r;
+    if (ptree->evalType == COND) {
+        l = evalCond(ptree->left);
+        r = evalCond(ptree->right);
+        if (ptree->ctype == AND) {
+            return l && r;
+        } else if (ptree->ctype == OR) {
+            return l || r;
+        }
+    } else if (ptree->evalType == PRED) {
+        return evalPred(ptree->pred);
+    }
+}
+
+bool Executor::selection() {
+    if (ptree != NULL) {
+        return evalCond(ptree);
+    } else {
+        return true;
+    }
+}
+
+void Executor::projection() {
+    printf("| ");
+    for (Statement &stmt : stmtVec) {
+        if (stmt.expr->type == DOUBLE) {
+            double v = evalOp<double>(stmt.expr);
+            printf("%lf | ", v);
+        } else if (stmt.expr->type == INT) {
+            int64_t v = evalOp<int64_t>(stmt.expr);
+            printf("%ld | ", v);
+        } else if (stmt.expr->type == TEXT) {
+            DATA_TYPE buf[128];
+            int k = stmt.expr->varKeyId;
+            buf[tsize[k]] = (DATA_TYPE)0;
+            memcpy(buf, tuple[k].p, tsize[k]);
+            printf("%s | ", buf);
+        }
+    }
+    printf("\n");
+}
+
+void Executor::aggregation0() {
+    for (int vk = 0; vk < aggContext.size(); vk++) {
+        int vkk = aggContext[vk].keyId;
+        switch (aggContext[vk].ftype) {
+            case SUM:
+                agg[vk].d += tuple[vkk].d;
+                break;
+            case COUNT:
+                aggCount[vk]++;
+                break;
+            case AVG:
+                agg[vk].d += tuple[vkk].d;
+                aggCount[vk]++;
+                break;
+            case MAX:
+                agg[vk].d =
+                    ((agg[vk].d > tuple[vkk].d) ? agg[vk].d : tuple[vkk].d);
+                break;
+            case MIN:
+                agg[vk].d =
+                    ((agg[vk].d < tuple[vkk].d) ? agg[vk].d : tuple[vkk].d);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void Executor::aggregation1() {
+    int kk = gKeyVec[0].id;
+
+    for (int vk = 0; vk < aggContext.size(); vk++) {
+        int vkk = aggContext[vk].keyId;
+        AggFuncType ftype = aggContext[vk].ftype;
+        if (ftype == COUNT) {
+            // todo: UTF-8
+            std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+            if (!aggCountMap->find(s)) {
+                aggCountMap->assign(s);
+            }
+            aggCountMap->count(s, vk);
+        } else if (ftype == DISTINCT) {
+            std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+            if (!aggCountMap->find(s)) {
+                aggCountMap->assign(s);
+            }
+        } else if (aggContext[vk].type == DOUBLE) {
+            if (ftype == SUM) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggCountMap->find(s)) {
+                    aggCountMap->assign(s);
+                }
+                aggMap->sumDouble(s, tuple[vkk].d, vk);
+            } else if (ftype == AVG) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
+                    aggCountMap->assign(s);
+                }
+                aggMap->sumDouble(s, tuple[vkk].d, vk);
+                aggCountMap->count(s, vk);
+            } else if (ftype == MAX) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
+                }
+                aggMap->maxDouble(s, tuple[vkk].d, vk);
+            } else if (ftype == MIN) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
+                }
+                aggMap->minDouble(s, tuple[vkk].d, vk);
+            }
+        } else if (aggContext[vk].type == INT) {
+            if (ftype == SUM) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggCountMap->find(s)) {
+                    aggCountMap->assign(s);
+                }
+                aggMap->sumInt(s, tuple[vkk].i, vk);
+            } else if (ftype == AVG) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
+                    aggCountMap->assign(s);
+                }
+                aggMap->sumInt(s, tuple[vkk].i, vk);
+                aggCountMap->count(s, vk);
+            } else if (ftype == MAX) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
+                }
+                aggMap->maxInt(s, tuple[vkk].i, vk);
+            } else if (ftype == MIN) {
+                std::string s(reinterpret_cast<char *>(tuple[kk].p), tsize[kk]);
+                if (!aggMap->find(s)) {
+                    aggMap->assign(s, aggContext);
+                }
+                aggMap->minInt(s, tuple[vkk].i, vk);
+            }
+        }
+    }
+}
+
+void Executor::aggregation() {
+    int aggSize = gKeyVec.size();
     if (aggSize > 1) {
         // todo: multiple keys
     } else if (aggSize == 1) {
@@ -609,38 +1114,30 @@ void Executor::aggregation() {
     }
 }
 
-void Executor::queryVExec() {
-    vmaterialize();
-    vselection();
-    if (numProjKeys > 0) {
-        projection();
-    } else {
-        aggregation();
-    }
+void Executor::queryExec() {
+    materialize();
 
-    tid = 0;
-    selVecSize = 0;
-}
-
-void Executor::printAggregation0() {
-    for (int vk = 0; vk < aggVSize; vk++) {
-        AggFuncType ftype = aggContext->valueKeys[vk].ftype;
-        if (ftype == COUNT) {
-            printf("| %d |\n", aggCount[vk]);
-        } else if (aggContext->valueKeys[vk].ktype == DOUBLE) {
-            if (ftype == AVG) {
-                printf("| %lf |\n", agg[vk].d / aggCount[vk]);
-            } else {
-                printf("| %lf |\n", agg[vk].d);
-            }
-        } else if (aggContext->valueKeys[vk].ktype == INT) {
-            if (ftype == AVG) {
-                printf("| %lf |\n", (double)agg[vk].i / aggCount[vk]);
-            } else {
-                printf("| %ld |\n", agg[vk].i);
-            }
+    if (selection()) {
+        if (isProj) {
+            projection();
+        } else {
+            aggregation();
         }
     }
+}
+#endif
+
+void Executor::printAggregation0() {
+    printf("|");
+    for (Statement &stmt : stmtVec) {
+        if (stmt.expr->type == INT) {
+            printf(" %ld |", evalOp<int64_t>(stmt.expr));
+        } else if (stmt.expr->type == DOUBLE) {
+            printf(" %lf |", evalOp<double>(stmt.expr));
+        } else {
+        }
+    }
+    printf("\n");
 }
 
 void Executor::printAggregation1() {
@@ -648,7 +1145,7 @@ void Executor::printAggregation1() {
     AggregationCountMap::HTType &cht = aggCountMap->getHashTable();
     auto begin = ht.begin();
     auto end = ht.begin();
-    if (limit) {
+    if (limit && limit <= ht.size()) {
         for (int i = 0; i < limit; i++) {
             ++end;
         }
@@ -657,26 +1154,20 @@ void Executor::printAggregation1() {
     }
 
     for (auto it = begin; it != end; ++it) {
-        printf("| %s |", it->first.c_str());
-        for (int vk = 0; vk < aggVSize; vk++) {
-            AggFuncType ftype = aggContext->valueKeys[vk].ftype;
-            if (aggContext->valueKeys[vk].ftype == COUNT) {
-                printf(" %d |", cht.at(it->first)[vk]);
-            } else if (aggContext->valueKeys[vk].ftype == DISTINCT) {
-                break;
-            } else if (aggContext->valueKeys[vk].ktype == DOUBLE) {
-                if (ftype == AVG) {
+        printf("|");
+        for (Statement &stmt : stmtVec) {
+            if (stmt.isProjection) {
+                printf(" %s |", it->first.c_str());
+            } else {
+                if (stmt.expr->type == INT) {
+                    printf(" %ld |",
+                           evalFunc1Op<int64_t>(stmt.expr, ht.at(it->first),
+                                                cht.at(it->first)));
+                } else if (stmt.expr->type == DOUBLE) {
                     printf(" %lf |",
-                           ht.at(it->first)[vk].d / cht.at(it->first)[vk]);
+                           evalFunc1Op<double>(stmt.expr, ht.at(it->first),
+                                               cht.at(it->first)));
                 } else {
-                    printf(" %lf |", ht.at(it->first)[vk].d);
-                }
-            } else if (aggContext->valueKeys[vk].ktype == INT) {
-                if (ftype == AVG) {
-                    printf(" %lf |",
-                           ht.at(it->first)[vk].i / cht.at(it->first)[vk]);
-                } else {
-                    printf(" %ld |", ht.at(it->first)[vk].i);
                 }
             }
         }
@@ -685,10 +1176,10 @@ void Executor::printAggregation1() {
 }
 
 void Executor::queryEndExec() {
-    if (numProjKeys > 0) {
+    if (isProj) {
     } else {
-        if (aggContext->keys.size() > 1) {
-        } else if (aggContext->keys.size() == 1) {
+        if (gKeyVec.size() > 1) {
+        } else if (gKeyVec.size() == 1) {
             printAggregation1();
         } else {
             printAggregation0();
@@ -700,11 +1191,13 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
     data = _data, size = _size;
 
 #if (defined BENCH)
+    // cpu_clock_counter_t t = mk_cpu_clock_counter();
+    // long long c0 = cpu_clock_counter_get(t);
+
     double ex_time = 0.0;
     timeval lex1, lex2;
     gettimeofday(&lex1, NULL);
 #endif
-
     while (i < size) {
         switch (kindTable[ctx.currentState]) {
             case ORDERED:
@@ -743,14 +1236,25 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
                         }
                         end->id = 0;
                     }
-                    for (int s = 0; s < subMatchSize; s++) {
-                        indexes[s][tid] = subMatches[s].start;
-                        sizes[s][tid] = subMatches[s].end - subMatches[s].start;
+#if (defined NOEXEC)
+                    if (subMatches[0].start - subMatches[1].start == 0) {
+                        tid++;
                     }
+#elif (defined VECEXEC)
+#if (defined BENCH_CLOCK)
+                    uint64_t clock_start, clock_end;
+                    clock_start = __rdtsc();
+#endif
+                    materialize(tid);
+#if (defined BENCH_CLOCK)
+                    clock_end = __rdtsc();
+                    vmatclocks += clock_end - clock_start;
+#endif
                     tid++;
-                    if (tid == VECEX_BYTE) {
-                        queryVExec();
-                    }
+                    queryVExec();
+#else
+                    queryExec();
+#endif
 
                     i = ctx.recentAcceptIndex + 1;
                 }
@@ -764,14 +1268,18 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
         }
     }
 
-    // queryExec(tid);
-    // todo: add non-vectorized execution
+#if (defined NOEXEC)
+#else
     queryEndExec();
+#endif
 
 #if (defined BENCH)
     gettimeofday(&lex2, NULL);
     ex_time =
         (lex2.tv_sec - lex1.tv_sec) + (lex2.tv_usec - lex1.tv_usec) * 0.000001;
     printf("#BENCH_exec: %lf s\n\n", ex_time);
+
+// long long c1 = cpu_clock_counter_get(t);
+// printf("exec clock: %ld\n", c1 - c0);
 #endif
 }

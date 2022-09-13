@@ -1,4 +1,4 @@
-#include "pfa.hpp"
+#include "scanner/pfa.hpp"
 
 using namespace vlex;
 

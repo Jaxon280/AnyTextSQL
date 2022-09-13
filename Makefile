@@ -1,28 +1,53 @@
 # Compiler
-CXX = g++
-# CPPFLAGS = -std=c++17 -O3 -flto -msse4.2
-CPPFLAGS = -std=c++17 -O3 -flto
-# CPPFLAGS = -std=c++17 -O0 -g -flto -msse4.2
-# DEBUGFLAGS = -Wall -Wextra
+CC = g++
+CFLAGS = -std=c++17 -flto -mavx512f -mavx512bw -mavx512vl -mavx512dq
+# CFLAGS = -std=c++17 -O3 -flto -march=native
+
+# CPPFLAGS += -DVECEXEC
+# CPPFLAGS += -DVECEXEC -DNOEXEC
+EXECFLAGS = -O3
+DEBUGFLAGS = -O0 -g
+# DEBUGFLAGS += -Wall -Wextra
 BENCHFLAGS = -DBENCH
-INCLUDES = -I./include/
-FLAGS = $(CPPFLAGS) $(DEBUGFLAGS) $(BENCHFLAGS) $(INCLUDES)
+INCLUDES = -I./include -I./include/parser/query -I./include/parser/regex
+FLAGS = $(CFLAGS) $(INCLUDES)
 
-# Your program
-CPP_CODES = main.cpp $(wildcard src/*.cpp)
-MAIN_O = main.exe
+CPP_CODES = $(wildcard src/*.cpp) main.cpp
+CPP_PROGRAM = $(basename $(CPP_CODES))
+# CPP_OBJS = $(addprefix build/, $(addsuffix .o, $(CPP_PROGRAM)))
 
-FILENAME = /home/natsuoiida/research/vlex/example/JSON/yelp_academic_dataset_business.json
+PROGRAM = vlex
 
-# Compile your program
-all:
-	$(CXX) $(FLAGS) $(CPP_CODES) -o $(MAIN_O)
+GEN = rparser rlexer qparser qlexer
 
-test:
-	make clean && make && make run
+all: $(PROGRAM)
+
+$(PROGRAM): $(CPP_CODES)
+	$(MAKE) $(GEN)
+	$(CC) $(FLAGS) $(EXECFLAGS) $(BENCHFLAGS)  $^ -o $@
+
+debug: $(CPP_CODES)
+	$(MAKE) $(GEN)
+	$(CC) $(FLAGS) $(DEBUGFLAGS) $^ -o vlex_debug
+
+rparser: generator/regex.ypp
+	bison -d -oregexParser.cpp generator/regex.ypp
+	(mv regexParser.cpp src/; mv regexParser.hpp include/parser/regex/;)
+
+rlexer: generator/regex.lex
+	flex -8 -oregexScanner.cpp generator/regex.lex
+	(mv regexScanner.cpp src/)
+
+qparser: generator/query.ypp
+	bison -d -oqueryParser.cpp generator/query.ypp
+	(mv queryParser.cpp src/; mv queryParser.hpp include/parser/query/;)
+
+qlexer: generator/query.lex
+	flex -8 -oqueryScanner.cpp generator/query.lex
+	(mv queryScanner.cpp src/)
 
 run:
-	./$(MAIN_O) $(FILENAME)
+	./$(PROGRAM)
 
 clean:
-	rm -f $(MAIN_O)
+	rm -f $(PROGRAM)

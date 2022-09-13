@@ -1,0 +1,219 @@
+%define api.prefix {query_yy}
+%{
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
+%}
+%parse-param { vlex::QueryContext& ctx }
+%lex-param { QUERY_YYSTYPE &yylval }
+
+%code provides
+{
+typedef union QUERY_YYSTYPE QUERY_YYSTYPE;
+
+#ifndef YY_DECL
+#define YY_DECL int query_yylex(QUERY_YYSTYPE &yylval)
+YY_DECL;
+#endif
+
+int query_yyerror(vlex::QueryContext &ctx, const char *s);
+}
+
+%code requires
+{
+#include "parser/query.hpp"
+}
+
+%union
+{
+    vlex::OpTree *opt;
+    vlex::PredTree *prt;
+    vlex::Statement *stmt;
+    vlex::StatementList *stmts;
+    double dvalue;
+    int ivalue;
+    char *svalue;
+    vlex::StringList *slist;
+};
+%{
+#include "queryTree.hpp"
+%}
+%token <dvalue> DOUBLE_TK
+%token <ivalue> INT_TK
+%token <svalue> IDENTIFIER_TK STRING_TK '=' '*' ',' ';' '(' ')' '.' '+' '-' '/' '%'
+%token SELECT_TK SUM_TK COUNT_TK AVG_TK MIN_TK MAX_TK DISTINCT_TK AS_TK FROM_TK WHERE_TK AND_TK OR_TK IS_TK NOT_TK NIL_TK BETWEEN_TK REGEXP_TK LIKE_TK EQ_TK NOTEQ_TK LESS_TK GREAT_TK LESSEQ_TK GREATEQ_TK GROUP_TK BY_TK ORDER_TK LIMIT_TK
+%token EOF_TK 0
+/* HAVING TRUE FALSE */
+%type <stmt> statement agg_statement
+%type <stmts> agg_statements proj_statements statements
+%type <opt> expression cexpression agg_func number ccond cpred string
+%type <prt> conds cond string_pred pred null_pred
+%type <svalue> identifier
+%type <slist> identifiers
+
+%left AND_TK
+%left OR_TK
+%left ','
+%left EQ_TK NOTEQ_TK LESS_TK LESSEQ_TK GREAT_TK GREATEQ_TK IS_TK LIKE_TK REGEXP_TK AS_TK
+%left '+''-'
+%left '*''/'
+
+%%
+
+line: SELECT_TK statements from_clauses { ctx.assignStmts($2);};
+
+statements: agg_statements {$$ = $1;}
+    | proj_statements {$$ = $1;}
+    | '*' {$$ = buildWildCard(false);}
+    | COUNT_TK '(' '*' ')' {$$ = buildWildCard(true);}
+    ;
+
+agg_statements: agg_statement {$$ = buildStatements(NULL, $1);}
+    | agg_statements ',' agg_statement {$$ = buildStatements($1, $3);}
+    | proj_statements ',' agg_statement {$$ = buildStatements($1, $3);}
+    ;
+
+proj_statements: statement {$$ = buildStatements(NULL, $1);}
+    | proj_statements ',' statement {$$ = buildStatements($1, $3);}
+    ;
+
+agg_func: SUM_TK '(' identifier ')' {$$ = buildAggFunc(SUM, $3);}
+    | COUNT_TK '(' identifier ')' {$$ = buildAggFunc(COUNT, $3);}
+    | AVG_TK '(' identifier ')' {$$ = buildAggFunc(AVG, $3);}
+    | MIN_TK '(' identifier ')' {$$ = buildAggFunc(MIN, $3);}
+    | MAX_TK '(' identifier ')' {$$ = buildAggFunc(MAX, $3);}
+    | DISTINCT_TK '(' identifier ')' {$$ = buildAggFunc(DISTINCT, $3);}
+    ;
+
+agg_statement: agg_func {$$ = buildStatement($1, NULL, false);}
+    | agg_func AS_TK identifier {$$ = buildStatement($1, $3, false);}
+    ;
+
+statement: expression {$$ = buildStatement($1, NULL, true);}
+    | expression AS_TK identifier {$$ = buildStatement($1, $3, true);}
+    ;
+
+from_clauses: FROM_TK identifiers selection_clauses { ctx.assignTables($2); };
+
+selection_clauses: agg_clauses { ctx.assignPredTree(NULL); }
+    | WHERE_TK conds agg_clauses { ctx.assignPredTree($2); }
+    ;
+
+agg_clauses: sort_clauses { ctx.assignGroupKeys(NULL); }
+    | GROUP_TK BY_TK identifiers sort_clauses { ctx.assignGroupKeys($3); }
+    ;
+
+sort_clauses: limit_clauses { ctx.assignOrderKeys(NULL); }
+    | ORDER_TK BY_TK identifiers limit_clauses { ctx.assignOrderKeys($3);}
+    ;
+
+limit_clauses: ';' { ctx.assignLimit(-1); }
+    | LIMIT_TK INT_TK ';' { ctx.assignLimit($2); }
+    ;
+
+conds: cond {$$ = $1;}
+    | ccond {$$ = buildCCond(DEFAULT, NULL, $1);}
+    ;
+
+cond: '(' cond ')' {$$ = $2;}
+    | cond AND_TK cond {$$ = buildCond(AND, $1, $3);}
+    | cond OR_TK cond {$$ = buildCond(OR, $1, $3);}
+    | cond AND_TK ccond {$$ = buildCCond(AND, $1, $3);}
+    | cond OR_TK ccond {$$ = buildCCond(OR, $1, $3);}
+    | ccond AND_TK cond {$$ = buildCCond(AND, $3, $1);}
+    | ccond OR_TK cond {$$ = buildCCond(OR, $3, $1);}
+    | pred {$$ = $1;}
+    | string_pred {$$ = $1;}
+    | null_pred {$$ = $1;}
+    ;
+
+ccond: '(' ccond ')' {$$ = $2;}
+    | ccond AND_TK ccond {$$ = evalConstCond(AND, $1, $3);}
+    | ccond OR_TK ccond {$$ = evalConstCond(OR, $1, $3);}
+    | cpred {$$ = $1;}
+    ;
+
+pred: expression EQ_TK expression {$$ = buildPred(EQUAL, $1, $3);}
+    | expression EQ_TK cexpression {$$ = buildPred(EQUAL, $1, $3);}
+    | cexpression EQ_TK expression {$$ = buildPred(EQUAL, $1, $3);}
+    | expression NOTEQ_TK expression {$$ = buildPred(NEQUAL, $1, $3);}
+    | expression NOTEQ_TK cexpression {$$ = buildPred(NEQUAL, $1, $3);}
+    | cexpression NOTEQ_TK expression {$$ = buildPred(NEQUAL, $1, $3);}
+    | expression LESSEQ_TK expression {$$ = buildPred(LESSEQ, $1, $3);}
+    | expression LESSEQ_TK cexpression {$$ = buildPred(LESSEQ, $1, $3);}
+    | cexpression LESSEQ_TK expression {$$ = buildPred(LESSEQ, $1, $3);}
+    | expression LESS_TK expression {$$ = buildPred(LESS, $1, $3);}
+    | expression LESS_TK cexpression {$$ = buildPred(LESS, $1, $3);}
+    | cexpression LESS_TK expression {$$ = buildPred(LESS, $1, $3);}
+    | expression GREATEQ_TK expression {$$ = buildPred(GREATEQ, $1, $3);}
+    | expression GREATEQ_TK cexpression {$$ = buildPred(GREATEQ, $1, $3);}
+    | cexpression GREATEQ_TK expression {$$ = buildPred(GREATEQ, $1, $3);}
+    | expression GREAT_TK expression {$$ = buildPred(GREATER, $1, $3);}
+    | expression GREAT_TK cexpression {$$ = buildPred(GREATER, $1, $3);}
+    | cexpression GREAT_TK expression {$$ = buildPred(GREATER, $1, $3);}
+    | expression BETWEEN_TK cexpression AND_TK cexpression {$$ = buildCond(AND, buildPred(LESSEQ, $3, $1), buildPred(GREATEQ, $5, $1));}
+    ;
+
+cpred: cexpression EQ_TK cexpression {$$ = evalConstPred(EQUAL, $1, $3);}
+    | cexpression NOTEQ_TK cexpression {$$ = evalConstPred(NEQUAL, $1, $3);}
+    | cexpression LESSEQ_TK cexpression {$$ = evalConstPred(LESSEQ, $1, $3);}
+    | cexpression LESS_TK cexpression {$$ = evalConstPred(LESS, $1, $3);}
+    | cexpression GREATEQ_TK cexpression {$$ = evalConstPred(GREATEQ, $1, $3);}
+    | cexpression GREAT_TK cexpression {$$ = evalConstPred(GREATER, $1, $3);}
+    | cexpression BETWEEN_TK cexpression AND_TK cexpression {$$ = evalConstCond(AND, evalConstPred(LESSEQ, $3, $1), evalConstPred(GREATEQ, $5, $1));}
+    ;
+
+string_pred: identifier LIKE_TK string {$$ = buildPred(REGEXP, buildVar($1), $3);}
+    | identifier REGEXP_TK string {$$ = buildPred(REGEXP, buildVar($1), $3);}
+    /* | identifier IN '[' strings ']' {$$ = buildPredNode();} */
+    /* | identifier NOT IN '[' strings ']' {$$ = buildPredNode();} */
+    ;
+
+null_pred: identifier IS_TK NIL_TK {$$ = buildPred(ISNULL, buildVar($1), NULL);}
+    | identifier IS_TK NOT_TK NIL_TK {$$ = buildPred(ISNOTNULL, buildVar($1), NULL);}
+    ;
+
+cexpression: '(' cexpression ')' {$$ = $2;}
+    | cexpression '+' cexpression {$$ = evalConstExpr(ADD, $1, $3);}
+    | cexpression '-' cexpression {$$ = evalConstExpr(SUB, $1, $3);}
+    | cexpression '*' cexpression {$$ = evalConstExpr(MUL, $1, $3);}
+    | cexpression '/' cexpression {$$ = evalConstExpr(DIV, $1, $3);}
+    | number {$$ = $1;}
+    ;
+
+expression: '(' expression ')' {$$ = $2;}
+    | expression '+' expression {$$ = buildOp(ADD, $1, $3);}
+    | expression '-' expression {$$ = buildOp(SUB, $1, $3);}
+    | expression '*' expression {$$ = buildOp(MUL, $1, $3);}
+    | expression '/' expression {$$ = buildOp(DIV, $1, $3);}
+    | expression '+' cexpression {$$ = buildOp(ADD, $1, $3);}
+    | expression '-' cexpression {$$ = buildOp(SUB, $1, $3);}
+    | expression '*' cexpression {$$ = buildOp(MUL, $1, $3);}
+    | expression '/' cexpression {$$ = buildOp(DIV, $1, $3);}
+    | cexpression '+' expression {$$ = buildOp(ADD, $1, $3);}
+    | cexpression '-' expression {$$ = buildOp(SUB, $1, $3);}
+    | cexpression '*' expression {$$ = buildOp(MUL, $1, $3);}
+    | cexpression '/' expression {$$ = buildOp(DIV, $1, $3);}
+    | identifier {$$ = buildVar($1);}
+    ;
+
+
+identifiers: identifier {$$ = buildIdents(NULL, $1);}
+    | identifiers ',' identifier {$$ = buildIdents($1, $3);}
+    ;
+
+identifier: IDENTIFIER_TK {$$ = $1;};
+
+number: INT_TK {$$ = buildConstInt($1);}
+    | DOUBLE_TK {$$ = buildConstDouble($1);}
+    ;
+
+string: STRING_TK {$$ = buildConstString($1);}
+    ;
+
+%%
+int query_yyerror(vlex::QueryContext &ctx, const char *s){
+    ctx.grammarError(s);
+	return *s;
+}

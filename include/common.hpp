@@ -18,8 +18,11 @@
 #include <iostream>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <queue>
+#include <regex>
 #include <set>
+#include <sstream>
 #include <stack>
 #include <string>
 #include <type_traits>
@@ -46,11 +49,11 @@
 #define SIMD_512dTYPE __m512d
 #define SIMD_512iTYPE __m512i
 
-#define VECEX_BYTE 512
+#define VECEX_BYTE 16
 #define VECEX_BYTE4 VECEX_BYTE >> 2
 #define VECEX_BYTE8 VECEX_BYTE >> 3
 #define VECEX_BYTE16 VECEX_BYTE >> 4
-#define VECEX_BYTE32 VECEX_BYTE >> 5
+#define VECEX_BYTE_PROB (double)1 / (double)VECEX_BYTE
 #define VECEX_SIZE 512  // AVX-512
 #define VECEX_TYPE __m256
 #define VECEX_TYPEI __m256i
@@ -68,3 +71,4 @@ union data64 {
 #define ASCII_START 32
 #define ASCII_END 126
 #define ASCII_SZ 128
+#define UNICODE_SZ 256

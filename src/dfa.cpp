@@ -1,4 +1,4 @@
-#include "dfa.hpp"
+#include "scanner/dfa.hpp"
 
 using namespace vlex;
 
@@ -150,9 +150,7 @@ void DFAGenerator::minimize() {
     }
 }
 
-DFAGenerator::~DFAGenerator() { delete dfa; }
-
-void DFAGenerator::generate() {
+void DFAGenerator::generate(KeyMap* keyMap) {
     setEpsilonTable(nfa->transVec, nfa->transSize, nfa->stateSize);
     setPowsetTable(nfa->transVec, nfa->transSize);
 
@@ -209,6 +207,8 @@ void DFAGenerator::generate() {
 
     for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
         DFA::SubMatchStates sms;
+        sms.id = keyMap->at(s->name).id;
+        sms.type = keyMap->at(s->name).type;
         for (int ss : stateVec) {
             if (powsetStates[ss].count(s->start) > 0) {
                 sms.startState = ss;
