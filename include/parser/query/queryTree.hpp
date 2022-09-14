@@ -8,7 +8,7 @@ using namespace vlex;
 
 StatementList *buildWildCard(bool isCount);
 StatementList *buildStatements(StatementList *stmts, Statement *stmt);
-Statement *buildStatement(OpTree *left, char *right);
+Statement *buildStatement(OpTree *left, const char *right);
 
 StringList *buildIdents(StringList *idents, char *ident);
 

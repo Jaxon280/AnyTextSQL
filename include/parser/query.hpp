@@ -68,7 +68,7 @@ struct PredTree {
 
 struct Statement {
     OpTree *expr;
-    char *name;
+    const char *name;
 
     HashTableType httype;
     bool isWildCard;

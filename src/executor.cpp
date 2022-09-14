@@ -724,6 +724,24 @@ inline void Executor::queryVExec() {
 }
 
 #else
+
+void Executor::printColumnNames() {
+    int id = 1;
+
+    printf("|");
+    for (auto stmt = stmtList.begin(); stmt != stmtList.end(); ++stmt) {
+        if (stmt->name == NULL) {
+            printf(" %d |", id);
+        } else {
+            printf(" %s |", stmt->name);
+        }
+        id++;
+    }
+    printf("\n");
+}
+
+void Executor::queryStartExec() { printColumnNames(); }
+
 void Executor::materialize() {
     DATA_TYPE buf[128];
     for (int s = 0; s < subMatchSize; s++) {
@@ -1247,6 +1265,8 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
     timeval lex1, lex2;
     gettimeofday(&lex1, NULL);
 #endif
+    queryStartExec();
+
     while (i < size) {
         switch (kindTable[ctx.currentState]) {
             case ORDERED:

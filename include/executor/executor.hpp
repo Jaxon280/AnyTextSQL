@@ -131,14 +131,14 @@ class Executor {
     inline void vaggregation();
     inline void queryVExec();
 #else
-    void materialize();
+    void printColumnNames();
+    void queryStartExec();
 
+    void materialize();
     template <typename Value>
     Value evalFunc1Op(OpTree *tree, data64 *vht, int *cht);
-
     template <typename Value>
     Value evalOp(OpTree *tree);
-
     bool evalPred(OpTree *tree);
     bool evalCond(PredTree *ptree);
     bool selection();

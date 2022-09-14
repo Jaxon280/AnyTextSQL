@@ -21,10 +21,16 @@ StatementList *buildStatements(StatementList *stmts, Statement *stmt) {
     return stmtList;
 }
 
-Statement *buildStatement(OpTree *left, char *right) {
+Statement *buildStatement(OpTree *left, const char *right) {
     Statement *stmt = new Statement;
     stmt->expr = left;
-    stmt->name = right;
+    if (right == NULL) {
+        if (left->evalType == VAR) {
+            stmt->name = left->varKey.c_str();
+        }
+    } else {
+        stmt->name = right;
+    }
     stmt->httype = left->httype;
     stmt->isWildCard = false;
     return stmt;
