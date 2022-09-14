@@ -16,6 +16,7 @@ OpTree *buildOp(OpType op, OpTree *left, OpTree *right);
 OpTree *buildAggFunc(AggFuncType ftype, char *ident);
 OpTree *buildVar(char *ident);
 OpTree *buildConstString(char *svalue);
+OpTree *buildSignedNumber(OpTree *opt, bool isNeg);
 OpTree *buildConstInt(int ivalue);
 OpTree *buildConstDouble(double dvalue);
 PredTree *buildCond(CondType ctype, PredTree *left, PredTree *right);

@@ -82,6 +82,17 @@ OpTree *buildConstString(char *svalue) {
     return opt;
 }
 
+OpTree *buildSignedNumber(OpTree *opt, bool isNeg) {
+    if (isNeg) {
+        if (opt->type == INT) {
+            opt->constData.i *= -1;
+        } else if (opt->type == DOUBLE) {
+            opt->constData.d *= -1.0;
+        }
+    }
+    return opt;
+}
+
 OpTree *buildConstInt(int ivalue) {
     OpTree *opt = new OpTree;
     opt->left = NULL, opt->right = NULL;

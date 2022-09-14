@@ -61,13 +61,13 @@ using qtoken = query_yytokentype;
     yylval.svalue = strdup(yytext);
     return qtoken::IDENTIFIER_TK;
 }
-[+-]?(0|[1-9][0-9]*)(\.[0-9]+)([Ee][+-]?(0|[1-9][0-9]*))? {
+(0|[1-9][0-9]*)(\.[0-9]+)([Ee][+-]?(0|[1-9][0-9]*))? {
     double temp;
     sscanf(yytext, "%lf", &temp);
     yylval.dvalue = temp;
     return qtoken::DOUBLE_TK;
 }
-[+-]?(0|[1-9][0-9]*) {
+(0|[1-9][0-9]*) {
     int temp;
     sscanf(yytext, "%d", &temp);
     yylval.ivalue = temp;

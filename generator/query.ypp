@@ -47,7 +47,7 @@ int query_yyerror(vlex::QueryContext &ctx, const char *s);
 /* HAVING TRUE FALSE */
 %type <stmt> statement agg_statement
 %type <stmts> agg_statements proj_statements statements
-%type <opt> expression cexpression agg_func number ccond cpred string
+%type <opt> expression cexpression agg_func unsigned_number number ccond cpred string
 %type <prt> conds cond string_pred pred null_pred
 %type <svalue> identifier
 %type <slist> identifiers
@@ -205,7 +205,12 @@ identifiers: identifier {$$ = buildIdents(NULL, $1);}
 
 identifier: IDENTIFIER_TK {$$ = $1;};
 
-number: INT_TK {$$ = buildConstInt($1);}
+number: unsigned_number {$$ = $1;}
+    | '+' unsigned_number {$$ = buildSignedNumber($2, false);}
+    | '-' unsigned_number {$$ = buildSignedNumber($2, true);}
+    ;
+
+unsigned_number: INT_TK {$$ = buildConstInt($1);}
     | DOUBLE_TK {$$ = buildConstDouble($1);}
     ;
 
