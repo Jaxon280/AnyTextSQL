@@ -158,7 +158,7 @@ void Executor::setQuery(QueryContext *query) {
 
     StatementList *stmts = query->getStatements();
     for (StatementList *s = stmts; s != NULL; s = s->next) {
-        stmtVec.push_back(*s->stmt);
+        stmtList.push_front(*s->stmt);
         if (s->stmt->httype != NONE_HT) {
             // extract aggregate function
             OpTree *op;
@@ -974,16 +974,16 @@ bool Executor::selection() {
 
 void Executor::projection() {
     printf("| ");
-    for (Statement &stmt : stmtVec) {
-        if (stmt.expr->type == DOUBLE) {
-            double v = evalOp<double>(stmt.expr);
+    for (auto stmt = stmtList.begin(); stmt != stmtList.end(); ++stmt) {
+        if (stmt->expr->type == DOUBLE) {
+            double v = evalOp<double>(stmt->expr);
             printf("%lf | ", v);
-        } else if (stmt.expr->type == INT) {
-            int64_t v = evalOp<int64_t>(stmt.expr);
+        } else if (stmt->expr->type == INT) {
+            int64_t v = evalOp<int64_t>(stmt->expr);
             printf("%ld | ", v);
-        } else if (stmt.expr->type == TEXT) {
+        } else if (stmt->expr->type == TEXT) {
             DATA_TYPE buf[128];
-            int k = stmt.expr->varKeyId;
+            int k = stmt->expr->varKeyId;
             buf[tsize[k]] = (DATA_TYPE)0;
             memcpy(buf, tuple[k].p, tsize[k]);
             printf("%s | ", buf);
@@ -1124,11 +1124,11 @@ void Executor::queryExec() {
 
 void Executor::printAggregation0() {
     printf("|");
-    for (Statement &stmt : stmtVec) {
-        if (stmt.expr->type == INT) {
-            printf(" %ld |", evalOp<int64_t>(stmt.expr));
-        } else if (stmt.expr->type == DOUBLE) {
-            printf(" %lf |", evalOp<double>(stmt.expr));
+    for (auto stmt = stmtList.begin(); stmt != stmtList.end(); ++stmt) {
+        if (stmt->expr->type == INT) {
+            printf(" %ld |", evalOp<int64_t>(stmt->expr));
+        } else if (stmt->expr->type == DOUBLE) {
+            printf(" %lf |", evalOp<double>(stmt->expr));
         } else {
         }
     }
@@ -1164,17 +1164,17 @@ void Executor::printAggregation1() {
     if (httype == COUNT_HT) {
         for (auto it = cbegin; it != cend; ++it) {
             printf("|");
-            for (Statement &stmt : stmtVec) {
-                if (stmt.httype == NONE_HT) {
+            for (auto stmt = stmtList.begin(); stmt != stmtList.end(); ++stmt) {
+                if (stmt->httype == NONE_HT) {
                     printf(" %s |", it->first.c_str());
                 } else {
-                    if (stmt.expr->type == INT) {
+                    if (stmt->expr->type == INT) {
                         printf(" %ld |",
-                               evalFunc1Op<int64_t>(stmt.expr, NULL,
+                               evalFunc1Op<int64_t>(stmt->expr, NULL,
                                                     cht.at(it->first)));
-                    } else if (stmt.expr->type == DOUBLE) {
+                    } else if (stmt->expr->type == DOUBLE) {
                         printf(" %lf |",
-                               evalFunc1Op<double>(stmt.expr, NULL,
+                               evalFunc1Op<double>(stmt->expr, NULL,
                                                    cht.at(it->first)));
                     }
                 }
@@ -1184,34 +1184,34 @@ void Executor::printAggregation1() {
     } else if (httype == VALUE_HT || httype == BOTH_HT) {
         for (auto it = vbegin; it != vend; ++it) {
             printf("|");
-            for (Statement &stmt : stmtVec) {
-                if (stmt.httype == NONE_HT) {
+            for (auto stmt = stmtList.begin(); stmt != stmtList.end(); ++stmt) {
+                if (stmt->httype == NONE_HT) {
                     printf(" %s |", it->first.c_str());
                 } else {
-                    if (stmt.expr->type == INT) {
+                    if (stmt->expr->type == INT) {
                         int64_t avi = 0;
-                        if (stmt.httype == COUNT_HT) {
-                            avi = evalFunc1Op<int64_t>(stmt.expr, NULL,
+                        if (stmt->httype == COUNT_HT) {
+                            avi = evalFunc1Op<int64_t>(stmt->expr, NULL,
                                                        cht.at(it->first));
-                        } else if (stmt.httype == VALUE_HT) {
-                            avi = evalFunc1Op<int64_t>(stmt.expr,
+                        } else if (stmt->httype == VALUE_HT) {
+                            avi = evalFunc1Op<int64_t>(stmt->expr,
                                                        vht.at(it->first), NULL);
-                        } else if (stmt.httype == BOTH_HT) {
-                            avi = evalFunc1Op<int64_t>(stmt.expr,
+                        } else if (stmt->httype == BOTH_HT) {
+                            avi = evalFunc1Op<int64_t>(stmt->expr,
                                                        vht.at(it->first),
                                                        cht.at(it->first));
                         }
                         printf(" %ld |", avi);
-                    } else if (stmt.expr->type == DOUBLE) {
+                    } else if (stmt->expr->type == DOUBLE) {
                         double avd = 0.0;
-                        if (stmt.httype == COUNT_HT) {
-                            avd = evalFunc1Op<double>(stmt.expr, NULL,
+                        if (stmt->httype == COUNT_HT) {
+                            avd = evalFunc1Op<double>(stmt->expr, NULL,
                                                       cht.at(it->first));
-                        } else if (stmt.httype == VALUE_HT) {
-                            avd = evalFunc1Op<double>(stmt.expr,
+                        } else if (stmt->httype == VALUE_HT) {
+                            avd = evalFunc1Op<double>(stmt->expr,
                                                       vht.at(it->first), NULL);
-                        } else if (stmt.httype == BOTH_HT) {
-                            avd = evalFunc1Op<double>(stmt.expr,
+                        } else if (stmt->httype == BOTH_HT) {
+                            avd = evalFunc1Op<double>(stmt->expr,
                                                       vht.at(it->first),
                                                       cht.at(it->first));
                         }

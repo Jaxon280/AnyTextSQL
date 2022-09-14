@@ -83,7 +83,7 @@ class Executor {
     Type *keyTypes;
 
     // SELECT clause
-    std::vector<Statement> stmtVec;
+    std::list<Statement> stmtList;
     HashTableType httype = NONE_HT;
 
     // WHERE clause
