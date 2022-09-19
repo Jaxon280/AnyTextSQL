@@ -16,7 +16,7 @@ NFA *build_wildcard_NFA();
 NFA *build_digit_NFA();
 NFA *build_alph_NFA();
 NFA *build_capt_NFA();
-NFA *build_submatch_NFA(NFA *nfa, char *name);
+NFA *build_submatch_NFA(NFA *nfa, const char *name);
 NFA *build_concat_NFA(NFA *n1, NFA *n2);
 NFA *build_union_NFA(NFA *n1, NFA *n2);
 NFA *build_star_NFA(NFA *n);

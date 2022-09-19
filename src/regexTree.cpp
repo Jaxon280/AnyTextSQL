@@ -1,9 +1,9 @@
 #include "parser/regex/regexTree.hpp"
 
 NFA *construct_NFA(int tsize, PatternType type) {
-    NFA *nfa = (NFA *)malloc(sizeof(NFA));
+    NFA *nfa = new NFA;
     nfa->subms = NULL;
-    nfa->transVec = (Transition *)malloc(sizeof(Transition) * tsize);
+    nfa->transVec = new Transition[tsize];
     nfa->type = type;
     return nfa;
 }
@@ -58,7 +58,7 @@ NFA *build_charsets_NFA(uint8_t *chsets) {
     nfa->acceptState = 1;
     nfa->stateSize = 2;
     nfa->transSize = tsize;
-    nfa->transVec = (Transition *)malloc(sizeof(Transition) * tsize);
+    nfa->transVec = new Transition[tsize];
     int ti = 0;
     for (int i = 0; i < ASCII_SZ; i++) {
         if (chsets[i] == 1) {
@@ -237,8 +237,8 @@ NFA *build_TEXT() {
     return nfa;
 }
 
-NFA *build_submatch_NFA(NFA *nfa, char *name) {
-    SubMatch *new_sub = (SubMatch *)malloc(sizeof(SubMatch));
+NFA *build_submatch_NFA(NFA *nfa, const char *name) {
+    SubMatch *new_sub = new SubMatch;
     new_sub->start = nfa->initState;
     new_sub->end = nfa->acceptState;
     new_sub->isAnyStart = nfa->isAnyStart;
@@ -246,18 +246,20 @@ NFA *build_submatch_NFA(NFA *nfa, char *name) {
     new_sub->name = strdup(name);
     new_sub->next = nfa->subms;
     new_sub->type = nfa->type;
+    new_sub->predID = 0;  // initial value
     nfa->subms = new_sub;
     return nfa;
 }
 
 SubMatch *copy_submatch(SubMatch *sm) {
-    SubMatch *sm_new = (SubMatch *)malloc(sizeof(SubMatch));
+    SubMatch *sm_new = new SubMatch;
     sm_new->start = sm->start;
     sm_new->end = sm->end;
     sm_new->isAnyStart = sm->isAnyStart;
     sm_new->isAnyEnd = sm->isAnyEnd;
     sm_new->name = sm->name;
     sm_new->type = sm->type;
+    sm_new->predID = sm->predID;
     return sm_new;
 }
 
