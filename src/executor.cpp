@@ -222,7 +222,7 @@ void Executor::setQuery(QueryContext *query) {
     limit = query->getLimit();
 }
 
-inline void Executor::cmpestri_ord(ST_TYPE cur_state) {
+inline void Executor::cmpestriOrd(ST_TYPE cur_state) {
 loop:
     if (i >= size) return;
     SIMD_TEXTTYPE text =
@@ -242,7 +242,7 @@ loop:
     ctx.currentState = rTable[cur_state];
 }
 
-inline void Executor::cmpestri_any(ST_TYPE cur_state) {
+inline void Executor::cmpestriAny(ST_TYPE cur_state) {
     if (anyStartTable[cur_state] > 0) {
         startSubMatch(anyStartTable[cur_state]);
     }
@@ -279,7 +279,7 @@ loop:
     }
 }
 
-inline void Executor::cmpestri_ranges(ST_TYPE cur_state) {
+inline void Executor::cmpestriRanges(ST_TYPE cur_state) {
     if (anyStartTable[cur_state] > 0) {
         startSubMatch(anyStartTable[cur_state]);
     }
@@ -1295,13 +1295,13 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
     while (i < size) {
         switch (kindTable[ctx.currentState]) {
             case ORDERED:
-                cmpestri_ord(ctx.currentState);
+                cmpestriOrd(ctx.currentState);
                 break;
             case ANY:
-                cmpestri_any(ctx.currentState);
+                cmpestriAny(ctx.currentState);
                 break;
             case RANGES:
-                cmpestri_ranges(ctx.currentState);
+                cmpestriRanges(ctx.currentState);
                 break;
             case C:
                 if (ctx.currentState == INIT_STATE) {

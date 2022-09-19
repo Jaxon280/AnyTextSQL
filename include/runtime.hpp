@@ -31,6 +31,6 @@ class Runtime {
 
     std::vector<SIZE_TYPE> partitions;
 
-    void make_partitions(SIZE_TYPE size);
+    void makePartitions(SIZE_TYPE size);
 };
 }  // namespace vlex

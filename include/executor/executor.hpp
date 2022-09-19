@@ -115,9 +115,9 @@ class Executor {
     // LIMIT clause
     int limit = 0;
 
-    inline void cmpestri_ord(ST_TYPE cur_state);
-    inline void cmpestri_any(ST_TYPE cur_state);
-    inline void cmpestri_ranges(ST_TYPE cur_state);
+    inline void cmpestriOrd(ST_TYPE cur_state);
+    inline void cmpestriAny(ST_TYPE cur_state);
+    inline void cmpestriRanges(ST_TYPE cur_state);
     inline void startSubMatch(int id);
     inline void endSubMatch(int id);
     inline void resetContext();

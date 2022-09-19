@@ -10,7 +10,7 @@ Runtime::Runtime(Table& table, NFA* nfa, QueryContext* _query)
     dfag->generate(table.getKeyMap());
     vfa = new VectFA(*dfag->getDFA());
     size = ios->getSize();
-    make_partitions(size);
+    makePartitions(size);
 }
 
 void Runtime::construct(double lr) {
@@ -56,7 +56,7 @@ void Runtime::exec() {
     executor->exec(data, size);
 }
 
-void Runtime::make_partitions(SIZE_TYPE size) {
+void Runtime::makePartitions(SIZE_TYPE size) {
     SIZE_TYPE psize = size / PARTITION_SIZE;
     SIZE_TYPE i = 0;
     SIZE_TYPE offset = 0;
