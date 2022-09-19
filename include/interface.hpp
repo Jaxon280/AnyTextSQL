@@ -39,7 +39,7 @@ class KeyMap {
         }
     }
 
-    inline Key &at(const std::string &name) { return map[name]; }
+    inline const Key &at(const std::string &name) const { return map.at(name); }
     inline bool find(const std::string &name) {
         return map.find(name) != map.end();
     }
