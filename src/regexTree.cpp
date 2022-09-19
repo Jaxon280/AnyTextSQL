@@ -1,6 +1,6 @@
 #include "parser/regex/regexTree.hpp"
 
-NFA *construct_NFA(int tsize, PatternType type) {
+NFA *constructNFA(int tsize, PatternType type) {
     NFA *nfa = new NFA;
     nfa->subms = NULL;
     nfa->transVec = new Transition[tsize];
@@ -8,13 +8,13 @@ NFA *construct_NFA(int tsize, PatternType type) {
     return nfa;
 }
 
-void destroy_NFA(NFA *nfa) {
+void destroyNFA(NFA *nfa) {
     free(nfa->transVec);
     free(nfa);
 }
 
-NFA *copy_NFA(NFA *n) {
-    NFA *nfa = construct_NFA(n->transSize, n->type);
+NFA *copyNFA(NFA *n) {
+    NFA *nfa = constructNFA(n->transSize, n->type);
     nfa->initState = n->initState;
     nfa->acceptState = n->acceptState;
     nfa->stateSize = n->stateSize;
@@ -30,8 +30,8 @@ NFA *copy_NFA(NFA *n) {
     return nfa;
 }
 
-NFA *build_NFA(char c) {
-    NFA *nfa = construct_NFA(1, TEXT_PT);
+NFA *buildNFA(char c) {
+    NFA *nfa = constructNFA(1, TEXT_PT);
     nfa->initState = 0;
     nfa->acceptState = 1;
     nfa->stateSize = 2;
@@ -45,7 +45,7 @@ NFA *build_NFA(char c) {
     return nfa;
 }
 
-NFA *build_charsets_NFA(uint8_t *chsets) {
+NFA *buildCharsetsNFA(uint8_t *chsets) {
     int tsize = 0;
     for (int i = 0; i < ASCII_SZ; i++) {
         if (chsets[i] == 1) {
@@ -53,7 +53,7 @@ NFA *build_charsets_NFA(uint8_t *chsets) {
         }
     }
 
-    NFA *nfa = construct_NFA(tsize, TEXT_PT);
+    NFA *nfa = constructNFA(tsize, TEXT_PT);
     nfa->initState = 0;
     nfa->acceptState = 1;
     nfa->stateSize = 2;
@@ -73,8 +73,8 @@ NFA *build_charsets_NFA(uint8_t *chsets) {
     return nfa;
 }
 
-NFA *build_wildcard_NFA() {
-    NFA *nfa = construct_NFA(ASCII_SZ, TEXT_PT);
+NFA *buildWildcardNFA() {
+    NFA *nfa = constructNFA(ASCII_SZ, TEXT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -89,8 +89,8 @@ NFA *build_wildcard_NFA() {
     return nfa;
 }
 
-NFA *build_digit_NFA() {
-    NFA *nfa = construct_NFA(10, INT_PT);
+NFA *buildDigitNFA() {
+    NFA *nfa = constructNFA(10, INT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -105,8 +105,8 @@ NFA *build_digit_NFA() {
     return nfa;
 }
 
-NFA *build_alph_NFA() {
-    NFA *nfa = construct_NFA(26, TEXT_PT);
+NFA *buildAlphNFA() {
+    NFA *nfa = constructNFA(26, TEXT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -121,8 +121,8 @@ NFA *build_alph_NFA() {
     return nfa;
 }
 
-NFA *build_capt_NFA() {
-    NFA *nfa = construct_NFA(26, TEXT_PT);
+NFA *buildCaptNFA() {
+    NFA *nfa = constructNFA(26, TEXT_PT);
     nfa->stateSize = 2;
     nfa->initState = 0;
     nfa->acceptState = 1;
@@ -137,107 +137,107 @@ NFA *build_capt_NFA() {
     return nfa;
 }
 
-NFA *build_INT() {
-    uint8_t *chset1 = build_c_charsets('+');
-    uint8_t *chset2 = build_c_charsets('-');
-    uint8_t *chset3 = add_charsets(chset1, chset2);
-    NFA *nfa1 = build_charsets_NFA(chset3);
-    NFA *nfa2 = build_select_NFA(nfa1);
+NFA *buildINT() {
+    uint8_t *chset1 = buildCharsets('+');
+    uint8_t *chset2 = buildCharsets('-');
+    uint8_t *chset3 = addCharsets(chset1, chset2);
+    NFA *nfa1 = buildCharsetsNFA(chset3);
+    NFA *nfa2 = buildSelectNFA(nfa1);
 
-    NFA *nfa3 = build_NFA('0');
-    uint8_t *chset4 = build_range_charsets('1', '9');
-    NFA *nfa4 = build_charsets_NFA(chset4);
-    uint8_t *chset5 = build_range_charsets('0', '9');
-    NFA *nfa5 = build_charsets_NFA(chset5);
-    NFA *nfa6 = build_star_NFA(nfa5);
-    NFA *nfa7 = build_concat_NFA(nfa4, nfa6);
-    NFA *nfa8 = build_union_NFA(nfa3, nfa7);
+    NFA *nfa3 = buildNFA('0');
+    uint8_t *chset4 = buildRangeCharsets('1', '9');
+    NFA *nfa4 = buildCharsetsNFA(chset4);
+    uint8_t *chset5 = buildRangeCharsets('0', '9');
+    NFA *nfa5 = buildCharsetsNFA(chset5);
+    NFA *nfa6 = buildStarNFA(nfa5);
+    NFA *nfa7 = buildConcatNFA(nfa4, nfa6);
+    NFA *nfa8 = buildUnionNFA(nfa3, nfa7);
 
-    NFA *nfa = build_concat_NFA(nfa2, nfa8);
+    NFA *nfa = buildConcatNFA(nfa2, nfa8);
     nfa->type = INT_PT;
     return nfa;
 }
 
 NFA *build_DOUBLE() {
-    uint8_t *chset1 = build_c_charsets('+');
-    uint8_t *chset2 = build_c_charsets('-');
-    uint8_t *chset3 = add_charsets(chset1, chset2);
-    NFA *nfa1 = build_charsets_NFA(chset3);
-    NFA *nfa2 = build_select_NFA(nfa1);
+    uint8_t *chset1 = buildCharsets('+');
+    uint8_t *chset2 = buildCharsets('-');
+    uint8_t *chset3 = addCharsets(chset1, chset2);
+    NFA *nfa1 = buildCharsetsNFA(chset3);
+    NFA *nfa2 = buildSelectNFA(nfa1);
 
-    NFA *nfa3 = build_NFA('0');
-    uint8_t *chset4 = build_range_charsets('1', '9');
-    NFA *nfa4 = build_charsets_NFA(chset4);
-    uint8_t *chset5 = build_range_charsets('0', '9');
-    NFA *nfa5 = build_charsets_NFA(chset5);
-    NFA *nfa6 = build_star_NFA(nfa5);
-    NFA *nfa7 = build_concat_NFA(nfa4, nfa6);
-    NFA *nfa8 = build_union_NFA(nfa3, nfa7);
+    NFA *nfa3 = buildNFA('0');
+    uint8_t *chset4 = buildRangeCharsets('1', '9');
+    NFA *nfa4 = buildCharsetsNFA(chset4);
+    uint8_t *chset5 = buildRangeCharsets('0', '9');
+    NFA *nfa5 = buildCharsetsNFA(chset5);
+    NFA *nfa6 = buildStarNFA(nfa5);
+    NFA *nfa7 = buildConcatNFA(nfa4, nfa6);
+    NFA *nfa8 = buildUnionNFA(nfa3, nfa7);
 
-    NFA *nfa9 = build_concat_NFA(nfa2, nfa8);
+    NFA *nfa9 = buildConcatNFA(nfa2, nfa8);
 
-    NFA *nfa10 = build_NFA('.');
-    uint8_t *chset6 = build_range_charsets('0', '9');
-    NFA *nfa11 = build_charsets_NFA(chset6);
-    NFA *nfa12 = build_plus_NFA(nfa11);
-    NFA *nfa13 = build_concat_NFA(nfa10, nfa12);
+    NFA *nfa10 = buildNFA('.');
+    uint8_t *chset6 = buildRangeCharsets('0', '9');
+    NFA *nfa11 = buildCharsetsNFA(chset6);
+    NFA *nfa12 = buildPlusNFA(nfa11);
+    NFA *nfa13 = buildConcatNFA(nfa10, nfa12);
 
-    uint8_t *chset7 = build_c_charsets('E');
-    uint8_t *chset8 = build_c_charsets('e');
-    uint8_t *chset9 = add_charsets(chset7, chset8);
-    NFA *nfa14 = build_charsets_NFA(chset9);
-    uint8_t *chset10 = build_c_charsets('+');
-    uint8_t *chset11 = build_c_charsets('-');
-    uint8_t *chset12 = add_charsets(chset10, chset11);
-    NFA *nfa15 = build_charsets_NFA(chset12);
-    NFA *nfa16 = build_select_NFA(nfa15);
-    NFA *nfa17 = build_NFA('0');
-    uint8_t *chset13 = build_range_charsets('1', '9');
-    NFA *nfa18 = build_charsets_NFA(chset13);
-    uint8_t *chset14 = build_range_charsets('0', '9');
-    NFA *nfa19 = build_charsets_NFA(chset14);
-    NFA *nfa20 = build_star_NFA(nfa19);
-    NFA *nfa21 = build_concat_NFA(nfa18, nfa20);
-    NFA *nfa22 = build_union_NFA(nfa17, nfa21);
-    NFA *nfa23 = build_concat_NFA(nfa14, nfa16);
-    NFA *nfa24 = build_concat_NFA(nfa23, nfa22);
-    NFA *nfa25 = build_select_NFA(nfa24);
+    uint8_t *chset7 = buildCharsets('E');
+    uint8_t *chset8 = buildCharsets('e');
+    uint8_t *chset9 = addCharsets(chset7, chset8);
+    NFA *nfa14 = buildCharsetsNFA(chset9);
+    uint8_t *chset10 = buildCharsets('+');
+    uint8_t *chset11 = buildCharsets('-');
+    uint8_t *chset12 = addCharsets(chset10, chset11);
+    NFA *nfa15 = buildCharsetsNFA(chset12);
+    NFA *nfa16 = buildSelectNFA(nfa15);
+    NFA *nfa17 = buildNFA('0');
+    uint8_t *chset13 = buildRangeCharsets('1', '9');
+    NFA *nfa18 = buildCharsetsNFA(chset13);
+    uint8_t *chset14 = buildRangeCharsets('0', '9');
+    NFA *nfa19 = buildCharsetsNFA(chset14);
+    NFA *nfa20 = buildStarNFA(nfa19);
+    NFA *nfa21 = buildConcatNFA(nfa18, nfa20);
+    NFA *nfa22 = buildUnionNFA(nfa17, nfa21);
+    NFA *nfa23 = buildConcatNFA(nfa14, nfa16);
+    NFA *nfa24 = buildConcatNFA(nfa23, nfa22);
+    NFA *nfa25 = buildSelectNFA(nfa24);
 
-    NFA *nfa26 = build_concat_NFA(nfa13, nfa25);
+    NFA *nfa26 = buildConcatNFA(nfa13, nfa25);
 
-    NFA *nfa = build_concat_NFA(nfa9, nfa26);
+    NFA *nfa = buildConcatNFA(nfa9, nfa26);
     nfa->type = DOUBLE_PT;
 
     return nfa;
 }
 
 NFA *build_TEXT() {
-    NFA *nfa1 = build_NFA('\'');
+    NFA *nfa1 = buildNFA('\'');
 
-    NFA *nfa2 = build_NFA('\\');
-    NFA *nfa3 = build_NFA('.');
-    NFA *nfa4 = build_concat_NFA(nfa2, nfa3);
+    NFA *nfa2 = buildNFA('\\');
+    NFA *nfa3 = buildNFA('.');
+    NFA *nfa4 = buildConcatNFA(nfa2, nfa3);
 
-    uint8_t *chset1 = build_c_charsets('\n');
-    uint8_t *chset2 = build_c_charsets('\'');
-    uint8_t *chset3 = add_charsets(chset1, chset2);
-    uint8_t *chset4 = build_c_charsets('\\');
-    uint8_t *chset5 = add_charsets(chset3, chset4);
-    uint8_t *chset6 = negate_charsets(chset5);
-    NFA *nfa5 = build_charsets_NFA(chset6);
+    uint8_t *chset1 = buildCharsets('\n');
+    uint8_t *chset2 = buildCharsets('\'');
+    uint8_t *chset3 = addCharsets(chset1, chset2);
+    uint8_t *chset4 = buildCharsets('\\');
+    uint8_t *chset5 = addCharsets(chset3, chset4);
+    uint8_t *chset6 = negateCharsets(chset5);
+    NFA *nfa5 = buildCharsetsNFA(chset6);
 
-    NFA *nfa6 = build_union_NFA(nfa4, nfa5);
-    NFA *nfa7 = build_star_NFA(nfa6);
+    NFA *nfa6 = buildUnionNFA(nfa4, nfa5);
+    NFA *nfa7 = buildStarNFA(nfa6);
 
-    NFA *nfa8 = build_NFA('\'');
-    NFA *nfa9 = build_concat_NFA(nfa1, nfa7);
-    NFA *nfa = build_concat_NFA(nfa9, nfa8);
+    NFA *nfa8 = buildNFA('\'');
+    NFA *nfa9 = buildConcatNFA(nfa1, nfa7);
+    NFA *nfa = buildConcatNFA(nfa9, nfa8);
     nfa->type = TEXT_PT;
 
     return nfa;
 }
 
-NFA *build_submatch_NFA(NFA *nfa, const char *name) {
+NFA *buildSubmatchNFA(NFA *nfa, const char *name) {
     SubMatch *new_sub = new SubMatch;
     new_sub->start = nfa->initState;
     new_sub->end = nfa->acceptState;
@@ -251,7 +251,7 @@ NFA *build_submatch_NFA(NFA *nfa, const char *name) {
     return nfa;
 }
 
-SubMatch *copy_submatch(SubMatch *sm) {
+SubMatch *copySubmatch(SubMatch *sm) {
     SubMatch *sm_new = new SubMatch;
     sm_new->start = sm->start;
     sm_new->end = sm->end;
@@ -263,7 +263,7 @@ SubMatch *copy_submatch(SubMatch *sm) {
     return sm_new;
 }
 
-NFA *build_concat_NFA(NFA *n1, NFA *n2) {
+NFA *buildConcatNFA(NFA *n1, NFA *n2) {
     int n1tsize = n1->transSize, n2tsize = n2->transSize,
         n1ssize = n1->stateSize, n2ssize = n2->stateSize;
 
@@ -304,15 +304,15 @@ NFA *build_concat_NFA(NFA *n1, NFA *n2) {
     } else {
         n1->type = DOUBLE_PT;
     }
-    destroy_NFA(n2);
+    destroyNFA(n2);
     return n1;
 }
 
-NFA *build_union_NFA(NFA *n1, NFA *n2) {
+NFA *buildUnionNFA(NFA *n1, NFA *n2) {
     int n1tsize = n1->transSize, n2tsize = n2->transSize,
         n1ssize = n1->stateSize, n2ssize = n2->stateSize;
 
-    NFA *nfa = construct_NFA(n1tsize + n2tsize + 4, TEXT_PT);
+    NFA *nfa = constructNFA(n1tsize + n2tsize + 4, TEXT_PT);
     nfa->transSize = n1tsize + n2tsize + 4;
     nfa->stateSize = n1ssize + n2ssize + 2;
     nfa->initState = 0;
@@ -343,12 +343,12 @@ NFA *build_union_NFA(NFA *n1, NFA *n2) {
         nfa->transVec[i + n1tsize + 4].c = n2->transVec[i].c;
     }
 
-    destroy_NFA(n1);
-    destroy_NFA(n2);
+    destroyNFA(n1);
+    destroyNFA(n2);
     return nfa;
 }
 
-NFA *build_star_NFA(NFA *n) {
+NFA *buildStarNFA(NFA *n) {
     int ntsize = n->transSize, nssize = n->stateSize;
     n->transSize += 4;
     n->stateSize += 2;
@@ -378,14 +378,14 @@ NFA *build_star_NFA(NFA *n) {
     return n;
 }
 
-NFA *build_plus_NFA(NFA *n) {
-    NFA *n1 = copy_NFA(n);
-    NFA *nr = build_star_NFA(n1);
-    NFA *npr = build_concat_NFA(n, nr);
+NFA *buildPlusNFA(NFA *n) {
+    NFA *n1 = copyNFA(n);
+    NFA *nr = buildStarNFA(n1);
+    NFA *npr = buildConcatNFA(n, nr);
     return npr;
 }
 
-NFA *build_select_NFA(NFA *n) {
+NFA *buildSelectNFA(NFA *n) {
     int ntsize = n->transSize, nssize = n->stateSize;
     n->transSize += 3;
     n->stateSize += 2;
@@ -408,7 +408,7 @@ NFA *build_select_NFA(NFA *n) {
     return n;
 }
 
-NFA *build_num_NFA(NFA *n, int num) {
+NFA *buildNumNFA(NFA *n, int num) {
     int tsize = n->transSize, ssize = n->stateSize;
 
     n->transSize = tsize * num + (num - 1);
@@ -438,13 +438,13 @@ NFA *build_num_NFA(NFA *n, int num) {
     return n;
 }
 
-uint8_t *build_c_charsets(char c) {
+uint8_t *buildCharsets(char c) {
     uint8_t *chsets = (uint8_t *)calloc(sizeof(uint8_t), ASCII_SZ);
     chsets[(int)c] = 1;
     return chsets;
 }
 
-uint8_t *add_charsets(uint8_t *chsets1, uint8_t *chsets2) {
+uint8_t *addCharsets(uint8_t *chsets1, uint8_t *chsets2) {
     for (int i = 0; i < ASCII_SZ; i++) {
         chsets1[i] = chsets1[i] | chsets2[i];
     }
@@ -452,7 +452,7 @@ uint8_t *add_charsets(uint8_t *chsets1, uint8_t *chsets2) {
     return chsets1;
 }
 
-uint8_t *build_range_charsets(char start, char end) {
+uint8_t *buildRangeCharsets(char start, char end) {
     uint8_t *chsets = (uint8_t *)calloc(sizeof(uint8_t), ASCII_SZ);
     for (char i = start; i <= end; i++) {
         chsets[(int)i] = 1;
@@ -460,7 +460,7 @@ uint8_t *build_range_charsets(char start, char end) {
     return chsets;
 }
 
-uint8_t *negate_charsets(uint8_t *chsets) {
+uint8_t *negateCharsets(uint8_t *chsets) {
     for (int i = 0; i < ASCII_SZ; i++) {
         chsets[i] = chsets[i] ^ 1;
     }

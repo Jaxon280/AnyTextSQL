@@ -14,7 +14,7 @@ void QueryOptimizer::getTextPred(QueryContext *ctx) {
 }
 
 NFA *QueryOptimizer::optimizeNFA(NFA *originalNFA, QueryContext *ctx) {
-    NFA *nfa = copy_NFA(originalNFA);
+    NFA *nfa = copyNFA(originalNFA);
     for (auto it = map.begin(); it != map.end(); ++it) {
         int id = 1;
         for (OpTree *opt : it->second) {
@@ -40,7 +40,7 @@ NFA *QueryOptimizer::mergeNFA(NFA *n1, NFA *n2, const std::string &sub,
     }
 
     int ssize = s1 + s2 + 2, tsize = t1 + t2 + 4;
-    NFA *nfa = construct_NFA(tsize, TEXT_PT);
+    NFA *nfa = constructNFA(tsize, TEXT_PT);
 
     nfa->initState = n1->initState;
     nfa->acceptState = n1->acceptState;
