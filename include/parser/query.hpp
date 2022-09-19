@@ -13,7 +13,8 @@ typedef enum _op_type {
     LESSEQ = 18,    // <= (only for numerics)
     GREATEQ = 29,   // >= (only for numerics)
     GREATER = 30,   // > (only for numerics)
-    REGEXP = 31,    // LIKE, REGEXP (only for text)
+    LIKE = 31,      // LIKE (only for text)
+    REGEXP = 32,    // REGEXP (only for text)
     ADD = 1,
     SUB = 2,
     MUL = 3,
@@ -50,6 +51,8 @@ struct OpTree {
     int aggId;           // only for AGGFUNC
     std::string varKey;  // only for VAR/AGGFUNC
     int varKeyId;        // only for VAR/AGGFUNC
+
+    int textPredId;  // only for TEXT PRED
 
     data64 constData;  // only for CONSTANT
 };
@@ -115,6 +118,8 @@ class QueryContext {
     std::vector<vlex::Type> keyTypes;
     int limit;
     PredTree *pTree;
+    std::vector<OpTree *> pList;
+    int countTPred;
     StatementList *output;
     StringList *tablenames;
     StringList *gKeys;
@@ -172,10 +177,21 @@ class QueryContext {
         }
     }
 
-    void mapPredTree(PredTree *tree, KeyMap *keyMap) {
+    void mapPredTree(std::vector<OpTree *> &pList, KeyMap *keyMap) {
+        for (OpTree *opt : pList) {
+            mapOpTree(opt, keyMap);
+            addTypeOp(opt);
+        }
+    }
+
+    void createPList(PredTree *pt) {
+        if (pt == NULL) {
+            return;
+        }
+
         PredTree *t;
         std::queue<PredTree *> bfsQueue;
-        bfsQueue.push(tree);
+        bfsQueue.push(pt);
         while (!bfsQueue.empty()) {
             t = bfsQueue.front();
             if (t->left != NULL) {
@@ -186,10 +202,18 @@ class QueryContext {
             }
 
             if (t->evalType == PRED) {
-                mapOpTree(t->pred, keyMap);
-                addTypeOp(t->pred);
+                pList.push_back(t->pred);
             }
             bfsQueue.pop();
+        }
+    }
+
+    void countTextPred() {
+        countTPred = 0;
+        for (OpTree *opt : pList) {
+            if (opt->type == TEXT) {
+                countTPred++;
+            }
         }
     }
 
@@ -200,8 +224,9 @@ class QueryContext {
             mapOpTree(s->stmt->expr, keyMap);
             addTypeOp(s->stmt->expr);
         }
-        if (pTree != NULL) {
-            mapPredTree(pTree, keyMap);
+        if (pList.size() != 0) {
+            mapPredTree(pList, keyMap);
+            countTextPred();
         }
         for (StringList *k = gKeys; k != NULL; k = k->next) {
             std::string s(k->str, strlen(k->str));
@@ -215,6 +240,8 @@ class QueryContext {
     inline StatementList *getStatements() { return output; }
     inline StringList *getTables() { return tablenames; }
     inline PredTree *getPredTree() { return pTree; }
+    inline std::vector<OpTree *> &getPList() { return pList; }
+    inline int getTextPredNum() { return countTPred; }
     inline std::vector<Key> &getGKeys() { return gKeyVec; }
     inline std::vector<Key> &getOKeys() { return oKeyVec; }
     inline std::vector<vlex::Type> &getKeyTypes() { return keyTypes; }
@@ -222,7 +249,10 @@ class QueryContext {
     inline bool isError() { return errorno; }
     void assignStmts(StatementList *_stmts) { output = _stmts; }
     void assignTables(StringList *_tables) { tablenames = _tables; }
-    void assignPredTree(PredTree *_ptree) { pTree = _ptree; }
+    void assignPredTree(PredTree *_ptree) {
+        pTree = _ptree;
+        createPList(_ptree);
+    }
     void assignGroupKeys(StringList *_keys) { gKeys = _keys; }
     void assignOrderKeys(StringList *_keys) { oKeys = _keys; }
     void assignLimit(int _limit) { limit = _limit; }

@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 #include "interface.hpp"
+#include "optimizer.hpp"
 #include "parser/nfa.hpp"
 #include "parser/parser.hpp"
 #include "parser/query.hpp"
@@ -22,8 +23,9 @@ class CommandExecutor {
     double version = 1.0;
 
     std::string buffer;
-    RegexParser rparser;
-    QueryParser qparser;
+    RegexParser* rparser;
+    QueryParser* qparser;
+    QueryOptimizer* qopter;
     std::map<std::string, Table> tableMap;
 
     void initialize();
@@ -63,8 +65,9 @@ class CommandExecutor {
 
    public:
     CommandExecutor() {
-        rparser = RegexParser();
-        qparser = QueryParser();
+        rparser = new RegexParser();
+        qparser = new QueryParser();
+        qopter = new QueryOptimizer();
     }
     void exec();
 };

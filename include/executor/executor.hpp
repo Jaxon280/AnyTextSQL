@@ -39,6 +39,7 @@ class Executor {
     int *anyEndTable;     // State -> sub id or 0
     int *charStartTable;  // State -> sub id or 0
     int *charEndTable;    // State -> sub id or 0
+    int *endPredIdTable;  // State -> Text Pred Id
     std::set<ST_TYPE> acceptStates;
 
     // Submatch
@@ -97,6 +98,8 @@ class Executor {
     *predTypes;                               // pred_id -> pred type
 #else
     PredTree *ptree;
+    int *textPredResults;
+    int textPredNum;
 #endif
 
     // Aggregate functions and GROUP BY clause

@@ -33,42 +33,37 @@ class RegexParser : public Parser {
     using Parser::Parser;
 
    private:
-    NFA *nfa;
+    NFA *nfa = NULL;
 
    public:
-    int parse(std::string &input) {
+    NFA *parse(std::string &input) {
+        nfa = NULL;
         YY_BUFFER_STATE buffer = regex_yy_scan_string(input.c_str());
         regex_yyparse(&nfa);
         regex_yy_delete_buffer(buffer);
-        if (nfa == NULL) {
-            return 0;
-        } else {
-            return 1;
-        }
+        return nfa;
     }
     void assign(NFA *_nfa) { nfa = _nfa; }
-    NFA *getNFA() { return nfa; }
 };
 
 class QueryParser : public Parser {
     using Parser::Parser;
 
    private:
-    QueryContext *ctx;
+    QueryContext *ctx = NULL;
 
    public:
-    int parse(std::string &input) {
+    QueryContext *parse(std::string &input) {
         YY_BUFFER_STATE buffer = query_yy_scan_string(input.c_str());
         ctx = new QueryContext();
         query_yyparse(*ctx);
         query_yy_delete_buffer(buffer);
         if (ctx->isError()) {
             delete ctx;
-            return 0;
+            return NULL;
         } else {
-            return 1;
+            return ctx;
         }
     }
-    QueryContext *getContext() { return ctx; }
 };
 }  // namespace vlex

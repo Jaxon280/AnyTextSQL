@@ -14,7 +14,7 @@
 namespace vlex {
 class Runtime {
    public:
-    Runtime(Table& table, QueryContext* _query);
+    Runtime(Table& table, NFA* nfa, QueryContext* _query);
     void construct(double lr);
     void iexec();
     void exec();

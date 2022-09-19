@@ -10,15 +10,18 @@ class DFA {
     struct SubMatchStates {
         int id;
         Type type;
+        int predID;
         DFA_ST_TYPE startState;
         bool isAnyStart;
         DFA_ST_TYPE endState;
         bool isAnyEnd;
 
-        SubMatchStates(int _id, Type _type, DFA_ST_TYPE _startState,
-                       bool _isAnyStart, DFA_ST_TYPE _endState, bool _isAnyEnd)
+        SubMatchStates(int _id, Type _type, int _predID,
+                       DFA_ST_TYPE _startState, bool _isAnyStart,
+                       DFA_ST_TYPE _endState, bool _isAnyEnd)
             : id(_id),
               type(_type),
+              predID(_predID),
               startState(_startState),
               isAnyStart(_isAnyStart),
               endState(_endState),
@@ -79,7 +82,7 @@ class DFAGenerator {
     void setEpsilonTable(Transition* trans, int transSize, int stateSize);
     void setPowsetTable(Transition* trans, int transSize);
     void initPowsetStates(int initState);
-    void minimize();
+    void minimize(std::vector<int>& submatchStates);
 
    public:
     DFAGenerator(NFA* _nfa) : nfa(_nfa) {

@@ -21,9 +21,8 @@ void CommandExecutor::initialize() {
 
 void CommandExecutor::execCommand(Command* cmd) {
     if (cmd->type == SCAN) {
-        int result = rparser.parse(cmd->args[5]);
-        if (result) {
-            NFA* nfa = rparser.getNFA();
+        NFA* nfa = rparser->parse(cmd->args[5]);
+        if (nfa != NULL) {
             KeyMap* keyMap = new KeyMap(nfa->subms);
             tableMap.insert(std::pair<std::string, Table>(
                 cmd->args[3], Table(cmd->args[3], cmd->args[1], nfa, keyMap)));
@@ -31,15 +30,15 @@ void CommandExecutor::execCommand(Command* cmd) {
             return;
         }
     } else if (cmd->type == EXEC) {
-        int result = qparser.parse(cmd->args[0]);
-        if (result) {
-            QueryContext* ctx = qparser.getContext();
+        QueryContext* ctx = qparser->parse(cmd->args[0]);
+        if (ctx != NULL) {
             for (StringList* tbn = ctx->getTables(); tbn != NULL;
                  tbn = tbn->next) {
                 std::string s(tbn->str, strlen(tbn->str));
                 Table& table = tableMap.find(s)->second;
                 ctx->mapping(table.getKeyMap());
-                Runtime runtime(table, ctx);
+                NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                Runtime runtime(table, nfa, ctx);
                 runtime.construct(0.0);
                 runtime.exec();
             }

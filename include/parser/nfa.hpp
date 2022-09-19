@@ -11,7 +11,8 @@ typedef struct submatch {
     int end;
     bool isAnyStart;
     bool isAnyEnd;
-    char *name;
+    int predID;
+    const char *name;
     struct submatch *next;
     PatternType type;
 } SubMatch;  // linked list

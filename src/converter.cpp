@@ -278,9 +278,9 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     }
 
     for (DFA::SubMatchStates sms : SMSs) {
-        DFA::SubMatchStates vsms(sms.id, sms.type, old2new[sms.startState],
-                                 sms.isAnyStart, old2new[sms.endState],
-                                 sms.isAnyEnd);
+        DFA::SubMatchStates vsms(sms.id, sms.type, sms.predID,
+                                 old2new[sms.startState], sms.isAnyStart,
+                                 old2new[sms.endState], sms.isAnyEnd);
         subMatches.push_back(vsms);
     }
 

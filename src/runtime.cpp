@@ -2,11 +2,11 @@
 
 using namespace vlex;
 
-Runtime::Runtime(Table& table, QueryContext* _query)
+Runtime::Runtime(Table& table, NFA* nfa, QueryContext* _query)
     : executor(new Executor()),
       ios(new ioStream(table.getFilename())),
       query(_query) {
-    dfag = new DFAGenerator(table.getNFA());
+    dfag = new DFAGenerator(nfa);
     dfag->generate(table.getKeyMap());
     vfa = new VectFA(*dfag->getDFA());
     size = ios->getSize();

@@ -107,7 +107,7 @@ void DFAGenerator::initPowsetStates(int initState) {
     }
 }
 
-void DFAGenerator::minimize() {
+void DFAGenerator::minimize(std::vector<int>& submatchStates) {
     std::stack<int> sstack;
     sstack.push(INIT_STATE);
 
@@ -128,24 +128,28 @@ void DFAGenerator::minimize() {
         for (const auto& [sid, ps] : powsetStates) {
             if (sid == s) continue;
             if ((acceptStates.count(s) > 0) ^ (acceptStates.count(sid) > 0)) {
-                sstack.push(sid);
+                goto distinguish;
             }
-
+            for (int smss : submatchStates) {
+                if (ps.find(smss) != ps.end()) {
+                    goto distinguish;
+                }
+            }
             for (int i = 0; i < ASCII_SZ; i++) {
                 if (transTable[s][i] != transTable[sid][i]) {
-                    sstack.push(sid);
-                    break;
-                }
-
-                if (i == ASCII_SZ - 1) {
-                    // merge
-                    visited[sid] = 1;
-                    for (int pss : ps) {
-                        powsetStates[s].insert(pss);
-                    }
-                    default2mini[sid] = s;  // memo
+                    goto distinguish;
                 }
             }
+
+            visited[sid] = 1;
+            for (int pss : ps) {
+                powsetStates[s].insert(pss);
+            }
+            default2mini[sid] = s;
+            continue;  // merge
+
+        distinguish:
+            sstack.push(sid);
         }
     }
 }
@@ -203,12 +207,18 @@ void DFAGenerator::generate(KeyMap* keyMap) {
         }
     }
 
-    minimize();
+    std::vector<int> smsVec;
+    for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
+        smsVec.push_back(s->start);
+        smsVec.push_back(s->end);
+    }
+    minimize(smsVec);
 
     for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
         DFA::SubMatchStates sms;
         sms.id = keyMap->at(s->name).id;
         sms.type = keyMap->at(s->name).type;
+        sms.predID = s->predID;
         for (int ss : stateVec) {
             if (powsetStates[ss].count(s->start) > 0) {
                 sms.startState = ss;

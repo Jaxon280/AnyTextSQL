@@ -51,11 +51,14 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     anyEndTable = new int[stateSize]();
     charStartTable = new int[stateSize]();
     charEndTable = new int[stateSize]();
+    endPredIdTable = new int[stateSize]();
     std::vector<DFA::SubMatchStates> &subMatchStates = vfa->getSubMatches();
     subMatchSize = subMatchStates.size();
     keyTypes = new Type[subMatchSize];
     for (DFA::SubMatchStates &sms : subMatchStates) {
         keyTypes[sms.id] = sms.type;
+        // sms.predID
+        endPredIdTable[sms.endState] = sms.predID;
         if (sms.isAnyStart) {
             anyStartTable[sms.startState] = sms.id + 1;
         } else {
@@ -151,8 +154,6 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
 // }
 
 void Executor::setQuery(QueryContext *query) {
-    ptree = query->getPredTree();
-
     tuple = new data64[subMatchSize];
     tsize = new SIZE_TYPE[subMatchSize];
 
@@ -182,6 +183,10 @@ void Executor::setQuery(QueryContext *query) {
         }
         httype = intersectionHTType(s->stmt->httype, httype);
     }
+
+    ptree = query->getPredTree();
+    textPredNum = query->getTextPredNum();
+    textPredResults = new int[textPredNum + 1];
 
     gKeyVec = query->getGKeys();
     int aggVSize = aggContext.size();
@@ -254,6 +259,9 @@ loop:
     i += r;
     if (anyEndTable[cur_state] > 0) {
         endSubMatch(anyEndTable[cur_state]);
+        if (endPredIdTable[cur_state] > 0) {
+            textPredResults[endPredIdTable[cur_state]] = 1;
+        }
     }
     if (ctx.currentState == INIT_STATE) {
         resetContext();
@@ -265,6 +273,9 @@ loop:
     ctx.currentState = charTable[cur_state][(int)data[i++]];
     if (charEndTable[ctx.currentState] > 0) {
         endSubMatch(charEndTable[ctx.currentState]);
+        if (endPredIdTable[cur_state] > 0) {
+            textPredResults[endPredIdTable[cur_state]] = 1;
+        }
     }
 }
 
@@ -285,6 +296,9 @@ loop:
     i += r;
     if (anyEndTable[cur_state] > 0) {
         endSubMatch(anyEndTable[cur_state]);
+        if (endPredIdTable[cur_state] > 0) {
+            textPredResults[endPredIdTable[cur_state]] = 1;
+        }
     }
     if (ctx.currentState == INIT_STATE) {
         resetContext();
@@ -296,6 +310,9 @@ loop:
     ctx.currentState = charTable[cur_state][(int)data[i++]];
     if (charEndTable[ctx.currentState] > 0) {
         endSubMatch(charEndTable[ctx.currentState]);
+        if (endPredIdTable[cur_state] > 0) {
+            textPredResults[endPredIdTable[cur_state]] = 1;
+        }
     }
 }
 
@@ -334,6 +351,9 @@ inline void Executor::resetContext() {
     ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;
     ctx.tokenStartIndex = i;
     end->id = 0;
+    for (int ti = 0; ti < textPredNum + 1; ti++) {
+        textPredResults[ti] = 0;
+    }
     while (!startStack.empty()) {
         startStack.pop();
     }
@@ -922,46 +942,49 @@ bool Executor::evalPred(OpTree *tree) {
                 return false;
             }
         } else if (tree->right->evalType == CONST) {
-            if (tree->opType == EQUAL) {
-                SIMD_512iTYPE r = _mm512_loadu_epi8(tree->right->constData.p);
-                SIMD_512iTYPE l =
-                    _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
-                uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
-                if (__builtin_ffsll(~m | ((uint64_t)1 << 63)) >
-                    tsize[tree->left->varKeyId]) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if (tree->opType == NEQUAL) {
-                SIMD_512iTYPE r = _mm512_loadu_epi8(tree->right->constData.p);
-                SIMD_512iTYPE l =
-                    _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
-                uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
-                if (__builtin_ffsll(m | ((uint64_t)1 << 63)) >
-                    tsize[tree->left->varKeyId]) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                // if (re2::RE2::FullMatch(
-                //         re2::StringPiece((char
-                //         *)tuple[tree->left->varKeyId].p,
-                //                          32),
-                //         pt1, &s, &t)) {
-                //     return true;
-                // } else {
-                //     return false;
-                // }
-                // if (std::regex_search(
-                //         std::string((char *)tuple[tree->left->varKey].p, 32),
-                //         pattern[tree->left->varKey])) {
-                //     return true;
-                // } else {
-                //     return false;
-                // }
-            }
+            return textPredResults[tree->textPredId] > 0 ? true : false;
+            // if (tree->opType == EQUAL) {
+            // SIMD_512iTYPE r =
+            //     _mm512_loadu_epi8(tree->right->constData.p + 1);
+            // SIMD_512iTYPE l =
+            //     _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
+            // uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
+            // if (__builtin_ffsll(~m | ((uint64_t)1 << 63)) >
+            //     tsize[tree->left->varKeyId]) {
+            //     return true;
+            // } else {
+            //     return false;
+            // }
+            // } else if (tree->opType == NEQUAL) {
+            // SIMD_512iTYPE r =
+            //     _mm512_loadu_epi8(tree->right->constData.p + 1);
+            // SIMD_512iTYPE l =
+            //     _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
+            // uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
+            // if (__builtin_ffsll(m | ((uint64_t)1 << 63)) >
+            //     tsize[tree->left->varKeyId]) {
+            //     return true;
+            // } else {
+            //     return false;
+            // }
+            // } else {
+            // if (re2::RE2::FullMatch(
+            //         re2::StringPiece((char
+            //         *)tuple[tree->left->varKeyId].p,
+            //                          32),
+            //         pt1, &s, &t)) {
+            //     return true;
+            // } else {
+            //     return false;
+            // }
+            // if (std::regex_search(
+            //         std::string((char *)tuple[tree->left->varKey].p, 32),
+            //         pattern[tree->left->varKey])) {
+            //     return true;
+            // } else {
+            //     return false;
+            // }
+            // }
         }
     }
     return false;
@@ -979,6 +1002,8 @@ bool Executor::evalCond(PredTree *ptree) {
         }
     } else if (ptree->evalType == PRED) {
         return evalPred(ptree->pred);
+    } else {
+        return false;
     }
 }
 
@@ -1289,6 +1314,9 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
                 ctx.currentState = charTable[ctx.currentState][(int)data[i++]];
                 if (charEndTable[ctx.currentState] > 0) {
                     endSubMatch(charEndTable[ctx.currentState]);
+                    if (endPredIdTable[ctx.currentState] > 0) {
+                        textPredResults[endPredIdTable[ctx.currentState]] = 1;
+                    }
                 }
                 break;
             default:
