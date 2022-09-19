@@ -27,35 +27,35 @@ class Parser {
         printf("ERROR: %s\n\n", s);
         errorno = 1;
     }
+    bool isError() {
+        if (errorno) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 class RegexParser : public Parser {
     using Parser::Parser;
 
-   private:
-    NFA *nfa = NULL;
-
    public:
     NFA *parse(std::string &input) {
-        nfa = NULL;
+        NFA *nfa = NULL;
         YY_BUFFER_STATE buffer = regex_yy_scan_string(input.c_str());
         regex_yyparse(&nfa);
         regex_yy_delete_buffer(buffer);
         return nfa;
     }
-    void assign(NFA *_nfa) { nfa = _nfa; }
 };
 
 class QueryParser : public Parser {
     using Parser::Parser;
 
-   private:
-    QueryContext *ctx = NULL;
-
    public:
     QueryContext *parse(std::string &input) {
         YY_BUFFER_STATE buffer = query_yy_scan_string(input.c_str());
-        ctx = new QueryContext();
+        QueryContext *ctx = new QueryContext();
         query_yyparse(*ctx);
         query_yy_delete_buffer(buffer);
         if (ctx->isError()) {
