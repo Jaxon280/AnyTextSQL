@@ -5,8 +5,7 @@
 #include "scanner/converter.hpp"
 #include "scanner/interface.hpp"
 #if (defined VECEXEC)
-#include "opEvaluator.hpp"
-#include "predEvaluator.hpp"
+#include "queryVExecutor.hpp"
 #endif
 #include "parser/query.hpp"
 
@@ -28,6 +27,43 @@ class Executor {
         SIZE_TYPE recentAcceptIndex;
         SIZE_TYPE tokenStartIndex;
     };
+
+    void setTransTable(const std::vector<Qlabel> &qlabels, int stateSize);
+    void setSubMatchTable(
+        const std::vector<DFA::SubMatchStates> &subMatchStates, int stateSize);
+    void setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize);
+    void setStatements(const StatementList *stmts);
+    void setSelections(QueryContext *query);
+    void setAggregations(const std::vector<Key> &gKeyVec);
+
+    inline void cmpestriOrd(ST_TYPE cur_state);
+    inline void cmpestriAny(ST_TYPE cur_state);
+    inline void cmpestriRanges(ST_TYPE cur_state);
+    inline void startSubMatch(int id);
+    inline void endSubMatch(int id);
+    inline void resetContext();
+
+    void printColumnNames() const;
+    void queryStartExec() const;
+
+    void materialize();
+    template <typename Value>
+    Value evalFunc1Op(const OpTree *tree, const data64 *vht,
+                      const int *cht) const;
+    template <typename Value>
+    Value evalOp(const OpTree *tree) const;
+    bool evalPred(const OpTree *tree) const;
+    bool evalCond(const PredTree *ptree) const;
+    bool selection();
+    void projection();
+    void aggregation0();
+    void aggregation1();
+    void aggregation();
+    void queryExec();
+
+    void printAggregation0() const;
+    void printAggregation1() const;
+    void queryEndExec() const;
 
     Executor::Context ctx;
     SIMD_TEXTTYPE *SIMDDatas;
@@ -65,46 +101,28 @@ class Executor {
 
     // tuple and types
 #if (defined VECEXEC)
-    SIZE_TYPE tid = 0;    // tuple index for vectorized execution
-    SIZE_TYPE **indexes;  // key * id -> index
-    SIZE_TYPE **sizes;    // key * id -> size
-
-    data64 **bufArray;  // key * tupleid -> 64bit data
-
-    uint8_t **predMasks;  // pred_id * tupleid -> mask
-    uint16_t *mask;
-
-    int *tupleIds;
-    int *selectionVector;  // array of selected tupleid
-    int selVecSize = 0;
+    QueryVExecutor *qexec;
 #else
+#endif
+
     data64 *tuple;     // key -> 64bit data (used only for tuple-at-once)
     SIZE_TYPE *tsize;  // key -> size (used only for tuple-at-once)
-#endif
     Type *keyTypes;
 
     // SELECT clause
-    std::list<Statement> stmtList;
+    Statement *stmtList;
+    int stmtSize;
     HashTableType httype = NONE_HT;
 
     // WHERE clause
-#if (defined VECEXEC)
-    bool isCNF;
-    int numPreds;
-    int predANDsize;                          // num of AND preds
-    int *predORsize;                          // AND -> num of OR preds
-    int **preds;                              // described in CNF. AND * OR ->
-    pred_id QueryContext::OpTree *predTrees;  // pred_id -> tree Type
-    *predTypes;                               // pred_id -> pred type
-#else
     PredTree *ptree;
     int *textPredResults;
     int textPredNum;
-#endif
-
     // Aggregate functions and GROUP BY clause
-    std::vector<Key> gKeyVec;
-    std::vector<Aggregation> aggContext;  // id -> agg
+    int gKeySize;
+    Key *gKeys;
+    int aggSize;
+    Aggregation *aggContexts;  // id -> agg
     AggregationValueMap *aggMap;
     AggregationCountMap *aggCountMap;
     data64 *agg;
@@ -114,46 +132,5 @@ class Executor {
 
     // LIMIT clause
     int limit = 0;
-
-    inline void cmpestriOrd(ST_TYPE cur_state);
-    inline void cmpestriAny(ST_TYPE cur_state);
-    inline void cmpestriRanges(ST_TYPE cur_state);
-    inline void startSubMatch(int id);
-    inline void endSubMatch(int id);
-    inline void resetContext();
-
-#if (defined VECEXEC)
-    void materialize(int tid);
-    void vmaterialize();
-    void vevalPreds();
-    void veval();
-    inline void vselection();
-    void vprojection();
-    void vaggregation0();
-    void vaggregation1();
-    inline void vaggregation();
-    inline void queryVExec();
-#else
-    void printColumnNames();
-    void queryStartExec();
-
-    void materialize();
-    template <typename Value>
-    Value evalFunc1Op(OpTree *tree, data64 *vht, int *cht);
-    template <typename Value>
-    Value evalOp(OpTree *tree);
-    bool evalPred(OpTree *tree);
-    bool evalCond(PredTree *ptree);
-    bool selection();
-    void projection();
-    void aggregation0();
-    void aggregation1();
-    void aggregation();
-    void queryExec();
-#endif
-
-    void printAggregation0();
-    void printAggregation1();
-    void queryEndExec();
 };
 }  // namespace vlex

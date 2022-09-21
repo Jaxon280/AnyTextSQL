@@ -3,18 +3,22 @@ CC = g++
 CFLAGS = -std=c++17 -flto -mavx512f -mavx512bw -mavx512vl -mavx512dq
 # CFLAGS = -std=c++17 -O3 -flto -march=native
 
-# CPPFLAGS += -DVECEXEC
-# CPPFLAGS += -DVECEXEC -DNOEXEC
+# QEXECFLAGS += -DVECEXEC
+# QEXECFLAGS += -DVECEXEC -DNOEXEC
+# QEXECFLAGS += -DCODEGEN
 EXECFLAGS = -O3
 DEBUGFLAGS = -O0 -g
-# DEBUGFLAGS += -Wall -Wextra
+DEBUGFLAGS += -Wall -Wextra
 BENCHFLAGS = -DBENCH
 INCLUDES = -I./include -I./include/parser/query -I./include/parser/regex
-FLAGS = $(CFLAGS) $(INCLUDES)
+FLAGS = $(CFLAGS) $(INCLUDES) $(QEXECFLAGS)
 
-CPP_CODES = $(wildcard src/*.cpp) main.cpp
+CPP_CODES = $(filter-out src/codegen.cpp, $(filter-out src/queryVExecutor.cpp, $(wildcard src/*.cpp))) main.cpp
 CPP_PROGRAM = $(basename $(CPP_CODES))
-# CPP_OBJS = $(addprefix build/, $(addsuffix .o, $(CPP_PROGRAM)))
+
+ifeq ($(QEXECFLAGS), -DVECEXEC)
+	CPP_CODES += src/queryVExecutor.cpp
+endif
 
 PROGRAM = vlex.exe
 

@@ -6,16 +6,15 @@
 namespace vlex {
 
 class Codegen {
-    std::string code;
-    int fd;
-    std::string filename;
-    std::vector<Qlabel> qlabels;
-    std::set<ST_TYPE> states;
+   public:
+    Codegen(const std::string &filename, std::vector<Qlabel> &qlabels,
+            std::set<ST_TYPE> &states);
+    ~Codegen();
+    int generate();
 
+   private:
     void add_preprocess();
-
     void add_tokenClass();
-
     void add_member();
     void add_cmpstr(Delta *d);
     void add_constructor();
@@ -26,12 +25,11 @@ class Codegen {
     void add_trans(Qlabel &label, std::string q);
     void add_vfaClass();
 
-   public:
-    Codegen(const std::string &filename, std::vector<Qlabel> &qlabels,
-            std::set<ST_TYPE> &states);
-    ~Codegen();
-
-    int generate();
+    std::string code;
+    int fd;
+    std::string filename;
+    std::vector<Qlabel> qlabels;
+    std::set<ST_TYPE> states;
 };
 
 }  // namespace vlex

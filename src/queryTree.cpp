@@ -36,7 +36,7 @@ Statement *buildStatement(OpTree *left, const char *right) {
     return stmt;
 }
 
-StringList *buildIdents(StringList *idents, char *ident) {
+StringList *buildIdents(StringList *idents, const char *ident) {
     StringList *idList = new StringList;
     idList->str = ident;
     idList->next = idents;
@@ -53,7 +53,7 @@ OpTree *buildOp(OpType op, OpTree *left, OpTree *right) {
     return opt;
 }
 
-OpTree *buildAggFunc(AggFuncType ftype, char *ident) {
+OpTree *buildAggFunc(AggFuncType ftype, const char *ident) {
     OpTree *opt = new OpTree;
     opt->left = NULL, opt->right = NULL;
     opt->evalType = AGGFUNC;
@@ -69,7 +69,7 @@ OpTree *buildAggFunc(AggFuncType ftype, char *ident) {
     return opt;
 }
 
-OpTree *buildVar(char *ident) {
+OpTree *buildVar(const char *ident) {
     OpTree *opt = new OpTree;
     opt->left = NULL, opt->right = NULL;
     opt->evalType = VAR;
@@ -78,7 +78,7 @@ OpTree *buildVar(char *ident) {
     return opt;
 }
 
-OpTree *buildConstString(char *svalue) {
+OpTree *buildConstString(const char *svalue) {
     OpTree *opt = new OpTree;
     opt->left = NULL, opt->right = NULL;
     opt->evalType = CONST;
@@ -144,7 +144,7 @@ PredTree *buildCCond(CondType ctype, PredTree *cond, OpTree *ccond) {
             prt->left = NULL, prt->right = NULL;
             prt->evalType = CPRED;
             prt->cvalue = false;
-            delete cond, ccond;
+            delete cond, delete ccond;
             return prt;
         }
     } else if (ctype == OR) {
@@ -153,7 +153,7 @@ PredTree *buildCCond(CondType ctype, PredTree *cond, OpTree *ccond) {
             prt->left = NULL, prt->right = NULL;
             prt->evalType = CPRED;
             prt->cvalue = true;
-            delete cond, ccond;
+            delete cond, delete ccond;
             return prt;
         } else {
             delete ccond;
@@ -222,7 +222,7 @@ OpTree *evalConstPred(OpType opt, OpTree *left, OpTree *right) {
             op->constData.i = ld >= rd;
         }
     }
-    delete left, right;
+    delete left, delete right;
     return op;
 }
 
@@ -237,7 +237,7 @@ OpTree *evalConstCond(CondType ctype, OpTree *left, OpTree *right) {
     } else if (ctype == OR) {
         op->constData.i = left->constData.i || right->constData.i;
     }
-    delete left, right;
+    delete left, delete right;
     return op;
 }
 
@@ -282,6 +282,6 @@ OpTree *evalConstExpr(OpType opt, OpTree *left, OpTree *right) {
             op->constData.d = ld / rd;
         }
     }
-    delete left, right;
+    delete left, delete right;
     return op;
 }

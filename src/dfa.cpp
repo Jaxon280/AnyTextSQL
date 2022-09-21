@@ -1,11 +1,12 @@
 #include "scanner/dfa.hpp"
 
-using namespace vlex;
+namespace vlex {
 
-DFA::DFA(int _initState, std::vector<int>& _powsStates,
-         std::map<int, int>& _old2new,
+DFA::DFA(int _initState, const std::vector<int>& _powsStates,
+         const std::map<int, int>& _old2new,
          std::map<int, std::vector<int>>& _powTTable,
-         std::set<int>& _acceptStates, std::vector<SubMatchStates> _smses) {
+         const std::set<int>& _acceptStates,
+         const std::vector<SubMatchStates>& _smses) {
     std::map<int, int> old2new_comp;
     numStates = 0;
     for (const int& s : _powsStates) {
@@ -37,8 +38,13 @@ DFA::DFA(int _initState, std::vector<int>& _powsStates,
         j++;
     }
 
-    for (SubMatchStates& sms : _smses) {
-        SubMatchStates new_sms = sms;
+    for (const SubMatchStates& sms : _smses) {
+        SubMatchStates new_sms;
+        new_sms.isAnyStart = sms.isAnyStart;
+        new_sms.isAnyEnd = sms.isAnyEnd;
+        new_sms.id = sms.id;
+        new_sms.predID = sms.predID;
+        new_sms.type = sms.type;
         new_sms.startState = old2new_comp[sms.startState];
         new_sms.endState = old2new_comp[sms.endState];
         subMatches.push_back(new_sms);
@@ -107,7 +113,7 @@ void DFAGenerator::initPowsetStates(int initState) {
     }
 }
 
-void DFAGenerator::minimize(std::vector<int>& submatchStates) {
+void DFAGenerator::minimize(const std::vector<int>& submatchStates) {
     std::stack<int> sstack;
     sstack.push(INIT_STATE);
 
@@ -154,7 +160,7 @@ void DFAGenerator::minimize(std::vector<int>& submatchStates) {
     }
 }
 
-void DFAGenerator::generate(KeyMap* keyMap) {
+DFA* DFAGenerator::generate(const KeyMap& keyMap) {
     setEpsilonTable(nfa->transVec, nfa->transSize, nfa->stateSize);
     setPowsetTable(nfa->transVec, nfa->transSize);
 
@@ -216,8 +222,8 @@ void DFAGenerator::generate(KeyMap* keyMap) {
 
     for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
         DFA::SubMatchStates sms;
-        sms.id = keyMap->at(s->name).id;
-        sms.type = keyMap->at(s->name).type;
+        sms.id = keyMap.at(s->name).id;
+        sms.type = keyMap.at(s->name).type;
         sms.predID = s->predID;
         for (int ss : stateVec) {
             if (powsetStates[ss].count(s->start) > 0) {
@@ -236,21 +242,7 @@ void DFAGenerator::generate(KeyMap* keyMap) {
 
     dfa = new DFA(initState, stateVec, default2mini, transTable, acceptStates,
                   smses);
-    // std::cout << "Num States: " << dfa->getNumStates() << std::endl;
-    // std::vector<std::vector<DFA_ST_TYPE>>& ttable = dfa->getTransTable();
-    // for (int ti = 1; ti < ttable.size(); ti++) {
-    //     for (int tc = 0; tc < ASCII_SZ; tc++) {
-    //         if (ttable[ti][tc] != 0) {
-    //             std::cout << "cur state: " << ti << " -- " << (char)tc
-    //                       << " --> " << (int)ttable[ti][tc] << std::endl;
-    //         }
-    //     }
-    // }
-    // for (DFA_ST_TYPE s : dfa->getAcceptStates()) {
-    //     std::cout << "Accept States: " << (int)s << std::endl;
-    // }
-    // for (DFA::SubMatchStates& s : dfa->getSubMatches()) {
-    //     std::cout << (int)s.startState << (int)s.isAnyStart << " "
-    //               << (int)s.endState << (int)s.isAnyEnd << std::endl;
-    // }
+    return dfa;
 }
+
+}  // namespace vlex

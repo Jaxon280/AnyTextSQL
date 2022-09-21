@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "query.hpp"
+#include "parser/query.hpp"
 
 namespace vlex {
 
@@ -13,7 +13,7 @@ class OpFullEvaluator {
     }
     ~OpFullEvaluator() { delete data; }
 
-    Value *evaluate(QueryContext::OpTree *tree, data64 **bufArray) {
+    Value *evaluate(OpTree *tree, data64 **bufArray) {
         Value *lvalue;
         Value *rvalue;
 
@@ -219,7 +219,7 @@ class OpPartialEvaluator {
     }
     ~OpPartialEvaluator() { delete data; }
 
-    Value *evaluate(QueryContext::OpTree *tree, data64 **bufArray) {
+    Value *evaluate(OpTree *tree, data64 **bufArray) {
         Value *lvalue;
         Value *rvalue;
 

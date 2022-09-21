@@ -45,7 +45,7 @@ NFA *buildNFA(char c) {
     return nfa;
 }
 
-NFA *buildCharsetsNFA(uint8_t *chsets) {
+NFA *buildCharsetsNFA(const uint8_t *chsets) {
     int tsize = 0;
     for (int i = 0; i < ASCII_SZ; i++) {
         if (chsets[i] == 1) {
@@ -158,7 +158,7 @@ NFA *buildINT() {
     return nfa;
 }
 
-NFA *build_DOUBLE() {
+NFA *buildDOUBLE() {
     uint8_t *chset1 = buildCharsets('+');
     uint8_t *chset2 = buildCharsets('-');
     uint8_t *chset3 = addCharsets(chset1, chset2);
@@ -211,7 +211,7 @@ NFA *build_DOUBLE() {
     return nfa;
 }
 
-NFA *build_TEXT() {
+NFA *buildTEXT() {
     NFA *nfa1 = buildNFA('\'');
 
     NFA *nfa2 = buildNFA('\\');

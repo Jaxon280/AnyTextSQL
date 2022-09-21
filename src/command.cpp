@@ -1,8 +1,8 @@
 #include "command.hpp"
 
-using namespace vlex;
+namespace vlex {
 
-void CommandExecutor::initialize() {
+void CommandExecutor::initialize() const {
     std::cout << "Welcome to AnyDB " << version << std::endl;
     std::cout << "Main commands are:" << std::endl;
     // std::cout
@@ -25,14 +25,14 @@ void CommandExecutor::execCommand(Command* cmd) {
         if (nfa != NULL) {
             KeyMap* keyMap = new KeyMap(nfa->subms);
             tableMap.insert(std::pair<std::string, Table>(
-                cmd->args[3], Table(cmd->args[3], cmd->args[1], nfa, keyMap)));
+                cmd->args[3], Table(cmd->args[3], cmd->args[1], nfa, *keyMap)));
         } else {
             return;
         }
     } else if (cmd->type == EXEC) {
         QueryContext* ctx = qparser->parse(cmd->args[0]);
         if (ctx != NULL) {
-            for (StringList* tbn = ctx->getTables(); tbn != NULL;
+            for (const StringList* tbn = ctx->getTables(); tbn != NULL;
                  tbn = tbn->next) {
                 std::string s(tbn->str, strlen(tbn->str));
                 Table& table = tableMap.find(s)->second;
@@ -63,3 +63,5 @@ void CommandExecutor::exec() {
         execCommand(cmd);
     }
 }
+
+}  // namespace vlex

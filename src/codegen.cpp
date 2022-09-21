@@ -1,6 +1,6 @@
 #include "scanner/codegen.hpp"
 
-using namespace vlex;
+namespace vlex {
 
 void Codegen::add_preprocess() {
     code += "#include <string.h>\n";
@@ -314,3 +314,5 @@ int Codegen::generate() {
     }
     return 0;
 }
+
+}  // namespace vlex

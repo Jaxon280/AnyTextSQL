@@ -8,24 +8,21 @@ namespace vlex {
 
 template <typename VType>
 class AggregationMapBase {
-   protected:
-    using KType = std::string;
-    int valueSize;
-    ska::flat_hash_map<KType, VType *> hashTable;
-
    public:
+    using KType = std::string;
     using HTType = ska::flat_hash_map<KType, VType *>;
-
     AggregationMapBase(int _valueSize) : valueSize(_valueSize) {}
     ~AggregationMapBase() {
         for (auto itr = hashTable.begin(); itr != hashTable.end(); ++itr) {
             delete itr->second;
         }
     }
+    bool find(KType k) const { return hashTable.count(k) > 0; }
+    const HTType &getHashTable() const { return hashTable; }
 
-    bool find(KType k) { return hashTable.count(k) > 0; }
-
-    HTType &getHashTable() { return hashTable; }
+   protected:
+    int valueSize;
+    ska::flat_hash_map<KType, VType *> hashTable;
 };
 
 class AggregationValueMap : public AggregationMapBase<data64> {
@@ -33,14 +30,14 @@ class AggregationValueMap : public AggregationMapBase<data64> {
     using VType = data64;
 
    public:
-    void assign(KType k, std::vector<Aggregation> &aggContext) {
+    void assign(KType k, Aggregation *aggContexts) {
         VType *values = new VType[valueSize];
         hashTable.insert(std::pair<KType, VType *>{k, values});
 
         // initialization
         for (int vk = 0; vk < valueSize; vk++) {
-            AggFuncType ftype = aggContext[vk].ftype;
-            Type ktype = aggContext[vk].type;
+            AggFuncType ftype = aggContexts[vk].ftype;
+            Type ktype = aggContexts[vk].type;
             if (ktype == DOUBLE) {
                 if (ftype == MIN) {
                     values[vk].d = DBL_MAX;

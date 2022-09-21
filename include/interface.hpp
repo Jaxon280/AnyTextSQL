@@ -15,9 +15,6 @@ struct Key {
 };
 
 class KeyMap {
-   private:
-    std::map<std::string, Key> map;
-
    public:
     KeyMap() {}
     KeyMap(SubMatch *smses) { construct(smses); }
@@ -40,24 +37,27 @@ class KeyMap {
     }
 
     inline const Key &at(const std::string &name) const { return map.at(name); }
-    inline bool find(const std::string &name) {
+    inline bool find(const std::string &name) const {
         return map.find(name) != map.end();
     }
+
+   private:
+    std::map<std::string, Key> map;
 };
 
 class Table {
-   private:
-    std::string name;
-    std::string filename;
-    NFA *nfa;
-    KeyMap *keyMap;
-
    public:
-    KeyMap *getKeyMap() { return keyMap; }
-    NFA *getNFA() { return nfa; }
-    std::string &getFilename() { return filename; }
-    Table(std::string name, std::string filename, NFA *nfa, KeyMap *keyMap)
+    Table(std::string &name, std::string &filename, NFA *nfa, KeyMap &keyMap)
         : name(name), filename(filename), nfa(nfa), keyMap(keyMap) {}
+    inline const KeyMap &getKeyMap() const { return keyMap; }
+    inline NFA *getNFA() const { return nfa; }
+    inline const std::string &getFilename() const { return filename; }
+
+   private:
+    std::string &name;
+    std::string &filename;
+    NFA *nfa;
+    KeyMap &keyMap;
 };
 
 }  // namespace vlex

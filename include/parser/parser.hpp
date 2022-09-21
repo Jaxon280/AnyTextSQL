@@ -17,9 +17,6 @@ extern void regex_yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 namespace vlex {
 class Parser {
-   private:
-    int errorno = 0;
-
    public:
     Parser() {}
 
@@ -27,20 +24,23 @@ class Parser {
         printf("ERROR: %s\n\n", s);
         errorno = 1;
     }
-    bool isError() {
+    inline bool isError() const {
         if (errorno) {
             return true;
         } else {
             return false;
         }
     }
+
+   private:
+    int errorno = 0;
 };
 
 class RegexParser : public Parser {
     using Parser::Parser;
 
    public:
-    NFA *parse(std::string &input) {
+    NFA *parse(const std::string &input) {
         NFA *nfa = NULL;
         YY_BUFFER_STATE buffer = regex_yy_scan_string(input.c_str());
         regex_yyparse(&nfa);
@@ -53,7 +53,7 @@ class QueryParser : public Parser {
     using Parser::Parser;
 
    public:
-    QueryContext *parse(std::string &input) {
+    QueryContext *parse(const std::string &input) {
         YY_BUFFER_STATE buffer = query_yy_scan_string(input.c_str());
         QueryContext *ctx = new QueryContext();
         query_yyparse(*ctx);

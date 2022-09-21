@@ -32,19 +32,12 @@ class DFA {
     using SubMatches = std::vector<SubMatchStates>;
     using StateSet = std::set<DFA_ST_TYPE>;
 
-   private:
-    TransTable transTable;
-    StateSet acceptStates;
-    SubMatches subMatches;
-    int numStates;
-    int initState;
-
-   public:
     DFA() {}
-    DFA(int _initState, std::vector<int>& _powsStates,
-        std::map<int, int>& _old2new,
+    DFA(int _initState, const std::vector<int>& _powsStates,
+        const std::map<int, int>& _old2new,
         std::map<int, std::vector<int>>& _powTTable,
-        std::set<int>& _acceptStates, std::vector<SubMatchStates> _smses);
+        const std::set<int>& _acceptStates,
+        const std::vector<SubMatchStates>& _smses);
     DFA(TransTable _transTable, StateSet _acceptStates, SubMatches _subMatches,
         int _numStates)
         : transTable(_transTable),
@@ -53,37 +46,20 @@ class DFA {
           numStates(_numStates) {}  // used in test
     ~DFA() {}
 
-    inline TransTable& getTransTable() { return transTable; }
-    inline SubMatches& getSubMatches() { return subMatches; }
-    inline StateSet& getAcceptStates() { return acceptStates; }
-    inline int getNumStates() { return numStates; }
+    inline const TransTable& getTransTable() const { return transTable; }
+    inline const SubMatches& getSubMatches() const { return subMatches; }
+    inline const StateSet& getAcceptStates() const { return acceptStates; }
+    inline int getNumStates() const { return numStates; }
+
+   private:
+    TransTable transTable;
+    StateSet acceptStates;
+    SubMatches subMatches;
+    int numStates;
+    int initState;
 };
 
 class DFAGenerator {
-   private:
-    std::vector<std::vector<int>> epsilonTable;  // NFA state -> NFA states
-    std::vector<std::vector<std::set<int>>>
-        powsetTransTable;  // NFA state -> NFA powset state table (128)
-
-    std::stack<int> stateStack;
-
-    NFA* nfa;
-
-    std::map<int, std::set<int>>
-        powsetStates;  // DFA state -> NFA powset states
-    std::map<int, std::vector<int>> transTable;  // state -> NFA powset state
-    std::vector<DFA::SubMatchStates> smses;
-    std::map<int, int> default2mini;
-    std::set<int> acceptStates;
-    DFA* dfa;
-
-    std::vector<int> stateVec;  // minimized DFA states
-
-    void setEpsilonTable(Transition* trans, int transSize, int stateSize);
-    void setPowsetTable(Transition* trans, int transSize);
-    void initPowsetStates(int initState);
-    void minimize(std::vector<int>& submatchStates);
-
    public:
     DFAGenerator(NFA* _nfa) : nfa(_nfa) {
         int stateSize = _nfa->stateSize;
@@ -95,7 +71,29 @@ class DFAGenerator {
     ~DFAGenerator() {
         if (dfa) delete dfa;
     }
-    void generate(KeyMap* keyMap);
-    DFA* getDFA() { return dfa; }
+    DFA* generate(const KeyMap& keyMap);
+    DFA* getDFA() const { return dfa; }
+
+   private:
+    void setEpsilonTable(Transition* trans, int transSize, int stateSize);
+    void setPowsetTable(Transition* trans, int transSize);
+    void initPowsetStates(int initState);
+    void minimize(const std::vector<int>& submatchStates);
+
+    std::vector<std::vector<int>> epsilonTable;  // NFA state -> NFA states
+    std::vector<std::vector<std::set<int>>>
+        powsetTransTable;  // NFA state -> NFA powset state table (128)
+    std::stack<int> stateStack;
+
+    NFA* nfa;
+
+    std::map<int, std::set<int>>
+        powsetStates;  // DFA state -> NFA powset states
+    std::map<int, std::vector<int>> transTable;  // state -> NFA powset state
+    std::vector<DFA::SubMatchStates> smses;
+    std::map<int, int> default2mini;
+    std::set<int> acceptStates;
+    DFA* dfa;
+    std::vector<int> stateVec;  // minimized DFA states
 };
 }  // namespace vlex

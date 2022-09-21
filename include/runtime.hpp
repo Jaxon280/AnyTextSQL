@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 #include "executor/executor.hpp"
-#include "general/ioStream.hpp"
+#include "general/ios.hpp"
 #include "interface.hpp"
 #include "parser/nfa.hpp"
 #include "parser/query.hpp"
@@ -14,23 +14,23 @@
 namespace vlex {
 class Runtime {
    public:
-    Runtime(Table& table, NFA* nfa, QueryContext* _query);
+    Runtime(const Table& table, NFA* nfa, QueryContext* _query);
     void construct(double lr);
     void iexec();
     void exec();
 
    private:
-    DFAGenerator* dfag;
-    VectFA* vfa;
-    QueryContext* query;
+    void makePartitions(SIZE_TYPE size);
+
     Executor* executor;
     ioStream* ios;
+    QueryContext* query;
+    DFAGenerator* dfag;
+    VectFA* vfa;
 
     DATA_TYPE* data;
     SIZE_TYPE size;
 
     std::vector<SIZE_TYPE> partitions;
-
-    void makePartitions(SIZE_TYPE size);
 };
 }  // namespace vlex

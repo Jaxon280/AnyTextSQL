@@ -89,11 +89,12 @@ struct Aggregation {
 };
 
 struct StringList {
-    char *str;
+    const char *str;
     StringList *next;
 };
 
-inline HashTableType intersectionHTType(HashTableType a, HashTableType b) {
+inline HashTableType intersectionHTType(const HashTableType a,
+                                        const HashTableType b) {
     if (a == NONE_HT) {
         return b;
     } else if (a == COUNT_HT) {
@@ -114,20 +115,53 @@ inline HashTableType intersectionHTType(HashTableType a, HashTableType b) {
 }
 
 class QueryContext {
-   private:
-    std::vector<vlex::Type> keyTypes;
-    int limit;
-    PredTree *pTree;
-    std::vector<OpTree *> pList;
-    int countTPred;
-    StatementList *output;
-    StringList *tablenames;
-    StringList *gKeys;
-    StringList *oKeys;
-    std::vector<Key> gKeyVec;
-    std::vector<Key> oKeyVec;
-    int errorno = 0;
+   public:
+    QueryContext() {}
+    void mapping(const KeyMap &keyMap) {
+        for (StatementList *s = output; s != NULL; s = s->next) {
+            mapOpTree(s->stmt->expr, keyMap);
+            addTypeOp(s->stmt->expr);
+        }
+        if (pList.size() != 0) {
+            mapPredTree(pList, keyMap);
+            countTextPred();
+        }
+        for (StringList *k = gKeys; k != NULL; k = k->next) {
+            std::string s(k->str, strlen(k->str));
+            gKeyVec.push_back(keyMap.at(s));
+        }
+        for (StringList *k = oKeys; k != NULL; k = k->next) {
+            std::string s(k->str, strlen(k->str));
+            oKeyVec.push_back(keyMap.at(s));
+        }
+    }
+    inline const StatementList *getStatements() const { return output; }
+    inline const StringList *getTables() const { return tablenames; }
+    inline PredTree *getPredTree() { return pTree; }
+    inline const std::vector<OpTree *> &getPList() const { return pList; }
+    inline int getTextPredNum() const { return countTPred; }
+    inline const std::vector<Key> &getGKeys() const { return gKeyVec; }
+    inline const std::vector<Key> &getOKeys() const { return oKeyVec; }
+    inline const std::vector<vlex::Type> &getKeyTypes() const {
+        return keyTypes;
+    }
+    inline int getLimit() const { return limit; }
+    inline bool isError() const { return errorno; }
+    void assignStmts(StatementList *_stmts) { output = _stmts; }
+    void assignTables(StringList *_tables) { tablenames = _tables; }
+    void assignPredTree(PredTree *_ptree) {
+        pTree = _ptree;
+        createPList(_ptree);
+    }
+    void assignGroupKeys(StringList *_keys) { gKeys = _keys; }
+    void assignOrderKeys(StringList *_keys) { oKeys = _keys; }
+    void assignLimit(int _limit) { limit = _limit; }
+    void grammarError(const char *s) {
+        printf("ERROR: %s\n\n", s);
+        errorno = 1;
+    }
 
+   private:
     Type addTypeOp(OpTree *tree) {
         if (tree->evalType == OP) {
             Type lt = addTypeOp(tree->left);
@@ -147,7 +181,7 @@ class QueryContext {
         return tree->type;
     }
 
-    void mapOpTree(OpTree *tree, KeyMap *keyMap) {
+    void mapOpTree(OpTree *tree, const KeyMap &keyMap) {
         OpTree *t;
         std::queue<OpTree *> bfsQueue;
         bfsQueue.push(tree);
@@ -161,8 +195,8 @@ class QueryContext {
             }
 
             if (t->evalType == VAR || t->evalType == AGGFUNC) {
-                if (keyMap->find(t->varKey)) {
-                    Key &key = keyMap->at(t->varKey);
+                if (keyMap.find(t->varKey)) {
+                    const Key &key = keyMap.at(t->varKey);
                     t->varKeyId = key.id;
                     if (t->evalType == AGGFUNC && t->ftype == COUNT) {
                         t->type = INT;
@@ -177,7 +211,7 @@ class QueryContext {
         }
     }
 
-    void mapPredTree(std::vector<OpTree *> &pList, KeyMap *keyMap) {
+    void mapPredTree(std::vector<OpTree *> &pList, const KeyMap &keyMap) {
         for (OpTree *opt : pList) {
             mapOpTree(opt, keyMap);
             addTypeOp(opt);
@@ -217,49 +251,18 @@ class QueryContext {
         }
     }
 
-   public:
-    QueryContext() {}
-    void mapping(KeyMap *keyMap) {
-        for (StatementList *s = output; s != NULL; s = s->next) {
-            mapOpTree(s->stmt->expr, keyMap);
-            addTypeOp(s->stmt->expr);
-        }
-        if (pList.size() != 0) {
-            mapPredTree(pList, keyMap);
-            countTextPred();
-        }
-        for (StringList *k = gKeys; k != NULL; k = k->next) {
-            std::string s(k->str, strlen(k->str));
-            gKeyVec.push_back(keyMap->at(s));
-        }
-        for (StringList *k = oKeys; k != NULL; k = k->next) {
-            std::string s(k->str, strlen(k->str));
-            oKeyVec.push_back(keyMap->at(s));
-        }
-    }
-    inline StatementList *getStatements() { return output; }
-    inline StringList *getTables() { return tablenames; }
-    inline PredTree *getPredTree() { return pTree; }
-    inline std::vector<OpTree *> &getPList() { return pList; }
-    inline int getTextPredNum() { return countTPred; }
-    inline std::vector<Key> &getGKeys() { return gKeyVec; }
-    inline std::vector<Key> &getOKeys() { return oKeyVec; }
-    inline std::vector<vlex::Type> &getKeyTypes() { return keyTypes; }
-    inline int getLimit() { return limit; }
-    inline bool isError() { return errorno; }
-    void assignStmts(StatementList *_stmts) { output = _stmts; }
-    void assignTables(StringList *_tables) { tablenames = _tables; }
-    void assignPredTree(PredTree *_ptree) {
-        pTree = _ptree;
-        createPList(_ptree);
-    }
-    void assignGroupKeys(StringList *_keys) { gKeys = _keys; }
-    void assignOrderKeys(StringList *_keys) { oKeys = _keys; }
-    void assignLimit(int _limit) { limit = _limit; }
-    void grammarError(const char *s) {
-        printf("ERROR: %s\n\n", s);
-        errorno = 1;
-    }
+    std::vector<vlex::Type> keyTypes;
+    int limit;
+    PredTree *pTree;
+    std::vector<OpTree *> pList;
+    int countTPred;
+    StatementList *output;
+    StringList *tablenames;
+    StringList *gKeys;
+    StringList *oKeys;
+    std::vector<Key> gKeyVec;
+    std::vector<Key> oKeyVec;
+    int errorno = 0;
 };
 
 }  // namespace vlex

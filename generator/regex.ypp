@@ -80,22 +80,22 @@ select: elementary_re '?' { $$ = buildSelectNFA($1);};
 
 elementary_re: '(' regex ')' { $$ = $2; }
     | '(' RSUBMATCH_TK regex ')' { $$ = buildSubmatchNFA($3, $2); }
-    | '.' { $$ = build_wildcard_NFA(); }
-    | RDIGIT_TK { $$ = build_digit_NFA(); }
-    | RALPH_TK { $$ = build_alph_NFA(); }
-    | RCAPT_TK { $$ = build_capt_NFA(); }
+    | '.' { $$ = buildWildcardNFA(); }
+    | RDIGIT_TK { $$ = buildDigitNFA(); }
+    | RALPH_TK { $$ = buildAlphNFA(); }
+    | RCAPT_TK { $$ = buildCaptNFA(); }
     | RCHAR_TK { $$ = buildNFA($1); }
     | int { $$ = $1; }
     | double { $$ = $1; }
     | text { $$ = $1; }
-    | charset { $$ = build_charsets_NFA($1); }
+    | charset { $$ = buildCharsetsNFA($1); }
     ;
 
-int: RINT_TK { $$ = build_INT(); };
+int: RINT_TK { $$ = buildINT(); };
 
-double: RDOUBLE_TK { $$ = build_DOUBLE(); };
+double: RDOUBLE_TK { $$ = buildDOUBLE(); };
 
-text: RTEXT_TK { $$ = build_TEXT(); };
+text: RTEXT_TK { $$ = buildTEXT(); };
 
 count: elementary_re RCNUM_TK { $$ = buildNumNFA($1, $2); };
 

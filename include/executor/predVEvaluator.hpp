@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "opEvaluator.hpp"
+#include "opVEvaluator.hpp"
 
 namespace vlex {
 template <typename Value>
@@ -154,7 +154,7 @@ class PredVEvaluator {
 
    public:
     PredVEvaluator(uint8_t *_masks) : masks(_masks) {}
-    void evaluate(QueryContext::OpTree *tree, data64 **bufArray) {
+    void evaluate(OpTree *tree, data64 **bufArray) {
         Value *lvalue;
         if (tree->left->evalType == OP) {
             if (tree->left->type == DOUBLE) {
@@ -277,8 +277,7 @@ class PredVEvaluator {
         }
     }
 
-    void evaluateText(QueryContext::OpTree *tree, data64 **bufArray,
-                      SIZE_TYPE **sizes) {
+    void evaluateText(OpTree *tree, data64 **bufArray, SIZE_TYPE **sizes) {
         // todo: add to comparison for string over 32 characters
         int lk = tree->left->varKey;
         switch (tree->opType) {

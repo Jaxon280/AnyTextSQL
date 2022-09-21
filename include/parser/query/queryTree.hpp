@@ -10,12 +10,12 @@ StatementList *buildWildCard(bool isCount);
 StatementList *buildStatements(StatementList *stmts, Statement *stmt);
 Statement *buildStatement(OpTree *left, const char *right);
 
-StringList *buildIdents(StringList *idents, char *ident);
+StringList *buildIdents(StringList *idents, const char *ident);
 
 OpTree *buildOp(OpType op, OpTree *left, OpTree *right);
-OpTree *buildAggFunc(AggFuncType ftype, char *ident);
-OpTree *buildVar(char *ident);
-OpTree *buildConstString(char *svalue);
+OpTree *buildAggFunc(AggFuncType ftype, const char *ident);
+OpTree *buildVar(const char *ident);
+OpTree *buildConstString(const char *svalue);
 OpTree *buildSignedNumber(OpTree *opt, bool isNeg);
 OpTree *buildConstInt(int ivalue);
 OpTree *buildConstDouble(double dvalue);

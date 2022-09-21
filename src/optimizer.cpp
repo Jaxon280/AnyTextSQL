@@ -1,21 +1,21 @@
 #include "optimizer.hpp"
 
-using namespace vlex;
+namespace vlex {
 
 void QueryOptimizer::getTextPred(QueryContext *ctx) {
     count = 0;
     for (OpTree *opt : ctx->getPList()) {
         if (opt->type == TEXT) {
-            map[opt->left->varKey].push_back(opt);
+            key2textPred[opt->left->varKey].push_back(opt);
             opt->textPredId = count + 1;
             count++;
         }
     }
 }
 
-NFA *QueryOptimizer::optimizeNFA(NFA *originalNFA, QueryContext *ctx) {
+NFA *QueryOptimizer::optimizeNFA(NFA *originalNFA) {
     NFA *nfa = copyNFA(originalNFA);
-    for (auto it = map.begin(); it != map.end(); ++it) {
+    for (auto it = key2textPred.begin(); it != key2textPred.end(); ++it) {
         int id = 1;
         for (OpTree *opt : it->second) {
             NFA *predNFA = constructPredNFA(opt);
@@ -79,7 +79,8 @@ NFA *QueryOptimizer::mergeNFA(NFA *n1, NFA *n2, const std::string &sub,
     nfa->transVec[tsize - 1].end = sacceptState;
     nfa->transVec[tsize - 1].c = EPSILON;
 
-    nfa->subms = addSubMatch(n1->subms);
+    nfa->subms = new SubMatch;
+    nfa->subms->next = n1->subms;
     nfa->subms->start = n2->initState + s1;
     nfa->subms->end = n2->acceptState + s1;
     nfa->subms->name = sub.c_str();
@@ -88,14 +89,8 @@ NFA *QueryOptimizer::mergeNFA(NFA *n1, NFA *n2, const std::string &sub,
     nfa->subms->isAnyEnd = n2->isAnyEnd;
     nfa->subms->predID = id;
 
-    delete n1, n2;
+    delete n1, delete n2;
     return nfa;
-}
-
-SubMatch *QueryOptimizer::addSubMatch(SubMatch *subms) {
-    SubMatch *new_sm = new SubMatch;
-    new_sm->next = subms;
-    return new_sm;
 }
 
 NFA *QueryOptimizer::constructPredNFA(OpTree *opt) {
@@ -124,9 +119,10 @@ NFA *QueryOptimizer::constructPredNFA(OpTree *opt) {
         new_nfa->isAnyEnd = false;
         return new_nfa;
     } else if (opt->opType == NEQUAL) {
+        return NULL;
     } else if (opt->opType == LIKE) {
         std::string pattern;
-        for (int si = 1; si < str.length() - 1; si++) {
+        for (int si = 1; si < (int)str.length() - 1; si++) {
             if (str[si] == '%') {
                 pattern.push_back('.');
                 pattern.push_back('*');
@@ -153,6 +149,8 @@ NFA *QueryOptimizer::optimize(NFA *nfa, QueryContext *ctx) {
         return nfa;
     }
 
-    NFA *new_nfa = optimizeNFA(nfa, ctx);
+    NFA *new_nfa = optimizeNFA(nfa);
     return new_nfa;
 }
+
+}  // namespace vlex

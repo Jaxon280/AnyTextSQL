@@ -11,7 +11,7 @@ void destroyNFA(NFA *nfa);
 NFA *copyNFA(NFA *n);
 
 NFA *buildNFA(char c);
-NFA *buildCharsetsNFA(uint8_t *chsets);
+NFA *buildCharsetsNFA(const uint8_t *chsets);
 NFA *buildWildcardNFA();
 NFA *buildDigitNFA();
 NFA *buildAlphNFA();

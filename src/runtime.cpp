@@ -1,14 +1,14 @@
 #include "runtime.hpp"
 
-using namespace vlex;
+namespace vlex {
 
-Runtime::Runtime(Table& table, NFA* nfa, QueryContext* _query)
+Runtime::Runtime(const Table& table, NFA* nfa, QueryContext* _query)
     : executor(new Executor()),
       ios(new ioStream(table.getFilename())),
-      query(_query) {
-    dfag = new DFAGenerator(nfa);
-    dfag->generate(table.getKeyMap());
-    vfa = new VectFA(*dfag->getDFA());
+      query(_query),
+      dfag(new DFAGenerator(nfa)) {
+    DFA* dfa = dfag->generate(table.getKeyMap());
+    vfa = new VectFA(*dfa);
     size = ios->getSize();
     makePartitions(size);
 }
@@ -40,7 +40,7 @@ void Runtime::iexec() {
     // interleave
     int i = 0;
 
-    while (i < partitions.size() - 1) {
+    while (i < (int)partitions.size() - 1) {
         SIZE_TYPE off = partitions[i], next_off = partitions[i + 1];
         i++;
         SIZE_TYPE rsize = next_off - off;
@@ -71,3 +71,5 @@ void Runtime::makePartitions(SIZE_TYPE size) {
     }
     partitions.push_back(size - 1);
 }
+
+}  // namespace vlex

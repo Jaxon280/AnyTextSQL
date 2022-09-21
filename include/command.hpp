@@ -13,6 +13,14 @@
 namespace vlex {
 
 class CommandExecutor {
+   public:
+    CommandExecutor() {
+        rparser = new RegexParser();
+        qparser = new QueryParser();
+        qopter = new QueryOptimizer();
+    }
+    void exec();
+
    private:
     typedef enum _action_type { SCAN, EXEC } CommandType;
     struct Command {
@@ -20,17 +28,9 @@ class CommandExecutor {
         std::vector<std::string> args;
     };
 
-    double version = 1.0;
+    void initialize() const;
 
-    std::string buffer;
-    RegexParser* rparser;
-    QueryParser* qparser;
-    QueryOptimizer* qopter;
-    std::map<std::string, Table> tableMap;
-
-    void initialize();
-
-    Command* parseScan(const std::string& input) {
+    Command* parseScan(const std::string& input) const {
         Command* cmd = new Command();
         cmd->type = SCAN;
         std::stringstream ss(input);
@@ -41,15 +41,15 @@ class CommandExecutor {
         return cmd;
     }
 
-    Command* parseExec(const std::string& input) {
+    Command* parseExec(const std::string& input) const {
         Command* cmd = new Command();
         cmd->type = EXEC;
         cmd->args.push_back(input);
         return cmd;
     }
 
-    Command* parseCommand(const std::string& input) {
-        int pos = input.find(' ');
+    Command* parseCommand(const std::string& input) const {
+        auto pos = input.find(' ');
         if (pos != std::string::npos) {
             if (input.substr(0, pos) == ".scan" && pos < input.length() - 1) {
                 return parseScan(input);
@@ -63,13 +63,12 @@ class CommandExecutor {
     }
     void execCommand(Command* cmd);
 
-   public:
-    CommandExecutor() {
-        rparser = new RegexParser();
-        qparser = new QueryParser();
-        qopter = new QueryOptimizer();
-    }
-    void exec();
+    double version = 1.0;
+    std::string buffer;
+    RegexParser* rparser;
+    QueryParser* qparser;
+    QueryOptimizer* qopter;
+    std::map<std::string, Table> tableMap;
 };
 
 }  // namespace vlex
