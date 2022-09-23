@@ -51,7 +51,7 @@ int regex_yyerror(vlex::NFA **nfa, const char *s);
 
 // https://www2.cs.sfu.ca/~cameron/Teaching/384/99-3/regexp-plg.html
 
-line: regex { *nfa=$1; };
+line: regex { *nfa=buildRegexPattern($1); };
 
 regex: union { $$ = $1; }
     | simple_re { $$ = $1; }

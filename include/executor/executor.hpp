@@ -2,8 +2,8 @@
 
 #include "common.hpp"
 #include "hashMap.hpp"
-#include "scanner/converter.hpp"
 #include "scanner/interface.hpp"
+#include "scanner/vfa.hpp"
 #if (defined VECEXEC)
 #include "queryVExecutor.hpp"
 #endif
@@ -30,7 +30,8 @@ class Executor {
 
     void setTransTable(const std::vector<Qlabel> &qlabels, int stateSize);
     void setSubMatchTable(
-        const std::vector<DFA::SubMatchStates> &subMatchStates, int stateSize);
+        const std::vector<VectFA::SubMatchStates> &subMatchStates,
+        int stateSize);
     void setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize);
     void setStatements(const StatementList *stmts);
     void setSelections(QueryContext *query);

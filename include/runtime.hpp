@@ -6,8 +6,8 @@
 #include "interface.hpp"
 #include "parser/nfa.hpp"
 #include "parser/query.hpp"
-#include "scanner/converter.hpp"
 #include "scanner/dfa.hpp"
+#include "scanner/vfa.hpp"
 
 #define PARTITION_SIZE (SIZE_TYPE)(1 << 31)  // 1024MB
 

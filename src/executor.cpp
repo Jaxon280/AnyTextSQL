@@ -1,7 +1,5 @@
 #include "executor/executor.hpp"
 
-#include "general/clock.hpp"
-
 namespace vlex {
 
 Executor::Executor() {}
@@ -37,7 +35,7 @@ void Executor::setTransTable(const std::vector<Qlabel> &qlabels,
 }
 
 void Executor::setSubMatchTable(
-    const std::vector<DFA::SubMatchStates> &subMatchStates, int stateSize) {
+    const std::vector<VectFA::SubMatchStates> &subMatchStates, int stateSize) {
     anyStartTable = new int[stateSize]();
     anyEndTable = new int[stateSize]();
     charStartTable = new int[stateSize]();
@@ -46,19 +44,22 @@ void Executor::setSubMatchTable(
 
     subMatchSize = subMatchStates.size();
     keyTypes = new Type[subMatchSize];
-    for (const DFA::SubMatchStates &sms : subMatchStates) {
+    for (const VectFA::SubMatchStates &sms : subMatchStates) {
         keyTypes[sms.id] = sms.type;
         // sms.predID
-        endPredIdTable[sms.endState] = sms.predID;
-        if (sms.isAnyStart) {
-            anyStartTable[sms.startState] = sms.id + 1;
-        } else {
-            charStartTable[sms.startState] = sms.id + 1;
+        for (int ss : sms.charStartStates) {
+            charStartTable[ss] = sms.id + 1;
         }
-        if (sms.isAnyEnd) {
-            anyEndTable[sms.endState] = sms.id + 1;
-        } else {
-            charEndTable[sms.endState] = sms.id + 1;
+        for (int es : sms.charEndStates) {
+            charEndTable[es] = sms.id + 1;
+            endPredIdTable[es] = sms.predID;
+        }
+        for (int ss : sms.anyStartStates) {
+            anyStartTable[ss] = sms.id + 1;
+        }
+        for (int es : sms.anyEndStates) {
+            anyEndTable[es] = sms.id + 1;
+            endPredIdTable[es] = sms.predID;
         }
     }
 }
@@ -101,7 +102,7 @@ void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     }
 
     setTransTable(qlabels, stateSize);
-    const std::vector<DFA::SubMatchStates> &subMatchStates =
+    const std::vector<VectFA::SubMatchStates> &subMatchStates =
         vfa->getSubMatches();
     setSubMatchTable(subMatchStates, stateSize);
     end = new SubMatchNode;
@@ -776,10 +777,10 @@ void Executor::printAggregation0() const {
 void Executor::printAggregation1() const {
     const AggregationValueMap::HTType &vht = aggMap->getHashTable();
     const AggregationCountMap::HTType &cht = aggCountMap->getHashTable();
-    auto vbegin = vht.begin();
-    auto vend = vht.begin();
-    auto cbegin = cht.begin();
-    auto cend = cht.begin();
+    auto vbegin = vht.cbegin();
+    auto vend = vht.cbegin();
+    auto cbegin = cht.cbegin();
+    auto cend = cht.cbegin();
 
     if (httype == COUNT_HT) {
         if (limit && limit <= (int)cht.size()) {
@@ -787,7 +788,7 @@ void Executor::printAggregation1() const {
                 ++cend;
             }
         } else {
-            cend = cht.end();
+            cend = cht.cend();
         }
     } else if (httype == VALUE_HT || httype == BOTH_HT) {
         if (limit && limit <= (int)vht.size()) {
@@ -795,7 +796,7 @@ void Executor::printAggregation1() const {
                 ++vend;
             }
         } else {
-            vend = vht.end();
+            vend = vht.cend();
         }
     }
 

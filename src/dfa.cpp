@@ -40,13 +40,15 @@ DFA::DFA(int _initState, const std::vector<int>& _powsStates,
 
     for (const SubMatchStates& sms : _smses) {
         SubMatchStates new_sms;
-        new_sms.isAnyStart = sms.isAnyStart;
-        new_sms.isAnyEnd = sms.isAnyEnd;
         new_sms.id = sms.id;
         new_sms.predID = sms.predID;
         new_sms.type = sms.type;
-        new_sms.startState = old2new_comp[sms.startState];
-        new_sms.endState = old2new_comp[sms.endState];
+        for (int ss : sms.startStates) {
+            new_sms.startStates.push_back(old2new_comp[ss]);
+        }
+        for (int es : sms.endStates) {
+            new_sms.endStates.push_back(old2new_comp[es]);
+        }
         subMatches.push_back(new_sms);
     }
 }
@@ -113,12 +115,13 @@ void DFAGenerator::initPowsetStates(int initState) {
     }
 }
 
-void DFAGenerator::minimize(const std::vector<int>& submatchStates) {
+void DFAGenerator::minimize() {
     std::stack<int> sstack;
     sstack.push(INIT_STATE);
 
     std::vector<int> visited(powsetStates.size() + 1, 0);
     stateVec.push_back(0);  // inv state
+    default2mini[0] = 0;
     while (!sstack.empty()) {
         int s = sstack.top();
         sstack.pop();
@@ -136,11 +139,6 @@ void DFAGenerator::minimize(const std::vector<int>& submatchStates) {
             if ((acceptStates.count(s) > 0) ^ (acceptStates.count(sid) > 0)) {
                 goto distinguish;
             }
-            for (int smss : submatchStates) {
-                if (ps.find(smss) != ps.end()) {
-                    goto distinguish;
-                }
-            }
             for (int i = 0; i < ASCII_SZ; i++) {
                 if (transTable[s][i] != transTable[sid][i]) {
                     goto distinguish;
@@ -156,6 +154,18 @@ void DFAGenerator::minimize(const std::vector<int>& submatchStates) {
 
         distinguish:
             sstack.push(sid);
+        }
+    }
+}
+
+void DFAGenerator::setInvStates() {
+    for (auto it = transTable.begin(); it != transTable.end(); ++it) {
+        if (acceptStates.find(it->first) != acceptStates.end()) {
+            for (int i = 0; i < (int)it->second.size(); i++) {
+                if (default2mini[it->second[i]] == INIT_STATE) {
+                    it->second[i] = INV_STATE;
+                }
+            }
         }
     }
 }
@@ -213,28 +223,21 @@ DFA* DFAGenerator::generate(const KeyMap& keyMap) {
         }
     }
 
-    std::vector<int> smsVec;
-    for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
-        smsVec.push_back(s->start);
-        smsVec.push_back(s->end);
-    }
-    minimize(smsVec);
+    minimize();
+    setInvStates();
 
     for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
         DFA::SubMatchStates sms;
         sms.id = keyMap.at(s->name).id;
         sms.type = keyMap.at(s->name).type;
         sms.predID = s->predID;
-        for (int ss : stateVec) {
-            if (powsetStates[ss].count(s->start) > 0) {
-                sms.startState = ss;
-                sms.isAnyStart = s->isAnyStart;
-                // todo: type and subm name
+        for (const auto& [sid, ps] : powsetStates) {
+            if (ps.count(s->start) > 0) {
+                sms.startStates.push_back(sid);
             }
 
-            if (powsetStates[ss].count(s->end) > 0) {
-                sms.endState = ss;
-                sms.isAnyEnd = s->isAnyEnd;
+            if (ps.count(s->end) > 0) {
+                sms.endStates.push_back(sid);
             }
         }
         smses.push_back(sms);

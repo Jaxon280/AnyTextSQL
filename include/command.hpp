@@ -7,8 +7,8 @@
 #include "parser/parser.hpp"
 #include "parser/query.hpp"
 #include "runtime.hpp"
-#include "scanner/converter.hpp"
 #include "scanner/dfa.hpp"
+#include "scanner/vfa.hpp"
 
 namespace vlex {
 

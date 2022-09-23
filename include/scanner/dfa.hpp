@@ -11,21 +11,17 @@ class DFA {
         int id;
         Type type;
         int predID;
-        DFA_ST_TYPE startState;
-        bool isAnyStart;
-        DFA_ST_TYPE endState;
-        bool isAnyEnd;
+        std::vector<DFA_ST_TYPE> startStates;
+        std::vector<DFA_ST_TYPE> endStates;
 
         SubMatchStates(int _id, Type _type, int _predID,
-                       DFA_ST_TYPE _startState, bool _isAnyStart,
-                       DFA_ST_TYPE _endState, bool _isAnyEnd)
+                       std::vector<DFA_ST_TYPE> _startStates,
+                       std::vector<DFA_ST_TYPE> _endStates)
             : id(_id),
               type(_type),
               predID(_predID),
-              startState(_startState),
-              isAnyStart(_isAnyStart),
-              endState(_endState),
-              isAnyEnd(_isAnyEnd) {}
+              startStates(_startStates),
+              endStates(_endStates) {}
         SubMatchStates() {}
     };
     using TransTable = std::vector<std::vector<DFA_ST_TYPE>>;
@@ -78,7 +74,8 @@ class DFAGenerator {
     void setEpsilonTable(Transition* trans, int transSize, int stateSize);
     void setPowsetTable(Transition* trans, int transSize);
     void initPowsetStates(int initState);
-    void minimize(const std::vector<int>& submatchStates);
+    void setInvStates();
+    void minimize();
 
     std::vector<std::vector<int>> epsilonTable;  // NFA state -> NFA states
     std::vector<std::vector<std::set<int>>>

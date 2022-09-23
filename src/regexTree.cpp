@@ -30,6 +30,13 @@ NFA *copyNFA(NFA *n) {
     return nfa;
 }
 
+NFA *buildRegexPattern(NFA *nfa) {
+    NFA *nfa1 = buildWildcardNFA();
+    NFA *nfa2 = buildStarNFA(nfa1);
+    NFA *pattern = buildConcatNFA(nfa2, nfa);
+    return pattern;
+}
+
 NFA *buildNFA(char c) {
     NFA *nfa = constructNFA(1, TEXT_PT);
     nfa->initState = 0;

@@ -1294,7 +1294,7 @@ yyreduce:
     {
         case 2:
 #line 54 "generator/regex.ypp" /* yacc.c:1646  */
-    { *nfa=(yyvsp[0].nfa); }
+    { *nfa=buildRegexPattern((yyvsp[0].nfa)); }
 #line 1299 "regexParser.cpp" /* yacc.c:1646  */
     break;
 

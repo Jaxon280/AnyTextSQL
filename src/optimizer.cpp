@@ -15,7 +15,7 @@ void QueryOptimizer::getTextPred(QueryContext *ctx) {
 
 NFA *QueryOptimizer::optimizeNFA(NFA *originalNFA) {
     NFA *nfa = copyNFA(originalNFA);
-    for (auto it = key2textPred.begin(); it != key2textPred.end(); ++it) {
+    for (auto it = key2textPred.cbegin(); it != key2textPred.cend(); ++it) {
         int id = 1;
         for (OpTree *opt : it->second) {
             NFA *predNFA = constructPredNFA(opt);

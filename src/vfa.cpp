@@ -1,4 +1,4 @@
-#include "scanner/converter.hpp"
+#include "scanner/vfa.hpp"
 
 #include <iostream>
 
@@ -137,9 +137,11 @@ void VectFA::constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
     const double p = 0.75;
     for (auto it = Qtilde.begin(); it != Qtilde.end();) {
         ST_TYPE q = *it;
+#if (defined PFA_ANY)
         if (pfa.calc(q, q) < p && anySMStates.find(q) == anySMStates.end()) {
             it = Qtilde.erase(it);
         } else {
+#endif
             Delta *new_trans = new Delta;
             new_trans->startState = old2new[q];
             new_trans->charTable.resize(ASCII_SZ);
@@ -165,7 +167,9 @@ void VectFA::constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
                 }
             }
             ++it;
+#if (defined PFA_ANY)
         }
+#endif
     }
 }
 
@@ -223,16 +227,11 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     }
     const std::vector<DFA::SubMatchStates> &SMSs = dfa.getSubMatches();
     for (const DFA::SubMatchStates &sms : SMSs) {
-        if (sms.isAnyStart) {
-            anySMStates.insert(sms.startState);
-        } else {
-            charSMStates.insert(sms.startState);
+        for (int ss : sms.startStates) {
+            charSMStates.insert(ss);
         }
-
-        if (sms.isAnyEnd) {
-            anySMStates.insert(sms.endState);
-        } else {
-            charSMStates.insert(sms.endState);
+        for (int es : sms.endStates) {
+            charSMStates.insert(es);
         }
     }
 
@@ -249,8 +248,10 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     pfa.scanSubString(Qstars);
     std::map<ST_TYPE, int> opt_poses = pfa.calcSubString();
 
+#if (defined PFA_ANY)
     pfa.scan();
     pfa.calc();
+#endif
 
     std::set<ST_TYPE> QstarSource;
     for (const Qstar &Qst : Qstars) {
@@ -276,9 +277,24 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     }
 
     for (DFA::SubMatchStates sms : SMSs) {
-        DFA::SubMatchStates vsms(sms.id, sms.type, sms.predID,
-                                 old2new[sms.startState], sms.isAnyStart,
-                                 old2new[sms.endState], sms.isAnyEnd);
+        VectFA::SubMatchStates vsms;
+        vsms.id = sms.id;
+        vsms.type = sms.type;
+        vsms.predID = sms.predID;
+        for (int ss : sms.startStates) {
+            if (Qtilde.find(ss) != Qtilde.end()) {
+                vsms.anyStartStates.push_back(old2new[ss]);
+            } else {
+                vsms.charStartStates.push_back(old2new[ss]);
+            }
+        }
+        for (int es : sms.endStates) {
+            if (Qtilde.find(es) != Qtilde.end()) {
+                vsms.anyEndStates.push_back(old2new[es]);
+            } else {
+                vsms.charEndStates.push_back(old2new[es]);
+            }
+        }
         subMatches.push_back(vsms);
     }
 

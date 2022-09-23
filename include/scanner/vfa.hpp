@@ -13,6 +13,29 @@
 namespace vlex {
 class VectFA {
    public:
+    struct SubMatchStates {
+        int id;
+        Type type;
+        int predID;
+        std::vector<DFA_ST_TYPE> charStartStates;
+        std::vector<DFA_ST_TYPE> charEndStates;
+        std::vector<DFA_ST_TYPE> anyStartStates;
+        std::vector<DFA_ST_TYPE> anyEndStates;
+
+        SubMatchStates(int _id, Type _type, int _predID,
+                       std::vector<DFA_ST_TYPE> _charStartStates,
+                       std::vector<DFA_ST_TYPE> _charEndStates,
+                       std::vector<DFA_ST_TYPE> _anyStartStates,
+                       std::vector<DFA_ST_TYPE> _anyEndStates)
+            : id(_id),
+              type(_type),
+              predID(_predID),
+              charStartStates(_charStartStates),
+              charEndStates(_charEndStates),
+              anyStartStates(_anyStartStates),
+              anyEndStates(_anyEndStates) {}
+        SubMatchStates() {}
+    };
     VectFA(const DFA &dfa);
     VectFA(DFA &dfa, DATA_TYPE *_data, SIZE_TYPE _size);
     void constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE _size);
@@ -22,7 +45,7 @@ class VectFA {
         return acceptStates;
     }
     inline const std::vector<Qlabel> &getQlabels() const { return qlabels; }
-    inline const std::vector<DFA::SubMatchStates> &getSubMatches() const {
+    inline const std::vector<VectFA::SubMatchStates> &getSubMatches() const {
         return subMatches;
     }
 #if (defined CODEGEN)
@@ -44,9 +67,8 @@ class VectFA {
     std::set<ST_TYPE> states;
     std::set<ST_TYPE> acceptStates;
     std::vector<Qlabel> qlabels;
-    std::vector<DFA::SubMatchStates> subMatches;
+    std::vector<VectFA::SubMatchStates> subMatches;
     std::set<ST_TYPE> charSMStates;
-    std::set<ST_TYPE> anySMStates;
     std::map<ST_TYPE, ST_TYPE> old2new;
 };
 }  // namespace vlex
