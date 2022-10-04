@@ -14,19 +14,22 @@
 namespace vlex {
 class Runtime {
    public:
-    Runtime(const Table& table, NFA* nfa, QueryContext* _query);
-    void construct(double lr);
-    void iexec();
-    void exec();
+    Runtime(const Table& table);
+    void constructDFA(const NFA** keyNFAs);
+    void constructDFA(const NFA* nfa);
+    void constructVFA(double lr);
+    void iexec(QueryContext* query);
+    void exec(QueryContext* query);
 
    private:
     void makePartitions(SIZE_TYPE size);
 
     Executor* executor;
     ioStream* ios;
-    QueryContext* query;
     DFAGenerator* dfag;
+    DFA* dfa;
     VectFA* vfa;
+    const Table& table;
 
     DATA_TYPE* data;
     SIZE_TYPE size;

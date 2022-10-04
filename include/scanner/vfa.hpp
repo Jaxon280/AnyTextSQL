@@ -17,16 +17,16 @@ class VectFA {
         int id;
         Type type;
         int predID;
-        std::vector<DFA_ST_TYPE> charStartStates;
-        std::vector<DFA_ST_TYPE> charEndStates;
-        std::vector<DFA_ST_TYPE> anyStartStates;
-        std::vector<DFA_ST_TYPE> anyEndStates;
+        std::set<DFA_ST_TYPE> charStartStates;
+        std::set<DFA_ST_TYPE> charEndStates;
+        std::set<DFA_ST_TYPE> anyStartStates;
+        std::set<DFA_ST_TYPE> anyEndStates;
 
         SubMatchStates(int _id, Type _type, int _predID,
-                       std::vector<DFA_ST_TYPE> _charStartStates,
-                       std::vector<DFA_ST_TYPE> _charEndStates,
-                       std::vector<DFA_ST_TYPE> _anyStartStates,
-                       std::vector<DFA_ST_TYPE> _anyEndStates)
+                       std::set<DFA_ST_TYPE> _charStartStates,
+                       std::set<DFA_ST_TYPE> _charEndStates,
+                       std::set<DFA_ST_TYPE> _anyStartStates,
+                       std::set<DFA_ST_TYPE> _anyEndStates)
             : id(_id),
               type(_type),
               predID(_predID),

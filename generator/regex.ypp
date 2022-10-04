@@ -37,7 +37,7 @@ int regex_yyerror(vlex::NFA **nfa, const char *s);
 };
 
 %{
-#include "regexTree.hpp"
+#include "parser/regex/regexNode.hpp"
 %}
 %token <cvalue> RCHAR_TK
 %token <ivalue> RCNUM_TK
@@ -51,7 +51,7 @@ int regex_yyerror(vlex::NFA **nfa, const char *s);
 
 // https://www2.cs.sfu.ca/~cameron/Teaching/384/99-3/regexp-plg.html
 
-line: regex { *nfa=buildRegexPattern($1); };
+line: regex { *nfa=$1; };
 
 regex: union { $$ = $1; }
     | simple_re { $$ = $1; }

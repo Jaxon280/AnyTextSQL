@@ -185,7 +185,7 @@ int regex_yyerror(vlex::NFA **nfa, const char *s);
 /* Copy the second part of user declarations.  */
 #line 39 "generator/regex.ypp" /* yacc.c:358  */
 
-#include "regexTree.hpp"
+#include "parser/regex/regexNode.hpp"
 
 #line 191 "regexParser.cpp" /* yacc.c:358  */
 

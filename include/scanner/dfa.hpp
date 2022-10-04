@@ -57,40 +57,27 @@ class DFA {
 
 class DFAGenerator {
    public:
-    DFAGenerator(NFA* _nfa) : nfa(_nfa) {
-        int stateSize = _nfa->stateSize;
-
-        epsilonTable = std::vector<std::vector<int>>(stateSize);
-        powsetTransTable = std::vector<std::vector<std::set<int>>>(
-            stateSize, std::vector<std::set<int>>(ASCII_SZ));
-    }
-    ~DFAGenerator() {
-        if (dfa) delete dfa;
-    }
-    DFA* generate(const KeyMap& keyMap);
-    DFA* getDFA() const { return dfa; }
+    DFAGenerator() {}
+    ~DFAGenerator() {}
+    void initialize();
+    DFA* generate(const NFA* nfa, const KeyMap& keyMap);
 
    private:
     void setEpsilonTable(Transition* trans, int transSize, int stateSize);
     void setPowsetTable(Transition* trans, int transSize);
-    void initPowsetStates(int initState);
+    void initPowsetStates(const NFA* nfa);
     void setInvStates();
     void minimize();
 
     std::vector<std::vector<int>> epsilonTable;  // NFA state -> NFA states
     std::vector<std::vector<std::set<int>>>
         powsetTransTable;  // NFA state -> NFA powset state table (128)
-    std::stack<int> stateStack;
-
-    NFA* nfa;
-
     std::map<int, std::set<int>>
         powsetStates;  // DFA state -> NFA powset states
     std::map<int, std::vector<int>> transTable;  // state -> NFA powset state
     std::vector<DFA::SubMatchStates> smses;
     std::map<int, int> default2mini;
     std::set<int> acceptStates;
-    DFA* dfa;
     std::vector<int> stateVec;  // minimized DFA states
 };
 }  // namespace vlex

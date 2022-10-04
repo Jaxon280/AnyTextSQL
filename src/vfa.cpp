@@ -283,16 +283,16 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
         vsms.predID = sms.predID;
         for (int ss : sms.startStates) {
             if (Qtilde.find(ss) != Qtilde.end()) {
-                vsms.anyStartStates.push_back(old2new[ss]);
+                vsms.anyStartStates.insert(old2new[ss]);
             } else {
-                vsms.charStartStates.push_back(old2new[ss]);
+                vsms.charStartStates.insert(old2new[ss]);
             }
         }
         for (int es : sms.endStates) {
             if (Qtilde.find(es) != Qtilde.end()) {
-                vsms.anyEndStates.push_back(old2new[es]);
+                vsms.anyEndStates.insert(old2new[es]);
             } else {
-                vsms.charEndStates.push_back(old2new[es]);
+                vsms.charEndStates.insert(old2new[es]);
             }
         }
         subMatches.push_back(vsms);

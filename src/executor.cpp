@@ -89,8 +89,7 @@ void Executor::setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize) {
 
 void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
     ctx.currentState = INIT_STATE;
-    ctx.tokenStartIndex = _start, ctx.recentAcceptIndex = 0,
-    ctx.recentAcceptState = 0;
+    ctx.recentAcceptIndex = 0, ctx.recentAcceptState = 0;
     i = _start;
 
     const std::vector<Qlabel> &qlabels = vfa->getQlabels();
@@ -333,8 +332,8 @@ inline void Executor::endSubMatch(int id) {
 }
 
 inline void Executor::resetContext() {
-    ctx.recentAcceptState = 0, ctx.recentAcceptIndex = 0;
-    ctx.tokenStartIndex = i;
+    ctx.currentState = INIT_STATE, ctx.recentAcceptState = 0,
+    ctx.recentAcceptIndex = 0;
     end->id = 0;
     for (int ti = 0; ti < textPredNum + 1; ti++) {
         textPredResults[ti] = 0;

@@ -1,4 +1,4 @@
-#include "parser/query/queryTree.hpp"
+#include "parser/query/queryNode.hpp"
 
 StatementList *buildWildCard(bool isCount) {
     StatementList *stmtList = new StatementList;

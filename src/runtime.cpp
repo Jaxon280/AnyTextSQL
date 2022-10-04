@@ -2,30 +2,49 @@
 
 namespace vlex {
 
-Runtime::Runtime(const Table& table, NFA* nfa, QueryContext* _query)
+Runtime::Runtime(const Table& _table)
     : executor(new Executor()),
       ios(new ioStream(table.getFilename())),
-      query(_query),
-      dfag(new DFAGenerator(nfa)) {
-    DFA* dfa = dfag->generate(table.getKeyMap());
-    vfa = new VectFA(*dfa);
+      dfag(new DFAGenerator()),
+      table(_table) {
     size = ios->getSize();
     makePartitions(size);
 }
 
-void Runtime::construct(double lr) {
+// Runtime::Runtime(const Table& table, NFA** keyNFAs, QueryContext* _query)
+//     : executor(new Executor()),
+//       ios(new ioStream(table.getFilename())),
+//       query(_query),
+//       dfag(new DFAGenerator(nfa)) {}
+
+void Runtime::constructDFA(const NFA* nfa) {
+    dfag->initialize();
+    dfa = dfag->generate(nfa, table.getKeyMap());
+}
+
+void Runtime::constructDFA(const NFA** keyNFAs) {
+    // int keySize = table.getKeySize();
+    // DFA** keyDFAs = new DFA*[keySize];
+    // for (int ki = 0; ki < keySize; ki++) {
+    //     dfag->initialize();
+    //     keyDFAs[ki] = dfag->generate(keyNFAs[ki], table.getKeyMap());
+    // }
+    // dfa = mergeDFAs(keyDFAs, keySize);
+}
+
+void Runtime::constructVFA(double lr) {
     // now only for VFA
 #if (defined BENCH)
     double ex_time = 0.0;
     timeval lex1, lex2;
     gettimeofday(&lex1, NULL);
 #endif
+    vfa = new VectFA(*dfa);
 
     SIZE_TYPE lsize = (SIZE_TYPE)size * lr;
     ios->readFile(0, lsize);
-    vfa->constructVFA(*dfag->getDFA(), ios->getData(), lsize);
+    vfa->constructVFA(*dfa, ios->getData(), lsize);
     executor->setVFA(vfa, 0);
-    executor->setQuery(query);
     ios->seek(0);
 
 #if (defined BENCH)
@@ -36,10 +55,11 @@ void Runtime::construct(double lr) {
 #endif
 }
 
-void Runtime::iexec() {
+void Runtime::iexec(QueryContext* query) {
     // interleave
-    int i = 0;
+    executor->setQuery(query);
 
+    int i = 0;
     while (i < (int)partitions.size() - 1) {
         SIZE_TYPE off = partitions[i], next_off = partitions[i + 1];
         i++;
@@ -50,7 +70,8 @@ void Runtime::iexec() {
     }
 }
 
-void Runtime::exec() {
+void Runtime::exec(QueryContext* query) {
+    executor->setQuery(query);
     ios->readFile(0, size);
     data = ios->getData();
     executor->exec(data, size);

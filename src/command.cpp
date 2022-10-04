@@ -13,34 +13,95 @@ void CommandExecutor::initialize() const {
                  "the regular "
                  "expression to scan file."
               << std::endl;
+    std::cout << "\".scan <filename> -t <tablename> -k [<pattern>,]\": give "
+                 "the set of regular "
+                 "expressions to scan file."
+              << std::endl;
     std::cout
         << "You can execute your query on the raw data by FROM <tablename>"
         << std::endl;
     std::cout << "Type \"help\" for more information." << std::endl;
 }
 
-void CommandExecutor::execCommand(Command* cmd) {
-    if (cmd->type == SCAN) {
-        NFA* nfa = rparser->parse(cmd->args[5]);
-        if (nfa != NULL) {
-            KeyMap* keyMap = new KeyMap(nfa->subms);
-            tableMap.insert(std::pair<std::string, Table>(
-                cmd->args[3], Table(cmd->args[3], cmd->args[1], nfa, *keyMap)));
+CommandContext* CommandExecutor::parseCommand(const std::string& input) const {
+    auto pos = input.find(' ');
+    if (pos != std::string::npos) {
+        if (input.substr(0, pos) == ".scan" && pos < input.length() - 1) {
+            CommandContext* ctx = new CommandContext(SCAN);
+            cparser->parse(input, ctx);
+            if (ctx->isError()) {
+                delete ctx;
+                return NULL;
+            }
+            return ctx;
         } else {
-            return;
+            CommandContext* ctx = new CommandContext(input);
+            return ctx;
         }
-    } else if (cmd->type == EXEC) {
-        QueryContext* ctx = qparser->parse(cmd->args[0]);
+    } else {
+        perror("Enter the command.\n");
+        return NULL;
+    }
+}
+
+NFA* CommandExecutor::buildRegexNFA(NFA* nfa) const {
+    NFA* nfa2 = copyNFA(nfa);
+    NFA* n1 = buildWildcardNFA();
+    NFA* n2 = buildStarNFA(n1);
+    NFA* regexNFA = buildConcatNFA(n2, nfa2);
+    return regexNFA;
+}
+
+void CommandExecutor::execCommand(CommandContext* cmd) {
+    if (cmd->getMode() == SCAN) {
+        if (cmd->isKeys()) {
+            int ksize = cmd->getPatternKeys().size();
+            NFA** keyNFAs = new NFA*[ksize];
+            NFA** keyRegexNFAs = new NFA*[ksize];
+            for (int pi = 0; pi < ksize; pi++) {
+                keyNFAs[pi] = rparser->parse(cmd->getPatternKeys()[pi]);
+                if (keyNFAs[pi] != NULL) {
+                    keyRegexNFAs[pi] = buildRegexNFA(keyNFAs[pi]);
+                } else {
+                    delete keyNFAs;
+                    return;
+                }
+            }
+            KeyMap* keyMap = new KeyMap(keyNFAs, ksize);
+            tableMap.insert(std::pair<std::string, Table>(
+                cmd->getTablename(),
+                Table(cmd->getTablename(), cmd->getFilename(), ksize, keyNFAs,
+                      keyRegexNFAs, *keyMap)));
+        } else {
+            NFA* nfa = rparser->parse(cmd->getPattern());
+            if (nfa != NULL) {
+                KeyMap* keyMap = new KeyMap(nfa);
+                NFA* regexNFA = buildRegexNFA(nfa);
+                tableMap.insert(std::pair<std::string, Table>(
+                    cmd->getTablename(),
+                    Table(cmd->getTablename(), cmd->getFilename(), nfa,
+                          regexNFA, *keyMap)));
+            } else {
+                return;
+            }
+        }
+    } else if (cmd->getMode() == EXEC) {
+        QueryContext* ctx = qparser->parse(cmd->getQuery());
         if (ctx != NULL) {
             for (const StringList* tbn = ctx->getTables(); tbn != NULL;
                  tbn = tbn->next) {
                 std::string s(tbn->str, strlen(tbn->str));
                 Table& table = tableMap.find(s)->second;
                 ctx->mapping(table.getKeyMap());
-                NFA* nfa = qopter->optimize(table.getNFA(), ctx);
-                Runtime runtime(table, nfa, ctx);
-                runtime.construct(0.0);
-                runtime.exec();
+                if (table.getKeySize() == 0) {
+                    // NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                    NFA* nfa = table.getNFA();
+                    Runtime runtime(table);
+                    runtime.constructDFA(nfa);
+                    runtime.constructVFA(0.0);
+                    runtime.exec(ctx);
+                } else {
+                }
             }
         } else {
             return;
@@ -55,7 +116,7 @@ void CommandExecutor::exec() {
         if (!std::getline(std::cin, buffer)) {
             return;
         }
-        Command* cmd = parseCommand(buffer);
+        CommandContext* cmd = parseCommand(buffer);
         if (cmd == NULL) {
             std::cout << "Reenter the command" << std::endl;
             continue;

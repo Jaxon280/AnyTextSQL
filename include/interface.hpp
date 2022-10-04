@@ -17,22 +17,28 @@ struct Key {
 class KeyMap {
    public:
     KeyMap() {}
-    KeyMap(SubMatch *smses) { construct(smses); }
-    void construct(SubMatch *smses) {
+    KeyMap(NFA *nfa) { constructByRegex(nfa->subms); }
+    KeyMap(NFA **keyNFAs, int keySize) {
+        std::vector<SubMatch *> smsVec;
+        for (int ki = 0; ki < keySize; ki++) {
+            for (SubMatch *sms = keyNFAs[ki]->subms; sms != NULL;
+                 sms = sms->next) {
+                smsVec.push_back(sms);
+            }
+        }
+        constructByKeys(smsVec);
+    }
+    void constructByRegex(SubMatch *smses) {
         int id = 0;
         for (SubMatch *sms = smses; sms != NULL; sms = sms->next) {
-            Type keyType;
-            if (sms->type == INT_PT) {
-                keyType = INT;
-            } else if (sms->type == DOUBLE_PT) {
-                keyType = DOUBLE;
-            } else if (sms->type == TEXT_PT) {
-                keyType = TEXT;
-            }
-            std::string keyName(sms->name, strlen(sms->name));
-            Key key(id, keyType);
-            map.insert(std::pair<std::string, Key>(keyName, key));
+            addKey(sms, id);
             id++;
+        }
+    }
+
+    void constructByKeys(const std::vector<SubMatch *> &smsVec) {
+        for (int sid = 0; sid < (int)smsVec.size(); sid++) {
+            addKey(smsVec[sid], sid);
         }
     }
 
@@ -42,21 +48,57 @@ class KeyMap {
     }
 
    private:
+    void addKey(const SubMatch *sms, int id) {
+        Type keyType;
+        if (sms->type == INT_PT) {
+            keyType = INT;
+        } else if (sms->type == DOUBLE_PT) {
+            keyType = DOUBLE;
+        } else if (sms->type == TEXT_PT) {
+            keyType = TEXT;
+        }
+        std::string keyName(sms->name, strlen(sms->name));
+        Key key(id, keyType);
+        map.insert(std::pair<std::string, Key>(keyName, key));
+    }
     std::map<std::string, Key> map;
 };
 
 class Table {
    public:
-    Table(std::string &name, std::string &filename, NFA *nfa, KeyMap &keyMap)
-        : name(name), filename(filename), nfa(nfa), keyMap(keyMap) {}
+    Table(const std::string &name, const std::string &filename, NFA *nfa,
+          NFA *regexNFA, KeyMap &keyMap)
+        : name(name),
+          filename(filename),
+          nfa(nfa),
+          regexNFA(regexNFA),
+          keySize(0),
+          keyNFAs(NULL),
+          keyRegexNFAs(NULL),
+          keyMap(keyMap) {}
+    Table(const std::string &name, const std::string &filename, int keySize,
+          NFA **keyNFAs, NFA **keyRegexNFAs, KeyMap &keyMap)
+        : name(name),
+          filename(filename),
+          nfa(NULL),
+          keySize(keySize),
+          keyNFAs(keyNFAs),
+          keyRegexNFAs(keyRegexNFAs),
+          keyMap(keyMap) {}
     inline const KeyMap &getKeyMap() const { return keyMap; }
     inline NFA *getNFA() const { return nfa; }
+    inline int getKeySize() const { return keySize; }
+    inline NFA **getKeyNFAs() const { return keyNFAs; }
     inline const std::string &getFilename() const { return filename; }
 
    private:
-    std::string &name;
-    std::string &filename;
+    const std::string &name;
+    const std::string &filename;
     NFA *nfa;
+    NFA *regexNFA;
+    int keySize;
+    NFA **keyNFAs;
+    NFA **keyRegexNFAs;
     KeyMap &keyMap;
 };
 

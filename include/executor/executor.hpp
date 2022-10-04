@@ -25,7 +25,6 @@ class Executor {
         ST_TYPE recentAcceptState;
         ST_TYPE currentState;
         SIZE_TYPE recentAcceptIndex;
-        SIZE_TYPE tokenStartIndex;
     };
 
     void setTransTable(const std::vector<Qlabel> &qlabels, int stateSize);

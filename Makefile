@@ -22,7 +22,7 @@ endif
 
 PROGRAM = vlex.exe
 
-GEN = rparser rlexer qparser qlexer
+GEN = cparser clexer rparser rlexer qparser qlexer
 
 all: $(PROGRAM)
 
@@ -33,6 +33,14 @@ $(PROGRAM): $(CPP_CODES)
 debug: $(CPP_CODES)
 	$(MAKE) $(GEN)
 	$(CC) $(FLAGS) $(DEBUGFLAGS) $^ -o vlex_debug.exe
+
+cparser: generator/command.ypp
+	bison -d -ocommandParser.cpp generator/command.ypp
+	(mv commandParser.cpp src/; mv commandParser.hpp include/parser/cmd/;)
+
+clexer: generator/command.lex
+	flex -8 -ocommandScanner.cpp generator/command.lex
+	(mv commandScanner.cpp src/)
 
 rparser: generator/regex.ypp
 	bison -d -oregexParser.cpp generator/regex.ypp

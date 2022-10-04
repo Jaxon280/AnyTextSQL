@@ -6,11 +6,9 @@
 
 using namespace vlex;
 
-NFA *constructNFA(int tsize, PatternType type);
 void destroyNFA(NFA *nfa);
 NFA *copyNFA(NFA *n);
 
-NFA *buildRegexPattern(NFA *nfa);
 NFA *buildNFA(char c);
 NFA *buildCharsetsNFA(const uint8_t *chsets);
 NFA *buildWildcardNFA();

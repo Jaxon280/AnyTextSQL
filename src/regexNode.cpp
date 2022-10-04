@@ -1,12 +1,4 @@
-#include "parser/regex/regexTree.hpp"
-
-NFA *constructNFA(int tsize, PatternType type) {
-    NFA *nfa = new NFA;
-    nfa->subms = NULL;
-    nfa->transVec = new Transition[tsize];
-    nfa->type = type;
-    return nfa;
-}
+#include "parser/regex/regexNode.hpp"
 
 void destroyNFA(NFA *nfa) {
     free(nfa->transVec);
@@ -14,41 +6,26 @@ void destroyNFA(NFA *nfa) {
 }
 
 NFA *copyNFA(NFA *n) {
-    NFA *nfa = constructNFA(n->transSize, n->type);
-    nfa->initState = n->initState;
-    nfa->acceptState = n->acceptState;
-    nfa->stateSize = n->stateSize;
-    nfa->transSize = n->transSize;
-    for (int i = 0; i < nfa->transSize; i++) {
-        nfa->transVec[i].start = n->transVec[i].start;
-        nfa->transVec[i].end = n->transVec[i].end;
-        nfa->transVec[i].c = n->transVec[i].c;
+    SubMatch *smsList = NULL;
+    for (SubMatch *sms = n->subms; sms != NULL; sms = sms->next) {
+        SubMatch *new_sms = new SubMatch(sms);
+        new_sms->next = smsList;
+        smsList = new_sms;
     }
-    nfa->subms = n->subms;  // assume NULL
-    nfa->isAnyStart = n->isAnyStart;
-    nfa->isAnyEnd = n->isAnyEnd;
+    Transition *transVec = new Transition[n->transSize];
+    for (int i = 0; i < n->transSize; i++) {
+        transVec[i].start = n->transVec[i].start;
+        transVec[i].end = n->transVec[i].end;
+        transVec[i].c = n->transVec[i].c;
+    }
+    NFA *nfa = new NFA(smsList, transVec, n->transSize, n->initState,
+                       n->acceptState, n->stateSize, n->type);
     return nfa;
 }
 
-NFA *buildRegexPattern(NFA *nfa) {
-    NFA *nfa1 = buildWildcardNFA();
-    NFA *nfa2 = buildStarNFA(nfa1);
-    NFA *pattern = buildConcatNFA(nfa2, nfa);
-    return pattern;
-}
-
 NFA *buildNFA(char c) {
-    NFA *nfa = constructNFA(1, TEXT_PT);
-    nfa->initState = 0;
-    nfa->acceptState = 1;
-    nfa->stateSize = 2;
-
-    nfa->transSize = 1;
-    nfa->transVec[0].start = 0;
-    nfa->transVec[0].end = 1;
-    nfa->transVec[0].c = (int)c;
-    nfa->isAnyStart = false;
-    nfa->isAnyEnd = false;
+    Transition *transVec = new Transition(0, 1, (int)c);
+    NFA *nfa = new NFA(NULL, transVec, 1, 0, 1, 2, TEXT_PT);
     return nfa;
 }
 
@@ -60,87 +37,62 @@ NFA *buildCharsetsNFA(const uint8_t *chsets) {
         }
     }
 
-    NFA *nfa = constructNFA(tsize, TEXT_PT);
-    nfa->initState = 0;
-    nfa->acceptState = 1;
-    nfa->stateSize = 2;
-    nfa->transSize = tsize;
-    nfa->transVec = new Transition[tsize];
+    Transition *transVec = new Transition[tsize];
     int ti = 0;
     for (int i = 0; i < ASCII_SZ; i++) {
         if (chsets[i] == 1) {
-            nfa->transVec[ti].start = 0;
-            nfa->transVec[ti].end = 1;
-            nfa->transVec[ti].c = (int)i;
+            transVec[ti].start = 0;
+            transVec[ti].end = 1;
+            transVec[ti].c = (int)i;
             ti++;
         }
     }
-    nfa->isAnyStart = false;
-    nfa->isAnyEnd = false;
+
+    NFA *nfa = new NFA(NULL, transVec, tsize, 0, 1, 2, TEXT_PT);
     return nfa;
 }
 
 NFA *buildWildcardNFA() {
-    NFA *nfa = constructNFA(ASCII_SZ, TEXT_PT);
-    nfa->stateSize = 2;
-    nfa->initState = 0;
-    nfa->acceptState = 1;
-    nfa->transSize = ASCII_SZ;
+    Transition *transVec = new Transition[ASCII_SZ];
     for (int i = 0; i < ASCII_SZ; i++) {
-        nfa->transVec[i].start = 0;
-        nfa->transVec[i].end = 1;
-        nfa->transVec[i].c = i;
+        transVec[i].start = 0;
+        transVec[i].end = 1;
+        transVec[i].c = (int)i;
     }
-    nfa->isAnyStart = false;
-    nfa->isAnyEnd = false;
+    NFA *nfa = new NFA(NULL, transVec, ASCII_SZ, 0, 1, 2, TEXT_PT);
     return nfa;
 }
 
 NFA *buildDigitNFA() {
-    NFA *nfa = constructNFA(10, INT_PT);
-    nfa->stateSize = 2;
-    nfa->initState = 0;
-    nfa->acceptState = 1;
-    nfa->transSize = 10;
-    for (int i = 0; i < nfa->transSize; i++) {
-        nfa->transVec[i].start = 0;
-        nfa->transVec[i].end = 1;
-        nfa->transVec[i].c = i + 48;
+    Transition *transVec = new Transition[10];
+    for (int i = 0; i < 10; i++) {
+        transVec[i].start = 0;
+        transVec[i].end = 1;
+        transVec[i].c = i + 48;
     }
-    nfa->isAnyStart = false;
-    nfa->isAnyEnd = false;
+    NFA *nfa = new NFA(NULL, transVec, 10, 0, 1, 2, INT_PT);
     return nfa;
 }
 
 NFA *buildAlphNFA() {
-    NFA *nfa = constructNFA(26, TEXT_PT);
-    nfa->stateSize = 2;
-    nfa->initState = 0;
-    nfa->acceptState = 1;
-    nfa->transSize = 26;
-    for (int i = 0; i < nfa->transSize; i++) {
-        nfa->transVec[i].start = 0;
-        nfa->transVec[i].end = 1;
-        nfa->transVec[i].c = i + 97;
+    Transition *transVec = new Transition[26];
+    for (int i = 0; i < 26; i++) {
+        transVec[i].start = 0;
+        transVec[i].end = 1;
+        transVec[i].c = i + 97;
     }
-    nfa->isAnyStart = false;
-    nfa->isAnyEnd = false;
+    NFA *nfa = new NFA(NULL, transVec, 26, 0, 1, 2, TEXT_PT);
     return nfa;
 }
 
 NFA *buildCaptNFA() {
-    NFA *nfa = constructNFA(26, TEXT_PT);
-    nfa->stateSize = 2;
-    nfa->initState = 0;
-    nfa->acceptState = 1;
-    nfa->transSize = 26;
-    for (int i = 0; i < nfa->transSize; i++) {
-        nfa->transVec[i].start = 0;
-        nfa->transVec[i].end = 1;
-        nfa->transVec[i].c = i + 65;
+    Transition *transVec = new Transition[26];
+    for (int i = 0; i < 26; i++) {
+        transVec[i].start = 0;
+        transVec[i].end = 1;
+        transVec[i].c = i + 65;
     }
-    nfa->isAnyStart = false;
-    nfa->isAnyEnd = false;
+    NFA *nfa = new NFA(NULL, transVec, 26, 0, 1, 2, TEXT_PT);
     return nfa;
 }
 
@@ -248,8 +200,6 @@ NFA *buildSubmatchNFA(NFA *nfa, const char *name) {
     SubMatch *new_sub = new SubMatch;
     new_sub->start = nfa->initState;
     new_sub->end = nfa->acceptState;
-    new_sub->isAnyStart = nfa->isAnyStart;
-    new_sub->isAnyEnd = nfa->isAnyEnd;
     new_sub->name = strdup(name);
     new_sub->next = nfa->subms;
     new_sub->type = nfa->type;
@@ -262,8 +212,6 @@ SubMatch *copySubmatch(SubMatch *sm) {
     SubMatch *sm_new = new SubMatch;
     sm_new->start = sm->start;
     sm_new->end = sm->end;
-    sm_new->isAnyStart = sm->isAnyStart;
-    sm_new->isAnyEnd = sm->isAnyEnd;
     sm_new->name = sm->name;
     sm_new->type = sm->type;
     sm_new->predID = sm->predID;
@@ -301,8 +249,6 @@ NFA *buildConcatNFA(NFA *n1, NFA *n2) {
     n1->transVec[n1->transSize - 1].c = EPSILON;
 
     n1->acceptState = n1ssize + n2->acceptState;
-    n1->isAnyStart = n1->isAnyStart;
-    n1->isAnyEnd = n2->isAnyEnd;
     if (n1->type == TEXT_PT || n2->type == TEXT_PT ||
         (n1->type == DOUBLE_PT && n2->type == DOUBLE_PT)) {
         n1->type = TEXT_PT;
@@ -319,37 +265,35 @@ NFA *buildUnionNFA(NFA *n1, NFA *n2) {
     int n1tsize = n1->transSize, n2tsize = n2->transSize,
         n1ssize = n1->stateSize, n2ssize = n2->stateSize;
 
-    NFA *nfa = constructNFA(n1tsize + n2tsize + 4, TEXT_PT);
-    nfa->transSize = n1tsize + n2tsize + 4;
-    nfa->stateSize = n1ssize + n2ssize + 2;
-    nfa->initState = 0;
-    nfa->acceptState = nfa->stateSize - 1;
-    nfa->transVec[0].start = nfa->initState;
-    nfa->transVec[0].end = n1->initState + 1;
-    nfa->transVec[0].c = EPSILON;
-    nfa->transVec[1].start = n1->acceptState + 1;
-    nfa->transVec[1].end = nfa->acceptState;
-    nfa->transVec[1].c = EPSILON;
-    nfa->transVec[2].start = nfa->initState;
-    nfa->transVec[2].end = n1ssize + n2->initState + 1;
-    nfa->transVec[2].c = EPSILON;
-    nfa->transVec[3].start = n1ssize + n2->acceptState + 1;
-    nfa->transVec[3].end = nfa->acceptState;
-    nfa->transVec[3].c = EPSILON;
+    Transition *transVec = new Transition[n1tsize + n2tsize + 4];
+    int initState = 0;
+    int acceptState = n1ssize + n2ssize + 1;
 
+    transVec[0].start = initState;
+    transVec[0].end = n1->initState + 1;
+    transVec[0].c = EPSILON;
+    transVec[1].start = n1->acceptState + 1;
+    transVec[1].end = acceptState;
+    transVec[1].c = EPSILON;
+    transVec[2].start = initState;
+    transVec[2].end = n1ssize + n2->initState + 1;
+    transVec[2].c = EPSILON;
+    transVec[3].start = n1ssize + n2->acceptState + 1;
+    transVec[3].end = acceptState;
+    transVec[3].c = EPSILON;
     for (int i = 0; i < n1tsize; i++) {
-        nfa->transVec[i + 4].start = n1->transVec[i].start + 1;
-        nfa->transVec[i + 4].end = n1->transVec[i].end + 1;
-        nfa->transVec[i + 4].c = n1->transVec[i].c;
+        transVec[i + 4].start = n1->transVec[i].start + 1;
+        transVec[i + 4].end = n1->transVec[i].end + 1;
+        transVec[i + 4].c = n1->transVec[i].c;
     }
-
     for (int i = 0; i < n2tsize; i++) {
-        nfa->transVec[i + n1tsize + 4].start =
-            n2->transVec[i].start + n1ssize + 1;
-        nfa->transVec[i + n1tsize + 4].end = n2->transVec[i].end + n1ssize + 1;
-        nfa->transVec[i + n1tsize + 4].c = n2->transVec[i].c;
+        transVec[i + n1tsize + 4].start = n2->transVec[i].start + n1ssize + 1;
+        transVec[i + n1tsize + 4].end = n2->transVec[i].end + n1ssize + 1;
+        transVec[i + n1tsize + 4].c = n2->transVec[i].c;
     }
 
+    NFA *nfa = new NFA(NULL, transVec, n1tsize + n2tsize + 4, initState,
+                       acceptState, n1ssize + n2ssize + 2, TEXT_PT);
     destroyNFA(n1);
     destroyNFA(n2);
     return nfa;
@@ -376,8 +320,6 @@ NFA *buildStarNFA(NFA *n) {
     n->transVec[ntsize + 3].c = EPSILON;
     n->initState = initState;
     n->acceptState = acceptState;
-    n->isAnyStart = true;
-    n->isAnyEnd = true;
 
     if (n->type == DOUBLE_PT) {
         n->type = TEXT_PT;
@@ -410,8 +352,6 @@ NFA *buildSelectNFA(NFA *n) {
     n->transVec[ntsize + 2].c = EPSILON;
     n->initState = initState;
     n->acceptState = acceptState;
-    n->isAnyStart = false;
-    n->isAnyEnd = false;
     return n;
 }
 

@@ -103,15 +103,15 @@ void DFAGenerator::setPowsetTable(Transition* trans, int transSize) {
     }
 }
 
-void DFAGenerator::initPowsetStates(int initState) {
+void DFAGenerator::initPowsetStates(const NFA* nfa) {
     std::set<int> pset;
-    powsetStates.insert(std::pair<int, std::set<int>>(initState, pset));
-    powsetStates[initState].insert(nfa->initState);
+    powsetStates.insert(std::pair<int, std::set<int>>(INIT_STATE, pset));
+    powsetStates[INIT_STATE].insert(nfa->initState);
     for (int es : epsilonTable[nfa->initState]) {
-        powsetStates[initState].insert(es);
+        powsetStates[INIT_STATE].insert(es);
     }
-    if (powsetStates[initState].count(nfa->acceptState) > 0) {
-        acceptStates.insert(initState);
+    if (powsetStates[INIT_STATE].count(nfa->acceptState) > 0) {
+        acceptStates.insert(INIT_STATE);
     }
 }
 
@@ -170,14 +170,27 @@ void DFAGenerator::setInvStates() {
     }
 }
 
-DFA* DFAGenerator::generate(const KeyMap& keyMap) {
+void DFAGenerator::initialize() {
+    powsetStates = std::map<int, std::set<int>>();
+    transTable = std::map<int, std::vector<int>>();
+    default2mini = std::map<int, int>();
+    acceptStates = std::set<int>();
+    stateVec = std::vector<int>();
+}
+
+DFA* DFAGenerator::generate(const NFA* nfa, const KeyMap& keyMap) {
+    int stateSize = nfa->stateSize;
+
+    epsilonTable = std::vector<std::vector<int>>(stateSize);
+    powsetTransTable = std::vector<std::vector<std::set<int>>>(
+        stateSize, std::vector<std::set<int>>(ASCII_SZ));
     setEpsilonTable(nfa->transVec, nfa->transSize, nfa->stateSize);
     setPowsetTable(nfa->transVec, nfa->transSize);
 
-    int initState = INIT_STATE;
-    initPowsetStates(initState);
+    initPowsetStates(nfa);
 
-    stateStack.push(initState);
+    std::stack<int> stateStack;
+    stateStack.push(INIT_STATE);
     int stateID = 2;
     while (!stateStack.empty()) {
         int s = stateStack.top();
@@ -243,8 +256,8 @@ DFA* DFAGenerator::generate(const KeyMap& keyMap) {
         smses.push_back(sms);
     }
 
-    dfa = new DFA(initState, stateVec, default2mini, transTable, acceptStates,
-                  smses);
+    DFA* dfa = new DFA(INIT_STATE, stateVec, default2mini, transTable,
+                       acceptStates, smses);
     return dfa;
 }
 

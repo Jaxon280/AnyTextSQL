@@ -6,21 +6,30 @@ namespace vlex {
 #define EPSILON -1
 #define ASCII_SZ 128
 
-typedef struct submatch {
+struct SubMatch {
     int start;
     int end;
-    bool isAnyStart;
-    bool isAnyEnd;
     int predID;
     const char *name;
-    struct submatch *next;
     PatternType type;
-} SubMatch;  // linked list
+    SubMatch *next;
+    SubMatch() {}
+    SubMatch(int start, int end, int predID, const char *name, PatternType type)
+        : start(start), end(end), predID(predID), name(name), type(type) {}
+    SubMatch(SubMatch *sms)
+        : start(sms->start),
+          end(sms->end),
+          predID(sms->predID),
+          name(sms->name),
+          type(sms->type) {}
+};  // linked list
 
 struct Transition {
     int start;
     int end;
     int c;  // 0x00-0xff and epsilon (-1)
+    Transition() {}
+    Transition(int start, int end, int c) : start(start), end(end), c(c) {}
 };
 
 struct NFA {
@@ -30,8 +39,15 @@ struct NFA {
     int initState;
     int acceptState;
     int stateSize;
-    bool isAnyStart;
-    bool isAnyEnd;
     PatternType type;
+    NFA() {}
+    NFA(SubMatch *subms, Transition *transVec, int transSize, int initState,
+        int acceptState, int stateSize, PatternType type)
+        : subms(subms),
+          transVec(transVec),
+          initState(initState),
+          acceptState(acceptState),
+          stateSize(stateSize),
+          type(type) {}
 };
 }  // namespace vlex

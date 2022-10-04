@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "regexParser.hpp"
-#include "regexTree.hpp"
+#include "parser/regex/regexParser.hpp"
+#include "parser/regex/regexNode.hpp"
 
 #undef yywrap
 #define yywrap() 1

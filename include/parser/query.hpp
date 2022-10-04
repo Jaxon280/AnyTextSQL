@@ -1,5 +1,6 @@
 #pragma once
 
+#include "command.hpp"
 #include "interface.hpp"
 
 namespace vlex {
@@ -86,11 +87,6 @@ struct Aggregation {
     Type type;
     AggFuncType ftype;
     int keyId;
-};
-
-struct StringList {
-    const char *str;
-    StringList *next;
 };
 
 inline HashTableType intersectionHTType(const HashTableType a,
