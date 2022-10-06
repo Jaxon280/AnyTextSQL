@@ -31,11 +31,15 @@ class CommandContext {
     void assignTable(const char *str) {
         tablename = std::string(str, strlen(str));
     }
-    void assignExp(const char *str) { pattern = std::string(str, strlen(str)); }
+    void assignExp(const char *str) {
+        std::string exp(str, strlen(str));
+        pattern = exp.substr(1, exp.length() - 2);
+    }
     void assignKeys(StringList *slist) {
         std::stack<std::string> sstack;
         for (StringList *sl = slist; sl != NULL; sl = sl->next) {
-            sstack.push(std::string(sl->str, strlen(sl->str)));
+            std::string exp(sl->str, strlen(sl->str));
+            sstack.push(exp.substr(1, exp.length() - 2));
         }
         while (!sstack.empty()) {
             std::string k = sstack.top();

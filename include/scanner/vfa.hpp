@@ -48,6 +48,9 @@ class VectFA {
     inline const std::vector<VectFA::SubMatchStates> &getSubMatches() const {
         return subMatches;
     }
+    inline const std::map<ST_TYPE, DFA_ST_TYPE> &getStateMap() const {
+        return dfas2vfas;
+    }
 #if (defined CODEGEN)
     int codegen(const std::string &filename);
 #endif
@@ -70,5 +73,6 @@ class VectFA {
     std::vector<VectFA::SubMatchStates> subMatches;
     std::set<ST_TYPE> charSMStates;
     std::map<ST_TYPE, ST_TYPE> old2new;
+    std::map<ST_TYPE, DFA_ST_TYPE> dfas2vfas;
 };
 }  // namespace vlex

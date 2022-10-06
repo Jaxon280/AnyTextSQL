@@ -44,7 +44,7 @@ CommandContext* CommandExecutor::parseCommand(const std::string& input) const {
     }
 }
 
-NFA* CommandExecutor::buildRegexNFA(NFA* nfa) const {
+NFA* CommandExecutor::constructRegexNFA(NFA* nfa) const {
     NFA* nfa2 = copyNFA(nfa);
     NFA* n1 = buildWildcardNFA();
     NFA* n2 = buildStarNFA(n1);
@@ -61,7 +61,7 @@ void CommandExecutor::execCommand(CommandContext* cmd) {
             for (int pi = 0; pi < ksize; pi++) {
                 keyNFAs[pi] = rparser->parse(cmd->getPatternKeys()[pi]);
                 if (keyNFAs[pi] != NULL) {
-                    keyRegexNFAs[pi] = buildRegexNFA(keyNFAs[pi]);
+                    keyRegexNFAs[pi] = constructRegexNFA(keyNFAs[pi]);
                 } else {
                     delete keyNFAs;
                     return;
@@ -76,7 +76,7 @@ void CommandExecutor::execCommand(CommandContext* cmd) {
             NFA* nfa = rparser->parse(cmd->getPattern());
             if (nfa != NULL) {
                 KeyMap* keyMap = new KeyMap(nfa);
-                NFA* regexNFA = buildRegexNFA(nfa);
+                NFA* regexNFA = constructRegexNFA(nfa);
                 tableMap.insert(std::pair<std::string, Table>(
                     cmd->getTablename(),
                     Table(cmd->getTablename(), cmd->getFilename(), nfa,
@@ -93,14 +93,15 @@ void CommandExecutor::execCommand(CommandContext* cmd) {
                 std::string s(tbn->str, strlen(tbn->str));
                 Table& table = tableMap.find(s)->second;
                 ctx->mapping(table.getKeyMap());
-                if (table.getKeySize() == 0) {
-                    // NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                if (table.isKeys()) {
+                } else {
                     NFA* nfa = table.getNFA();
-                    Runtime runtime(table);
-                    runtime.constructDFA(nfa);
+                    NFA* regexNFA = table.getRegexNFA();
+                    // NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                    RuntimeExpression runtime(table);
+                    runtime.constructDFA(nfa, regexNFA);
                     runtime.constructVFA(0.0);
                     runtime.exec(ctx);
-                } else {
                 }
             }
         } else {

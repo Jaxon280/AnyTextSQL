@@ -3,10 +3,6 @@
 namespace vlex {
 
 Executor::Executor() {}
-Executor::Executor(VectFA *vfa, QueryContext *query, SIZE_TYPE _start) {
-    setVFA(vfa, _start);
-    setQuery(query);
-}
 
 Executor::~Executor() {}
 
@@ -87,7 +83,7 @@ void Executor::setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize) {
     }
 }
 
-void Executor::setVFA(VectFA *vfa, SIZE_TYPE _start) {
+void Executor::setFA(VectFA *vfa, SIZE_TYPE _start) {
     ctx.currentState = INIT_STATE;
     ctx.recentAcceptIndex = 0, ctx.recentAcceptState = 0;
     i = _start;

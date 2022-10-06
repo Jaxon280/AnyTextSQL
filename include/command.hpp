@@ -25,7 +25,7 @@ class CommandExecutor {
 
    private:
     void initialize() const;
-    NFA* buildRegexNFA(NFA* nfa) const;
+    NFA* constructRegexNFA(NFA* nfa) const;
     CommandContext* parseCommand(const std::string& input) const;
     void execCommand(CommandContext* ctx);
 

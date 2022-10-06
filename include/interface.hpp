@@ -86,9 +86,12 @@ class Table {
           keyRegexNFAs(keyRegexNFAs),
           keyMap(keyMap) {}
     inline const KeyMap &getKeyMap() const { return keyMap; }
+    inline bool isKeys() const { return keySize > 0 ? true : false; }
     inline NFA *getNFA() const { return nfa; }
+    inline NFA *getRegexNFA() const { return regexNFA; }
     inline int getKeySize() const { return keySize; }
     inline NFA **getKeyNFAs() const { return keyNFAs; }
+    inline NFA **getKeyRegexNFAs() const { return keyRegexNFAs; }
     inline const std::string &getFilename() const { return filename; }
 
    private:

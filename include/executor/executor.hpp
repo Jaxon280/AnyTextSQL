@@ -13,9 +13,8 @@ namespace vlex {
 class Executor {
    public:
     Executor();
-    Executor(VectFA *vfa, QueryContext *query, SIZE_TYPE _start);
     ~Executor();
-    void setVFA(VectFA *vfa, SIZE_TYPE _start);
+    void setFA(VectFA *vfa, SIZE_TYPE _start);
     void setQuery(QueryContext *query);
     void exec(DATA_TYPE *_data, SIZE_TYPE size);
 

@@ -45,6 +45,7 @@ struct NFA {
         int acceptState, int stateSize, PatternType type)
         : subms(subms),
           transVec(transVec),
+          transSize(transSize),
           initState(initState),
           acceptState(acceptState),
           stateSize(stateSize),

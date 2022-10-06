@@ -39,20 +39,22 @@ class DFA {
         : transTable(_transTable),
           acceptStates(_acceptStates),
           subMatches(_subMatches),
-          numStates(_numStates) {}  // used in test
+          numStates(_numStates),
+          initState(INIT_STATE) {}
     ~DFA() {}
 
     inline const TransTable& getTransTable() const { return transTable; }
     inline const SubMatches& getSubMatches() const { return subMatches; }
     inline const StateSet& getAcceptStates() const { return acceptStates; }
     inline int getNumStates() const { return numStates; }
+    inline DFA_ST_TYPE getInitState() const { return initState; }
 
    private:
     TransTable transTable;
     StateSet acceptStates;
     SubMatches subMatches;
     int numStates;
-    int initState;
+    DFA_ST_TYPE initState;
 };
 
 class DFAGenerator {
@@ -75,7 +77,6 @@ class DFAGenerator {
     std::map<int, std::set<int>>
         powsetStates;  // DFA state -> NFA powset states
     std::map<int, std::vector<int>> transTable;  // state -> NFA powset state
-    std::vector<DFA::SubMatchStates> smses;
     std::map<int, int> default2mini;
     std::set<int> acceptStates;
     std::vector<int> stateVec;  // minimized DFA states

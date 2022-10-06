@@ -239,6 +239,7 @@ DFA* DFAGenerator::generate(const NFA* nfa, const KeyMap& keyMap) {
     minimize();
     setInvStates();
 
+    std::vector<DFA::SubMatchStates> smses;
     for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
         DFA::SubMatchStates sms;
         sms.id = keyMap.at(s->name).id;
