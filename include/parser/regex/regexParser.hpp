@@ -67,8 +67,7 @@ extern int regex_yydebug;
     RCAPT_TK = 262,
     RDIGIT_TK = 263,
     RINT_TK = 264,
-    RDOUBLE_TK = 265,
-    RTEXT_TK = 266
+    RDOUBLE_TK = 265
   };
 #endif
 
@@ -86,7 +85,7 @@ union REGEX_YYSTYPE
 	char *svalue;
     uint8_t *charsets; // size: 256
 
-#line 90 "regexParser.hpp" /* yacc.c:1909  */
+#line 89 "regexParser.hpp" /* yacc.c:1909  */
 };
 
 typedef union REGEX_YYSTYPE REGEX_YYSTYPE;
@@ -110,6 +109,6 @@ YY_DECL;
 
 int regex_yyerror(vlex::NFA **nfa, const char *s);
 
-#line 114 "regexParser.hpp" /* yacc.c:1909  */
+#line 113 "regexParser.hpp" /* yacc.c:1909  */
 
 #endif /* !YY_REGEX_YY_REGEXPARSER_HPP_INCLUDED  */

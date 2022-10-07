@@ -42,9 +42,9 @@ int regex_yyerror(vlex::NFA **nfa, const char *s);
 %token <cvalue> RCHAR_TK
 %token <ivalue> RCNUM_TK
 %token <svalue> '*' '(' ')' '.' '[' ']' '+' '-' '|' '%' '?' '^' RSUBMATCH_TK
-%token <nfa> RALPH_TK RCAPT_TK RDIGIT_TK RINT_TK RDOUBLE_TK RTEXT_TK
+%token <nfa> RALPH_TK RCAPT_TK RDIGIT_TK RINT_TK RDOUBLE_TK
 %token REOF_TK 0
-%type <nfa> regex union simple_re concat basic_re star plus select elementary_re int double text count
+%type <nfa> regex union simple_re concat basic_re star plus select elementary_re int double count
 %type <charsets> charset setitems setitem range
 
 %%
@@ -87,15 +87,12 @@ elementary_re: '(' regex ')' { $$ = $2; }
     | RCHAR_TK { $$ = buildNFA($1); }
     | int { $$ = $1; }
     | double { $$ = $1; }
-    | text { $$ = $1; }
     | charset { $$ = buildCharsetsNFA($1); }
     ;
 
 int: RINT_TK { $$ = buildINT(); };
 
 double: RDOUBLE_TK { $$ = buildDOUBLE(); };
-
-text: RTEXT_TK { $$ = buildTEXT(); };
 
 count: elementary_re RCNUM_TK { $$ = buildNumNFA($1, $2); };
 

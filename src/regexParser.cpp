@@ -135,8 +135,7 @@ extern int regex_yydebug;
     RCAPT_TK = 262,
     RDIGIT_TK = 263,
     RINT_TK = 264,
-    RDOUBLE_TK = 265,
-    RTEXT_TK = 266
+    RDOUBLE_TK = 265
   };
 #endif
 
@@ -154,7 +153,7 @@ union REGEX_YYSTYPE
 	char *svalue;
     uint8_t *charsets; // size: 256
 
-#line 158 "regexParser.cpp" /* yacc.c:355  */
+#line 157 "regexParser.cpp" /* yacc.c:355  */
 };
 
 typedef union REGEX_YYSTYPE REGEX_YYSTYPE;
@@ -178,7 +177,7 @@ YY_DECL;
 
 int regex_yyerror(vlex::NFA **nfa, const char *s);
 
-#line 182 "regexParser.cpp" /* yacc.c:355  */
+#line 181 "regexParser.cpp" /* yacc.c:355  */
 
 #endif /* !YY_REGEX_YY_REGEXPARSER_HPP_INCLUDED  */
 
@@ -187,7 +186,7 @@ int regex_yyerror(vlex::NFA **nfa, const char *s);
 
 #include "parser/regex/regexNode.hpp"
 
-#line 191 "regexParser.cpp" /* yacc.c:358  */
+#line 190 "regexParser.cpp" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -427,23 +426,23 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  33
+#define YYFINAL  31
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   56
+#define YYLAST   43
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  24
+#define YYNTOKENS  23
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  19
+#define YYNNTS  18
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  38
+#define YYNRULES  36
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  50
+#define YYNSTATES  48
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   266
+#define YYMAXUTOK   265
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -478,7 +477,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-      17,    18,    19,    20,    21,    22,    23
+      17,    18,    19,    20,    21,    22
 };
 
 #if REGEX_YYDEBUG
@@ -487,8 +486,8 @@ static const yytype_uint8 yyrline[] =
 {
        0,    54,    54,    56,    57,    60,    62,    63,    66,    68,
       69,    70,    71,    72,    75,    77,    79,    81,    82,    83,
-      84,    85,    86,    87,    88,    89,    90,    91,    94,    96,
-      98,   100,   102,   103,   106,   107,   110,   111,   114
+      84,    85,    86,    87,    88,    89,    90,    93,    95,    97,
+      99,   100,   103,   104,   107,   108,   111
 };
 #endif
 
@@ -500,10 +499,9 @@ static const char *const yytname[] =
   "REOF_TK", "error", "$undefined", "RCHAR_TK", "RCNUM_TK", "'*'", "'('",
   "')'", "'.'", "'['", "']'", "'+'", "'-'", "'|'", "'%'", "'?'", "'^'",
   "RSUBMATCH_TK", "RALPH_TK", "RCAPT_TK", "RDIGIT_TK", "RINT_TK",
-  "RDOUBLE_TK", "RTEXT_TK", "$accept", "line", "regex", "union",
-  "simple_re", "concat", "basic_re", "star", "plus", "select",
-  "elementary_re", "int", "double", "text", "count", "charset", "setitems",
-  "setitem", "range", YY_NULLPTR
+  "RDOUBLE_TK", "$accept", "line", "regex", "union", "simple_re", "concat",
+  "basic_re", "star", "plus", "select", "elementary_re", "int", "double",
+  "count", "charset", "setitems", "setitem", "range", YY_NULLPTR
 };
 #endif
 
@@ -514,14 +512,14 @@ static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,    42,    40,    41,    46,    91,
       93,    43,    45,   124,    37,    63,    94,   260,   261,   262,
-     263,   264,   265,   266
+     263,   264,   265
 };
 # endif
 
-#define YYPACT_NINF -18
+#define YYPACT_NINF -26
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-18)))
+  (!!((Yystate) == (-26)))
 
 #define YYTABLE_NINF -1
 
@@ -532,11 +530,11 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      21,   -18,     0,   -18,    10,   -18,   -18,   -18,   -18,   -18,
-     -18,     2,    -6,   -18,    21,   -18,   -18,   -18,   -18,   -18,
-      41,   -18,   -18,   -18,   -18,   -18,    21,    -3,     3,    13,
-      18,    13,   -18,   -18,    21,   -18,   -18,   -18,   -18,   -18,
-      -2,   -18,    28,    23,   -18,   -18,    21,   -18,   -18,   -18
+       7,   -26,     0,   -26,     8,   -26,   -26,   -26,   -26,   -26,
+       5,    -6,   -26,     7,   -26,   -26,   -26,   -26,   -26,    28,
+     -26,   -26,   -26,   -26,     7,    23,     2,     9,    25,     9,
+     -26,   -26,     7,   -26,   -26,   -26,   -26,   -26,    27,   -26,
+      34,    31,   -26,   -26,     7,   -26,   -26,   -26
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -544,25 +542,25 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,    23,     0,    19,     0,    21,    22,    20,    28,    29,
-      30,     0,     2,     3,     4,     6,     7,     9,    10,    11,
-      12,    24,    25,    26,    13,    27,     0,     0,    37,     0,
-       0,    34,    36,     1,     0,     8,    31,    14,    15,    16,
-       0,    17,     0,     0,    32,    35,     5,    18,    38,    33
+       0,    23,     0,    19,     0,    21,    22,    20,    27,    28,
+       0,     2,     3,     4,     6,     7,     9,    10,    11,    12,
+      24,    25,    13,    26,     0,     0,    35,     0,     0,    32,
+      34,     1,     0,     8,    29,    14,    15,    16,     0,    17,
+       0,     0,    30,    33,     5,    18,    36,    31
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -18,   -18,    -1,   -18,     1,   -18,   -14,   -18,   -18,   -18,
-     -18,   -18,   -18,   -18,   -18,   -18,   -17,   -18,   -18
+     -26,   -26,    -1,   -26,     6,   -26,   -13,   -26,   -26,   -26,
+     -26,   -26,   -26,   -26,   -26,   -25,   -26,   -26
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,    11,    12,    13,    14,    15,    16,    17,    18,    19,
-      20,    21,    22,    23,    24,    25,    30,    31,    32
+      -1,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,    20,    21,    22,    23,    28,    29,    30
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -570,22 +568,20 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-      35,    27,    33,     1,    41,    47,     2,    34,     3,     4,
-      34,    34,    43,    28,    45,    42,    28,    26,     5,     6,
-       7,     8,     9,    10,     1,    40,    29,     2,    44,     3,
-       4,    48,    35,    49,     0,    46,     0,     0,     0,     5,
-       6,     7,     8,     9,    10,    36,    37,     0,     0,     0,
-       0,     0,    38,     0,     0,     0,    39
+      33,    25,    41,     1,    43,    31,     2,    32,     3,     4,
+       1,    26,    26,     2,    40,     3,     4,    24,     5,     6,
+       7,     8,     9,    38,    27,     5,     6,     7,     8,     9,
+      39,    33,    34,    35,    45,    42,    32,    46,    44,    36,
+      32,    47,     0,    37
 };
 
 static const yytype_int8 yycheck[] =
 {
-      14,     2,     0,     3,     7,     7,     6,    13,     8,     9,
-      13,    13,    29,     3,    31,    12,     3,    17,    18,    19,
-      20,    21,    22,    23,     3,    26,    16,     6,    10,     8,
-       9,     3,    46,    10,    -1,    34,    -1,    -1,    -1,    18,
-      19,    20,    21,    22,    23,     4,     5,    -1,    -1,    -1,
-      -1,    -1,    11,    -1,    -1,    -1,    15
+      13,     2,    27,     3,    29,     0,     6,    13,     8,     9,
+       3,     3,     3,     6,    12,     8,     9,    17,    18,    19,
+      20,    21,    22,    24,    16,    18,    19,    20,    21,    22,
+       7,    44,     4,     5,     7,    10,    13,     3,    32,    11,
+      13,    10,    -1,    15
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -593,19 +589,19 @@ static const yytype_int8 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,     3,     6,     8,     9,    18,    19,    20,    21,    22,
-      23,    25,    26,    27,    28,    29,    30,    31,    32,    33,
-      34,    35,    36,    37,    38,    39,    17,    26,     3,    16,
-      40,    41,    42,     0,    13,    30,     4,     5,    11,    15,
-      26,     7,    12,    40,    10,    40,    28,     7,     3,    10
+      24,    25,    26,    27,    28,    29,    30,    31,    32,    33,
+      34,    35,    36,    37,    17,    25,     3,    16,    38,    39,
+      40,     0,    13,    29,     4,     5,    11,    15,    25,     7,
+      12,    38,    10,    38,    27,     7,     3,    10
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    24,    25,    26,    26,    27,    28,    28,    29,    30,
-      30,    30,    30,    30,    31,    32,    33,    34,    34,    34,
-      34,    34,    34,    34,    34,    34,    34,    34,    35,    36,
-      37,    38,    39,    39,    40,    40,    41,    41,    42
+       0,    23,    24,    25,    25,    26,    27,    27,    28,    29,
+      29,    29,    29,    29,    30,    31,    32,    33,    33,    33,
+      33,    33,    33,    33,    33,    33,    33,    34,    35,    36,
+      37,    37,    38,    38,    39,    39,    40
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -613,8 +609,8 @@ static const yytype_uint8 yyr2[] =
 {
        0,     2,     1,     1,     1,     3,     1,     1,     2,     1,
        1,     1,     1,     1,     2,     2,     2,     3,     4,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     2,     3,     4,     1,     2,     1,     1,     3
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     2,
+       3,     4,     1,     2,     1,     1,     3
 };
 
 
@@ -1295,227 +1291,215 @@ yyreduce:
         case 2:
 #line 54 "generator/regex.ypp" /* yacc.c:1646  */
     { *nfa=(yyvsp[0].nfa); }
-#line 1299 "regexParser.cpp" /* yacc.c:1646  */
+#line 1295 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 3:
 #line 56 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1305 "regexParser.cpp" /* yacc.c:1646  */
+#line 1301 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 4:
 #line 57 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1311 "regexParser.cpp" /* yacc.c:1646  */
+#line 1307 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 5:
 #line 60 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildUnionNFA((yyvsp[-2].nfa), (yyvsp[0].nfa)); }
-#line 1317 "regexParser.cpp" /* yacc.c:1646  */
+#line 1313 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 6:
 #line 62 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1323 "regexParser.cpp" /* yacc.c:1646  */
+#line 1319 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 7:
 #line 63 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1329 "regexParser.cpp" /* yacc.c:1646  */
+#line 1325 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 8:
 #line 66 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildConcatNFA((yyvsp[-1].nfa), (yyvsp[0].nfa)); }
-#line 1335 "regexParser.cpp" /* yacc.c:1646  */
+#line 1331 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 9:
 #line 68 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1341 "regexParser.cpp" /* yacc.c:1646  */
+#line 1337 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 10:
 #line 69 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1347 "regexParser.cpp" /* yacc.c:1646  */
+#line 1343 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 11:
 #line 70 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1353 "regexParser.cpp" /* yacc.c:1646  */
+#line 1349 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 12:
 #line 71 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1359 "regexParser.cpp" /* yacc.c:1646  */
+#line 1355 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 13:
 #line 72 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1365 "regexParser.cpp" /* yacc.c:1646  */
+#line 1361 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 14:
 #line 75 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildStarNFA((yyvsp[-1].nfa)); }
-#line 1371 "regexParser.cpp" /* yacc.c:1646  */
+#line 1367 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 15:
 #line 77 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildPlusNFA((yyvsp[-1].nfa));}
-#line 1377 "regexParser.cpp" /* yacc.c:1646  */
+#line 1373 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 16:
 #line 79 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildSelectNFA((yyvsp[-1].nfa));}
-#line 1383 "regexParser.cpp" /* yacc.c:1646  */
+#line 1379 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 17:
 #line 81 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[-1].nfa); }
-#line 1389 "regexParser.cpp" /* yacc.c:1646  */
+#line 1385 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 18:
 #line 82 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildSubmatchNFA((yyvsp[-1].nfa), (yyvsp[-2].svalue)); }
-#line 1395 "regexParser.cpp" /* yacc.c:1646  */
+#line 1391 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
 #line 83 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildWildcardNFA(); }
-#line 1401 "regexParser.cpp" /* yacc.c:1646  */
+#line 1397 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 20:
 #line 84 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildDigitNFA(); }
-#line 1407 "regexParser.cpp" /* yacc.c:1646  */
+#line 1403 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 21:
 #line 85 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildAlphNFA(); }
-#line 1413 "regexParser.cpp" /* yacc.c:1646  */
+#line 1409 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 22:
 #line 86 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildCaptNFA(); }
-#line 1419 "regexParser.cpp" /* yacc.c:1646  */
+#line 1415 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 23:
 #line 87 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = buildNFA((yyvsp[0].cvalue)); }
-#line 1425 "regexParser.cpp" /* yacc.c:1646  */
+#line 1421 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 24:
 #line 88 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1431 "regexParser.cpp" /* yacc.c:1646  */
+#line 1427 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 25:
 #line 89 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1437 "regexParser.cpp" /* yacc.c:1646  */
+#line 1433 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 26:
 #line 90 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.nfa) = (yyvsp[0].nfa); }
-#line 1443 "regexParser.cpp" /* yacc.c:1646  */
+    { (yyval.nfa) = buildCharsetsNFA((yyvsp[0].charsets)); }
+#line 1439 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 91 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.nfa) = buildCharsetsNFA((yyvsp[0].charsets)); }
-#line 1449 "regexParser.cpp" /* yacc.c:1646  */
+#line 93 "generator/regex.ypp" /* yacc.c:1646  */
+    { (yyval.nfa) = buildINT(); }
+#line 1445 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 94 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.nfa) = buildINT(); }
-#line 1455 "regexParser.cpp" /* yacc.c:1646  */
+#line 95 "generator/regex.ypp" /* yacc.c:1646  */
+    { (yyval.nfa) = buildDOUBLE(); }
+#line 1451 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 96 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.nfa) = buildDOUBLE(); }
-#line 1461 "regexParser.cpp" /* yacc.c:1646  */
+#line 97 "generator/regex.ypp" /* yacc.c:1646  */
+    { (yyval.nfa) = buildNumNFA((yyvsp[-1].nfa), (yyvsp[0].ivalue)); }
+#line 1457 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 98 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.nfa) = buildTEXT(); }
-#line 1467 "regexParser.cpp" /* yacc.c:1646  */
+#line 99 "generator/regex.ypp" /* yacc.c:1646  */
+    { (yyval.charsets) = (yyvsp[-1].charsets); }
+#line 1463 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 31:
 #line 100 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.nfa) = buildNumNFA((yyvsp[-1].nfa), (yyvsp[0].ivalue)); }
-#line 1473 "regexParser.cpp" /* yacc.c:1646  */
+    { (yyval.charsets) = negateCharsets((yyvsp[-1].charsets)); }
+#line 1469 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 102 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.charsets) = (yyvsp[-1].charsets); }
-#line 1479 "regexParser.cpp" /* yacc.c:1646  */
+#line 103 "generator/regex.ypp" /* yacc.c:1646  */
+    { (yyval.charsets) = (yyvsp[0].charsets); }
+#line 1475 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 103 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.charsets) = negateCharsets((yyvsp[-1].charsets)); }
-#line 1485 "regexParser.cpp" /* yacc.c:1646  */
+#line 104 "generator/regex.ypp" /* yacc.c:1646  */
+    { (yyval.charsets) = addCharsets((yyvsp[-1].charsets), (yyvsp[0].charsets)); }
+#line 1481 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 106 "generator/regex.ypp" /* yacc.c:1646  */
+#line 107 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.charsets) = (yyvsp[0].charsets); }
-#line 1491 "regexParser.cpp" /* yacc.c:1646  */
+#line 1487 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 107 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.charsets) = addCharsets((yyvsp[-1].charsets), (yyvsp[0].charsets)); }
-#line 1497 "regexParser.cpp" /* yacc.c:1646  */
+#line 108 "generator/regex.ypp" /* yacc.c:1646  */
+    { (yyval.charsets) = buildCharsets((yyvsp[0].cvalue)); }
+#line 1493 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 110 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.charsets) = (yyvsp[0].charsets); }
-#line 1503 "regexParser.cpp" /* yacc.c:1646  */
-    break;
-
-  case 37:
 #line 111 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.charsets) = buildCharsets((yyvsp[0].cvalue)); }
-#line 1509 "regexParser.cpp" /* yacc.c:1646  */
-    break;
-
-  case 38:
-#line 114 "generator/regex.ypp" /* yacc.c:1646  */
     { (yyval.charsets) = buildRangeCharsets((yyvsp[-2].cvalue), (yyvsp[0].cvalue)); }
-#line 1515 "regexParser.cpp" /* yacc.c:1646  */
+#line 1499 "regexParser.cpp" /* yacc.c:1646  */
     break;
 
 
-#line 1519 "regexParser.cpp" /* yacc.c:1646  */
+#line 1503 "regexParser.cpp" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1743,7 +1727,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 116 "generator/regex.ypp" /* yacc.c:1906  */
+#line 113 "generator/regex.ypp" /* yacc.c:1906  */
 
 int regex_yyerror(vlex::NFA **nfa, const char *s){
     *nfa = NULL;

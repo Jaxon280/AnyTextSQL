@@ -25,7 +25,6 @@ NFA *buildNumNFA(NFA *n, int num);
 
 NFA *buildINT();
 NFA *buildDOUBLE();
-NFA *buildTEXT();
 
 uint8_t *buildCharsets(char c);
 uint8_t *buildRangeCharsets(char start, char end);

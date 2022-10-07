@@ -23,7 +23,6 @@ using rtoken = regex_yytokentype;
 
 ("INT"|"int")                 return rtoken::RINT_TK;
 ("DOUBLE"|"double")              return rtoken::RDOUBLE_TK;
-("TEXT"|"text")                return rtoken::RTEXT_TK;
 "*"                   return *yytext;
 "."                   return *yytext;
 "("                   return *yytext;

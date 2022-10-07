@@ -170,32 +170,6 @@ NFA *buildDOUBLE() {
     return nfa;
 }
 
-NFA *buildTEXT() {
-    NFA *nfa1 = buildNFA('\'');
-
-    NFA *nfa2 = buildNFA('\\');
-    NFA *nfa3 = buildNFA('.');
-    NFA *nfa4 = buildConcatNFA(nfa2, nfa3);
-
-    uint8_t *chset1 = buildCharsets('\n');
-    uint8_t *chset2 = buildCharsets('\'');
-    uint8_t *chset3 = addCharsets(chset1, chset2);
-    uint8_t *chset4 = buildCharsets('\\');
-    uint8_t *chset5 = addCharsets(chset3, chset4);
-    uint8_t *chset6 = negateCharsets(chset5);
-    NFA *nfa5 = buildCharsetsNFA(chset6);
-
-    NFA *nfa6 = buildUnionNFA(nfa4, nfa5);
-    NFA *nfa7 = buildStarNFA(nfa6);
-
-    NFA *nfa8 = buildNFA('\'');
-    NFA *nfa9 = buildConcatNFA(nfa1, nfa7);
-    NFA *nfa = buildConcatNFA(nfa9, nfa8);
-    nfa->type = TEXT_PT;
-
-    return nfa;
-}
-
 NFA *buildSubmatchNFA(NFA *nfa, const char *name) {
     SubMatch *new_sub = new SubMatch;
     new_sub->start = nfa->initState;
