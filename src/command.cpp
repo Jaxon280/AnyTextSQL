@@ -94,6 +94,13 @@ void CommandExecutor::execCommand(CommandContext* cmd) {
                 Table& table = tableMap.find(s)->second;
                 ctx->mapping(table.getKeyMap());
                 if (table.isKeys()) {
+                    NFA** keyNFAs = table.getKeyNFAs();
+                    NFA** keyRegexNFAs = table.getKeyRegexNFAs();
+
+                    RuntimeKeys runtime(table);
+                    runtime.constructDFA(keyNFAs, keyRegexNFAs);
+                    runtime.constructVFA(0.0);
+                    runtime.exec(ctx);
                 } else {
                     NFA* nfa = table.getNFA();
                     NFA* regexNFA = table.getRegexNFA();

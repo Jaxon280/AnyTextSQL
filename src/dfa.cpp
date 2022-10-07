@@ -53,6 +53,187 @@ DFA::DFA(int _initState, const std::vector<int>& _powsStates,
     }
 }
 
+DFA* DFAMerger::merge(const DFA* rDFA, const DFA* sDFA) {
+    mapDFAStates(rDFA, sDFA);
+
+    int ssize = rDFA->getNumStates();
+    const DFA::StateSet& racceptStates = rDFA->getAcceptStates();
+    const DFA::SubMatches& rsubms = rDFA->getSubMatches();
+
+    createTransMap(rDFA, sDFA, ssize, racceptStates);
+
+    int numStates = transMap.size();
+    std::vector<int> old2new = createStateMap(ssize);
+    DFA::TransTable transTable = createTransTable(numStates, old2new, ssize);
+    DFA::StateSet acceptStates =
+        createAcceptStates(racceptStates, old2new, ssize);
+    DFA::SubMatches subMatches = createSubMatches(rsubms, old2new, ssize);
+
+    DFA* dfa = new DFA(transTable, acceptStates, subMatches, numStates);
+    delete rDFA;
+    delete sDFA;
+    return dfa;
+}
+
+void DFAMerger::createTransMap(const DFA* rDFA, const DFA* sDFA, int ssize,
+                               const DFA::StateSet& racceptStates) {
+    std::vector<int> visited(ssize * 2 + 1);
+    const DFA::TransTable& rtrans = rDFA->getTransTable();
+    const DFA::TransTable& strans = sDFA->getTransTable();
+    DFA_ST_TYPE initState = rDFA->getInitState();
+
+    std::stack<DFA_ST_TYPE> stateStack;
+    if (racceptStates.find(initState) != racceptStates.end()) {
+        stateStack.push(initState + ssize);
+    } else {
+        stateStack.push(initState);
+    }
+    stateStack.push(0);
+
+    while (!stateStack.empty()) {
+        DFA_ST_TYPE s = stateStack.top();
+        stateStack.pop();
+
+        std::vector<DFA_ST_TYPE> trans(ASCII_SZ);
+        if (s > ssize) {
+            int ss = s - ssize;
+            for (int i = 0; i < ASCII_SZ; i++) {
+                if (strans[rsMap[ss]][i] == 0) {
+                    trans[i] = 0;
+                } else {
+                    trans[i] = srMap[strans[rsMap[ss]][i]] + ssize;
+                }
+                if (visited[trans[i]] == 0) {
+                    stateStack.push(trans[i]);
+                    visited[trans[i]] = 1;
+                }
+            }
+        } else if (s == ssize) {
+            continue;
+        } else {
+            for (int i = 0; i < ASCII_SZ; i++) {
+                if (racceptStates.find(rtrans[s][i]) != racceptStates.end()) {
+                    trans[i] = rtrans[s][i] + ssize;
+                } else {
+                    trans[i] = rtrans[s][i];
+                }
+                if (visited[trans[i]] == 0) {
+                    stateStack.push(trans[i]);
+                    visited[trans[i]] = 1;
+                }
+            }
+        }
+        transMap.insert(std::pair<int, std::vector<int>>(s, trans));
+    }
+}
+
+DFA::StateSet DFAMerger::createAcceptStates(const DFA::StateSet& racceptStates,
+                                            const std::vector<int>& old2new,
+                                            int ssize) {
+    DFA::StateSet states;
+    for (auto it = transMap.cbegin(); it != transMap.cend(); ++it) {
+        if (it->first >= ssize &&
+            racceptStates.find(it->first - ssize) != racceptStates.end()) {
+            states.insert(old2new[it->first]);
+        }
+    }
+    return states;
+}
+
+DFA::SubMatches DFAMerger::createSubMatches(const DFA::SubMatches& rsubms,
+                                            const std::vector<int>& old2new,
+                                            int ssize) {
+    DFA::SubMatches subms;
+    for (const DFA::SubMatchStates& rsms : rsubms) {
+        std::vector<DFA_ST_TYPE> startStates;
+        std::vector<DFA_ST_TYPE> endStates;
+        for (DFA_ST_TYPE ss : rsms.startStates) {
+            if (old2new[ss] == 0) {
+                if (old2new[ss + ssize] == 0) {
+                } else {
+                    startStates.push_back(old2new[ss + ssize]);
+                }
+            } else {
+                startStates.push_back(old2new[ss]);
+            }
+        }
+        for (DFA_ST_TYPE ss : rsms.endStates) {
+            if (old2new[ss] == 0) {
+                if (old2new[ss + ssize] == 0) {
+                } else {
+                    endStates.push_back(old2new[ss + ssize]);
+                }
+            } else {
+                endStates.push_back(old2new[ss]);
+            }
+        }
+
+        subms.push_back(DFA::SubMatchStates(rsms.id, rsms.type, rsms.predID,
+                                            startStates, endStates));
+    }
+    return subms;
+}
+
+DFA::TransTable DFAMerger::createTransTable(int numStates,
+                                            const std::vector<int>& old2new,
+                                            int ssize) {
+    DFA::TransTable transTable;
+
+    for (auto it = transMap.cbegin(); it != transMap.cend(); ++it) {
+        std::vector<int> trans;
+        for (int s : it->second) {
+            trans.push_back(old2new[s]);
+        }
+        transTable.push_back(trans);
+    }
+
+    return transTable;
+}
+
+std::vector<int> DFAMerger::createStateMap(int ssize) {
+    std::vector<int> map(ssize * 2);
+    map[INV_STATE] = INV_STATE, map[INIT_STATE] = INIT_STATE;
+    int i = 2;
+    for (auto it = transMap.cbegin(); it != transMap.cend(); ++it) {
+        if (it->first != INV_STATE && it->first != INIT_STATE) {
+            map[it->first] = i;
+            i++;
+        }
+    }
+    return map;
+}
+
+void DFAMerger::mapDFAStates(const DFA* rDFA, const DFA* sDFA) {
+    const DFA::TransTable& rtrans = rDFA->getTransTable();
+    const DFA::TransTable& strans = sDFA->getTransTable();
+
+    std::vector<int> visited(rDFA->getNumStates());
+
+    srMap.insert(
+        std::pair<int, int>(sDFA->getInitState(), rDFA->getInitState()));
+    std::stack<int> stateStack;
+    stateStack.push(sDFA->getInitState());
+    while (!stateStack.empty()) {
+        int s = stateStack.top();
+        int rs = srMap[s];
+        stateStack.pop();
+        for (int i = 0; i < ASCII_SZ; i++) {
+            if (strans[s][i] != 0) {
+                if (visited[rtrans[rs][i]] == 0) {
+                    visited[rtrans[rs][i]] = 1;
+                    stateStack.push(strans[s][i]);
+                    srMap.insert(
+                        std::pair<int, int>(strans[s][i], rtrans[rs][i]));
+                }
+            }
+        }
+    }
+
+    for (const auto& [s, r] : srMap) {
+        rsMap.insert(std::pair<int, int>(r, s));
+    }
+}
+
 void DFAGenerator::setEpsilonTable(Transition* trans, int transSize,
                                    int stateSize) {
     std::vector<std::vector<int>> etTable(stateSize);

@@ -57,6 +57,37 @@ class DFA {
     DFA_ST_TYPE initState;
 };
 
+class DFAMerger {
+   public:
+    DFAMerger() {}
+    ~DFAMerger() {}
+    void initialize() {
+        transMap = std::map<int, std::vector<int>>();
+        rsMap = std::map<int, int>();
+        srMap = std::map<int, int>();
+    }
+    DFA* merge(const DFA* rDFA, const DFA* sDFA);
+
+   private:
+    void mapDFAStates(const DFA* rDFA, const DFA* sDFA);
+    void createTransMap(const DFA* rDFA, const DFA* sDFA, int ssize,
+                        const DFA::StateSet& racceptStates);
+    std::vector<int> createStateMap(int ssize);
+    DFA::TransTable createTransTable(int numStates,
+                                     const std::vector<int>& old2new,
+                                     int ssize);
+    DFA::StateSet createAcceptStates(const DFA::StateSet& racceptStates,
+                                     const std::vector<int>& old2new,
+                                     int ssize);
+    DFA::SubMatches createSubMatches(const DFA::SubMatches& rsubms,
+                                     const std::vector<int>& old2new,
+                                     int ssize);
+
+    std::map<int, std::vector<int>> transMap;
+    std::map<int, int> rsMap;
+    std::map<int, int> srMap;
+};
+
 class DFAGenerator {
    public:
     DFAGenerator() {}

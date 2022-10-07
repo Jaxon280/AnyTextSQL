@@ -15,27 +15,20 @@ namespace vlex {
 class RuntimeBase {
    public:
     RuntimeBase(const Table& table);
+    void constructVFA(double lr);
+    void iexec(QueryContext* query);
+    void exec(QueryContext* query);
 
    protected:
     void makePartitions(SIZE_TYPE size);
-    DFA* mergeDFAs(const DFA* rDFA, const DFA* sDFA);
-    DFA::StateSet createAcceptStates(
-        const std::map<int, std::vector<int>>& transMap,
-        const DFA::StateSet& acceptStates, const std::vector<int>& old2new,
-        int ssize);
-    DFA::SubMatches createSubMatches(const DFA::SubMatches& subms,
-                                     const std::vector<int>& old2new,
-                                     int ssize);
-    DFA::TransTable createTransTable(
-        const std::map<int, std::vector<int>>& transMap, int numStates,
-        const std::vector<int>& old2new, int ssize);
-    std::vector<int> createStateMap(
-        const std::map<int, std::vector<int>>& transMap, int ssize);
 
     Executor* executor;
     ioStream* ios;
     DFAGenerator* dfag;
+    DFAMerger* dfam;
     const Table& table;
+    DFA* dfa;
+    VectFA* vfa;
 
     DATA_TYPE* data;
     SIZE_TYPE size;
@@ -47,27 +40,16 @@ class RuntimeExpression : public RuntimeBase {
 
    public:
     void constructDFA(const NFA* nfa, const NFA* regexNFA);
-    void constructVFA(double lr);
-    void iexec(QueryContext* query);
-    void exec(QueryContext* query);
-
-   private:
-    DFA* dfa;
-    VectFA* vfa;
 };
 
 class RuntimeKeys : public RuntimeBase {
     using RuntimeBase::RuntimeBase;
 
    public:
-    void constructDFAs(const NFA** keyNFAs, const NFA** keyRegexNFAs);
-    void constructVFAs(double lr);
-    void iexec(QueryContext* query);
-    void exec(QueryContext* query);
+    void constructDFA(NFA** keyNFAs, NFA** keyRegexNFAs);
 
    private:
-    int keySize;
-    DFA** dfa;
-    VectFA** keyVFAs;
+    std::vector<std::map<int, int>> createStateMaps(DFA** keyDFAs, int keySize);
+    void mergeKeys(DFA** keyDFAs, int keySize);
 };
 }  // namespace vlex
