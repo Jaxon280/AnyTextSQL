@@ -108,7 +108,7 @@ sort_clauses: limit_clauses { ctx.assignOrderKeys(NULL); }
     | ORDER_TK BY_TK identifiers limit_clauses { ctx.assignOrderKeys($3);}
     ;
 
-limit_clauses: ';' { ctx.assignLimit(-1); }
+limit_clauses: ';' { ctx.assignLimit(INT32_MAX); }
     | LIMIT_TK INT_TK ';' { ctx.assignLimit($2); }
     ;
 

@@ -126,10 +126,11 @@ class Executor {
     AggregationCountMap *aggCountMap;
     data64 *agg;
     int *aggCount;
+    int count = 0;
 
     // ORDER BY clause
 
     // LIMIT clause
-    int limit = 0;
+    int limit;
 };
 }  // namespace vlex

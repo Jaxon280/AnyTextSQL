@@ -113,7 +113,7 @@ void RuntimeKeys::mergeKeys(DFA** keyDFAs, int keySize) {
     std::vector<std::map<int, int>> stateMaps =
         createStateMaps(keyDFAs, keySize);
     int numStates = 1;  // includes inv state
-    for (const std::map<int, int> smap : stateMaps) {
+    for (const std::map<int, int>& smap : stateMaps) {
         numStates += smap.size();
     }
     DFA::TransTable transTable(numStates);

@@ -1616,7 +1616,7 @@ yyreduce:
 
   case 29:
 #line 111 "generator/query.ypp" /* yacc.c:1646  */
-    { ctx.assignLimit(-1); }
+    { ctx.assignLimit(INT32_MAX); }
 #line 1621 "queryParser.cpp" /* yacc.c:1646  */
     break;
 

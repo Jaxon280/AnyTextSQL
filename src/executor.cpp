@@ -748,7 +748,8 @@ void Executor::queryExec() {
     materialize();
 
     if (selection()) {
-        if (httype == NONE_HT) {
+        count++;
+        if (count <= limit && httype == NONE_HT) {
             projection();
         } else {
             aggregation();
