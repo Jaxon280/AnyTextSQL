@@ -179,7 +179,7 @@ OpTree *evalConstPred(OpType opt, OpTree *left, OpTree *right) {
     op->left = NULL, op->right = NULL;
     op->evalType = CONST;
     op->httype = NONE_HT;
-    op->type = BOOL;
+    op->type = INT;
     int li, ri;
     double ld, rd;
 
@@ -231,7 +231,7 @@ OpTree *evalConstCond(CondType ctype, OpTree *left, OpTree *right) {
     op->left = NULL, op->right = NULL;
     op->evalType = CONST;
     op->httype = NONE_HT;
-    op->type = BOOL;
+    op->type = INT;
     if (ctype == AND) {
         op->constData.i = left->constData.i && right->constData.i;
     } else if (ctype == OR) {

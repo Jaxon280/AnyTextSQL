@@ -295,7 +295,7 @@ NFA *buildStarNFA(NFA *n) {
     n->initState = initState;
     n->acceptState = acceptState;
 
-    if (n->type == DOUBLE_PT) {
+    if (n->type == DOUBLE_PT || n->type == TEXT_PT) {
         n->type = TEXT_PT;
     }
     return n;
