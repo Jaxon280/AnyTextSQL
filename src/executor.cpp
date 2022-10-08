@@ -471,7 +471,7 @@ Value Executor::evalOp(const OpTree *tree) const {
 
 bool Executor::evalPred(const OpTree *tree) const {
     if (tree->type == DOUBLE) {
-        double lvalue = tuple[tree->left->varKeyId].d;
+        double lvalue = evalOp<double>(tree->left);
         double rvalue = evalOp<double>(tree->right);
         if (tree->opType == EQUAL && lvalue == rvalue)
             return true;
@@ -488,7 +488,7 @@ bool Executor::evalPred(const OpTree *tree) const {
         else
             return false;
     } else if (tree->type == INT) {
-        int64_t lvalue = tuple[tree->left->varKeyId].i;
+        int64_t lvalue = evalOp<int64_t>(tree->left);
         int64_t rvalue = evalOp<int64_t>(tree->right);
         if (tree->opType == EQUAL && lvalue == rvalue)
             return true;
