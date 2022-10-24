@@ -78,7 +78,7 @@ plus: elementary_re '+' { $$ = buildPlusNFA($1);};
 
 select: elementary_re '?' { $$ = buildSelectNFA($1);};
 
-elementary_re: '(' regex ')' { $$ = $2; }
+elementary_re: '(' regex ')' { $$ = buildParenthesis($2); }
     | '(' RSUBMATCH_TK regex ')' { $$ = buildSubmatchNFA($3, $2); }
     | '.' { $$ = buildWildcardNFA(); }
     | RDIGIT_TK { $$ = buildDigitNFA(); }

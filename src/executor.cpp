@@ -38,31 +38,38 @@ void Executor::setSubMatchTable(
     charEndTable = new int[stateSize]();
     endPredIdTable = new int[stateSize]();
 
-    subMatchSize = subMatchStates.size();
+    std::set<int> sset;
+    for (const VectFA::SubMatchStates &sms : subMatchStates) {
+        sset.insert(sms.id);
+    }
+    subMatchSize = sset.size();
     keyTypes = new Type[subMatchSize];
     for (const VectFA::SubMatchStates &sms : subMatchStates) {
         keyTypes[sms.id] = sms.type;
-        // sms.predID
         for (int ss : sms.charStartStates) {
             charStartTable[ss] = sms.id + 1;
         }
         for (int es : sms.charEndStates) {
             charEndTable[es] = sms.id + 1;
-            endPredIdTable[es] = sms.predID;
+            if (sms.predID != 0 && endPredIdTable[es] == 0) {
+                endPredIdTable[es] = sms.predID;
+            }
         }
         for (int ss : sms.anyStartStates) {
             anyStartTable[ss] = sms.id + 1;
         }
         for (int es : sms.anyEndStates) {
             anyEndTable[es] = sms.id + 1;
-            endPredIdTable[es] = sms.predID;
+            if (sms.predID != 0 && endPredIdTable[es] == 0) {
+                endPredIdTable[es] = sms.predID;
+            }
         }
     }
 }
 
 void Executor::setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize) {
     SIMDDatas = new SIMD_TEXTTYPE[stateSize];
-    SIMDSizes = new int[stateSize];
+    SIMDSizes = new int[stateSize]();
     int iter = 0;
     for (const Qlabel &it : qlabels) {
         if (it.kind == ORDERED || it.kind == ANY || it.kind == RANGES) {
@@ -109,7 +116,32 @@ void Executor::setFA(VectFA *vfa, SIZE_TYPE _start) {
     setVecDatas(qlabels, stateSize);
 }
 
+void Executor::setWildCardProjection() {
+    // stmtSize = subMatchSize;
+    // stmtList = new Statement[stmtSize];
+    // for (int i = 0; i < subMatchSize; i++) {
+    //     OpTree *op = new OpTree;
+    //     op->evalType = VAR;
+    //     op->type;
+    //     op->varKeyId = i;
+    //     stmtList[i].expr = op;
+    //     stmtList[i].httype = NONE_HT;
+    //     stmtList[i].name;
+    // }
+}
+
 void Executor::setStatements(const StatementList *stmts) {
+    if (stmts->stmt->isWildCard) {
+        if (stmts->stmt->httype == COUNT_HT) {
+            stmtSize = 1;
+            gKeySize = -1;
+            count = 0;
+        } else {
+            setWildCardProjection();
+        }
+        return;
+    }
+
     int stSize = 0;
     for (const StatementList *s = stmts; s != NULL; s = s->next) {
         stSize++;
@@ -739,8 +771,10 @@ void Executor::aggregation() {
         // todo: multiple keys
     } else if (gKeySize == 1) {
         aggregation1();
-    } else {
+    } else if (gKeySize == 0) {
         aggregation0();
+    } else {
+        count++;
     }
 }
 
@@ -865,8 +899,11 @@ void Executor::queryEndExec() const {
         if (gKeySize > 1) {
         } else if (gKeySize == 1) {
             printAggregation1();
-        } else {
+        } else if (gKeySize == 0) {
             printAggregation0();
+        } else {
+            printf("| COUNT(*) |\n");
+            printf("| %d |\n", count);
         }
     }
 }

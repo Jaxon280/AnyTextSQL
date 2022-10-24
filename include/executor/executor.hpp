@@ -31,6 +31,7 @@ class Executor {
         const std::vector<VectFA::SubMatchStates> &subMatchStates,
         int stateSize);
     void setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize);
+    void setWildCardProjection();
     void setStatements(const StatementList *stmts);
     void setSelections(QueryContext *query);
     void setAggregations(const std::vector<Key> &gKeyVec);

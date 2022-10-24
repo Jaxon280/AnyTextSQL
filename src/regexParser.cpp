@@ -1380,7 +1380,7 @@ yyreduce:
 
   case 17:
 #line 81 "generator/regex.ypp" /* yacc.c:1646  */
-    { (yyval.nfa) = (yyvsp[-1].nfa); }
+    { (yyval.nfa) = buildParenthesis((yyvsp[-1].nfa)); }
 #line 1385 "regexParser.cpp" /* yacc.c:1646  */
     break;
 

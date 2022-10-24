@@ -55,9 +55,19 @@ using rtoken = regex_yytokentype;
     return rtoken::RCNUM_TK;
 }
 
-([ !"#&',/0-9:;<=>A-Z_`a-z\{\}~]|\\[@$%\(\)*+-.?\[\]\^\|]) {
+([ -#&/0-9:->A-Z_`a-z~]|\\[$%\'-\+\-\.?@\[-^nt\{-\}]) {
     int size = strlen(yytext);
-    yylval.cvalue = yytext[size - 1];
+    if (size > 1){
+        if(yytext[size - 1] == 'n'){
+            yylval.cvalue = '\n';
+        } else if(yytext[size - 1] == 't'){
+            yylval.cvalue = '\t';
+        } else {
+            yylval.cvalue = yytext[size - 1];
+        }
+    } else {
+        yylval.cvalue = yytext[0];
+    }
     return rtoken::RCHAR_TK;
 }
 

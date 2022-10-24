@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "types.hpp"
 
 namespace vlex {
@@ -12,16 +14,24 @@ struct SubMatch {
     int predID;
     const char *name;
     PatternType type;
+    std::string regex;
     SubMatch *next;
     SubMatch() {}
-    SubMatch(int start, int end, int predID, const char *name, PatternType type)
-        : start(start), end(end), predID(predID), name(name), type(type) {}
+    SubMatch(int start, int end, int predID, const char *name, PatternType type,
+             std::string regex)
+        : start(start),
+          end(end),
+          predID(predID),
+          name(name),
+          type(type),
+          regex(regex) {}
     SubMatch(SubMatch *sms)
         : start(sms->start),
           end(sms->end),
           predID(sms->predID),
           name(sms->name),
-          type(sms->type) {}
+          type(sms->type),
+          regex(sms->regex) {}
 };  // linked list
 
 struct Transition {
@@ -40,15 +50,17 @@ struct NFA {
     int acceptState;
     int stateSize;
     PatternType type;
+    std::string regex;
     NFA() {}
     NFA(SubMatch *subms, Transition *transVec, int transSize, int initState,
-        int acceptState, int stateSize, PatternType type)
+        int acceptState, int stateSize, PatternType type, std::string regex)
         : subms(subms),
           transVec(transVec),
           transSize(transSize),
           initState(initState),
           acceptState(acceptState),
           stateSize(stateSize),
-          type(type) {}
+          type(type),
+          regex(regex) {}
 };
 }  // namespace vlex

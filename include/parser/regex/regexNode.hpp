@@ -1,5 +1,6 @@
 #pragma once
 
+#include "charCode.hpp"
 #include "common.hpp"
 #include "interface.hpp"
 #include "parser/nfa.hpp"
@@ -22,6 +23,7 @@ NFA *buildStarNFA(NFA *n);
 NFA *buildPlusNFA(NFA *n);
 NFA *buildSelectNFA(NFA *n);
 NFA *buildNumNFA(NFA *n, int num);
+NFA *buildParenthesis(NFA *n);
 
 NFA *buildINT();
 NFA *buildDOUBLE();
@@ -30,3 +32,4 @@ uint8_t *buildCharsets(char c);
 uint8_t *buildRangeCharsets(char start, char end);
 uint8_t *addCharsets(uint8_t *chsets1, uint8_t *chsets2);
 uint8_t *negateCharsets(uint8_t *chsets);
+std::string restoreChsetRegex(const uint8_t *chsets);

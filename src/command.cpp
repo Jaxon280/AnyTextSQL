@@ -57,30 +57,22 @@ void CommandExecutor::execCommand(CommandContext* cmd) {
         if (cmd->isKeys()) {
             int ksize = cmd->getPatternKeys().size();
             NFA** keyNFAs = new NFA*[ksize];
-            NFA** keyRegexNFAs = new NFA*[ksize];
             for (int pi = 0; pi < ksize; pi++) {
                 keyNFAs[pi] = rparser->parse(cmd->getPatternKeys()[pi]);
-                if (keyNFAs[pi] != NULL) {
-                    keyRegexNFAs[pi] = constructRegexNFA(keyNFAs[pi]);
-                } else {
-                    delete keyNFAs;
-                    return;
-                }
             }
             KeyMap* keyMap = new KeyMap(keyNFAs, ksize);
             tableMap.insert(std::pair<std::string, Table>(
                 cmd->getTablename(),
                 Table(cmd->getTablename(), cmd->getFilename(), ksize, keyNFAs,
-                      keyRegexNFAs, *keyMap)));
+                      *keyMap)));
         } else {
             NFA* nfa = rparser->parse(cmd->getPattern());
             if (nfa != NULL) {
                 KeyMap* keyMap = new KeyMap(nfa);
-                NFA* regexNFA = constructRegexNFA(nfa);
                 tableMap.insert(std::pair<std::string, Table>(
                     cmd->getTablename(),
                     Table(cmd->getTablename(), cmd->getFilename(), nfa,
-                          regexNFA, *keyMap)));
+                          *keyMap)));
             } else {
                 return;
             }
@@ -94,20 +86,24 @@ void CommandExecutor::execCommand(CommandContext* cmd) {
                 Table& table = tableMap.find(s)->second;
                 ctx->mapping(table.getKeyMap());
                 if (table.isKeys()) {
-                    NFA** keyNFAs = table.getKeyNFAs();
-                    NFA** keyRegexNFAs = table.getKeyRegexNFAs();
-
+                    qopter->initialize();
+                    NFA** keyNFAs = qopter->optimize(table.getKeyNFAs(),
+                                                     table.getKeySize(), ctx);
+                    NFA** keyRegexNFAs = new NFA*[table.getKeySize()];
+                    for (int k = 0; k < table.getKeySize(); k++) {
+                        keyRegexNFAs[k] = constructRegexNFA(keyNFAs[k]);
+                    }
                     RuntimeKeys runtime(table);
                     runtime.constructDFA(keyNFAs, keyRegexNFAs);
-                    runtime.constructVFA(0.0);
+                    runtime.constructVFA(0.0002);
                     runtime.exec(ctx);
                 } else {
-                    NFA* nfa = table.getNFA();
-                    NFA* regexNFA = table.getRegexNFA();
-                    // NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                    qopter->initialize();
+                    NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                    NFA* regexNFA = constructRegexNFA(nfa);
                     RuntimeExpression runtime(table);
                     runtime.constructDFA(nfa, regexNFA);
-                    runtime.constructVFA(0.0);
+                    runtime.constructVFA(0.0002);
                     runtime.exec(ctx);
                 }
             }

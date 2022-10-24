@@ -18,14 +18,32 @@ NFA *copyNFA(NFA *n) {
         transVec[i].end = n->transVec[i].end;
         transVec[i].c = n->transVec[i].c;
     }
-    NFA *nfa = new NFA(smsList, transVec, n->transSize, n->initState,
-                       n->acceptState, n->stateSize, n->type);
+    NFA *nfa =
+        new NFA(smsList, transVec, n->transSize, n->initState, n->acceptState,
+                n->stateSize, n->type, std::string(n->regex));
     return nfa;
+}
+
+bool isEscaped(char c) {
+    if (c == '@' || c == '$' || c == '%' || c == '(' || c == ')' || c == '*' ||
+        c == '+' || c == '-' || c == '.' || c == '?' || c == '[' || c == ']' ||
+        c == '^' || c == '|' || c == '\\') {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 NFA *buildNFA(char c) {
     Transition *transVec = new Transition(0, 1, (int)c);
-    NFA *nfa = new NFA(NULL, transVec, 1, 0, 1, 2, TEXT_PT);
+    std::string regex = "";
+    if (isEscaped(c)) {
+        regex += '\\';
+        regex += c;
+    } else {
+        regex += c;
+    }
+    NFA *nfa = new NFA(NULL, transVec, 1, 0, 1, 2, TEXT_PT, regex);
     return nfa;
 }
 
@@ -48,7 +66,9 @@ NFA *buildCharsetsNFA(const uint8_t *chsets) {
         }
     }
 
-    NFA *nfa = new NFA(NULL, transVec, tsize, 0, 1, 2, TEXT_PT);
+    std::string regex = restoreChsetRegex(chsets);
+
+    NFA *nfa = new NFA(NULL, transVec, tsize, 0, 1, 2, TEXT_PT, regex);
     return nfa;
 }
 
@@ -59,7 +79,7 @@ NFA *buildWildcardNFA() {
         transVec[i].end = 1;
         transVec[i].c = (int)i;
     }
-    NFA *nfa = new NFA(NULL, transVec, ASCII_SZ, 0, 1, 2, TEXT_PT);
+    NFA *nfa = new NFA(NULL, transVec, ASCII_SZ, 0, 1, 2, TEXT_PT, ".");
     return nfa;
 }
 
@@ -70,7 +90,7 @@ NFA *buildDigitNFA() {
         transVec[i].end = 1;
         transVec[i].c = i + 48;
     }
-    NFA *nfa = new NFA(NULL, transVec, 10, 0, 1, 2, INT_PT);
+    NFA *nfa = new NFA(NULL, transVec, 10, 0, 1, 2, INT_PT, "\\d");
     return nfa;
 }
 
@@ -81,7 +101,7 @@ NFA *buildAlphNFA() {
         transVec[i].end = 1;
         transVec[i].c = i + 97;
     }
-    NFA *nfa = new NFA(NULL, transVec, 26, 0, 1, 2, TEXT_PT);
+    NFA *nfa = new NFA(NULL, transVec, 26, 0, 1, 2, TEXT_PT, "\\w");
     return nfa;
 }
 
@@ -92,7 +112,7 @@ NFA *buildCaptNFA() {
         transVec[i].end = 1;
         transVec[i].c = i + 65;
     }
-    NFA *nfa = new NFA(NULL, transVec, 26, 0, 1, 2, TEXT_PT);
+    NFA *nfa = new NFA(NULL, transVec, 26, 0, 1, 2, TEXT_PT, "\\W");
     return nfa;
 }
 
@@ -114,6 +134,7 @@ NFA *buildINT() {
 
     NFA *nfa = buildConcatNFA(nfa2, nfa8);
     nfa->type = INT_PT;
+    nfa->regex = "INT";
     return nfa;
 }
 
@@ -166,30 +187,20 @@ NFA *buildDOUBLE() {
 
     NFA *nfa = buildConcatNFA(nfa9, nfa26);
     nfa->type = DOUBLE_PT;
+    nfa->regex = "DOUBLE";
 
     return nfa;
 }
 
 NFA *buildSubmatchNFA(NFA *nfa, const char *name) {
-    SubMatch *new_sub = new SubMatch;
-    new_sub->start = nfa->initState;
-    new_sub->end = nfa->acceptState;
-    new_sub->name = strdup(name);
+    SubMatch *new_sub = new SubMatch(nfa->initState, nfa->acceptState, 0,
+                                     strdup(name), nfa->type, nfa->regex);
     new_sub->next = nfa->subms;
-    new_sub->type = nfa->type;
-    new_sub->predID = 0;  // initial value
     nfa->subms = new_sub;
+    std::string regex =
+        "(?P<" + std::string(name, strlen(name)) + ">" + nfa->regex + ")";
+    nfa->regex = regex;
     return nfa;
-}
-
-SubMatch *copySubmatch(SubMatch *sm) {
-    SubMatch *sm_new = new SubMatch;
-    sm_new->start = sm->start;
-    sm_new->end = sm->end;
-    sm_new->name = sm->name;
-    sm_new->type = sm->type;
-    sm_new->predID = sm->predID;
-    return sm_new;
 }
 
 NFA *buildConcatNFA(NFA *n1, NFA *n2) {
@@ -231,6 +242,7 @@ NFA *buildConcatNFA(NFA *n1, NFA *n2) {
     } else {
         n1->type = DOUBLE_PT;
     }
+    n1->regex += n2->regex;
     destroyNFA(n2);
     return n1;
 }
@@ -265,9 +277,10 @@ NFA *buildUnionNFA(NFA *n1, NFA *n2) {
         transVec[i + n1tsize + 4].end = n2->transVec[i].end + n1ssize + 1;
         transVec[i + n1tsize + 4].c = n2->transVec[i].c;
     }
+    std::string regex = n1->regex + '|' + n2->regex;
 
     NFA *nfa = new NFA(NULL, transVec, n1tsize + n2tsize + 4, initState,
-                       acceptState, n1ssize + n2ssize + 2, TEXT_PT);
+                       acceptState, n1ssize + n2ssize + 2, TEXT_PT, regex);
     destroyNFA(n1);
     destroyNFA(n2);
     return nfa;
@@ -298,6 +311,7 @@ NFA *buildStarNFA(NFA *n) {
     if (n->type == DOUBLE_PT || n->type == TEXT_PT) {
         n->type = TEXT_PT;
     }
+    n->regex.push_back('*');
     return n;
 }
 
@@ -326,6 +340,7 @@ NFA *buildSelectNFA(NFA *n) {
     n->transVec[ntsize + 2].c = EPSILON;
     n->initState = initState;
     n->acceptState = acceptState;
+    n->regex.push_back('?');
     return n;
 }
 
@@ -359,15 +374,25 @@ NFA *buildNumNFA(NFA *n, int num) {
     return n;
 }
 
+NFA *buildParenthesis(NFA *n) {
+    std::string regex = "(" + n->regex + ")";
+    n->regex = regex;
+    return n;
+}
+
 uint8_t *buildCharsets(char c) {
     uint8_t *chsets = (uint8_t *)calloc(sizeof(uint8_t), ASCII_SZ);
-    chsets[(int)c] = 1;
+    if (isValidAscii((int)c)) {
+        chsets[(int)c] = 1;
+    }
     return chsets;
 }
 
 uint8_t *addCharsets(uint8_t *chsets1, uint8_t *chsets2) {
     for (int i = 0; i < ASCII_SZ; i++) {
-        chsets1[i] = chsets1[i] | chsets2[i];
+        if (isValidAscii(i)) {
+            chsets1[i] = chsets1[i] | chsets2[i];
+        }
     }
     free(chsets2);
     return chsets1;
@@ -376,14 +401,65 @@ uint8_t *addCharsets(uint8_t *chsets1, uint8_t *chsets2) {
 uint8_t *buildRangeCharsets(char start, char end) {
     uint8_t *chsets = (uint8_t *)calloc(sizeof(uint8_t), ASCII_SZ);
     for (char i = start; i <= end; i++) {
-        chsets[(int)i] = 1;
+        if (isValidAscii(i)) {
+            chsets[(int)i] = 1;
+        }
     }
     return chsets;
 }
 
 uint8_t *negateCharsets(uint8_t *chsets) {
     for (int i = 0; i < ASCII_SZ; i++) {
-        chsets[i] = chsets[i] ^ 1;
+        if (isValidAscii(i)) {
+            chsets[i] = chsets[i] ^ 1;
+        }
     }
     return chsets;
+}
+
+std::string restoreChsetRegex(const uint8_t *chsets) {
+    std::string regex;
+    regex.push_back('[');
+    int cend = -2;
+    std::stack<int> cstack;
+    for (int i = 0; i < ASCII_SZ; i++) {
+        if (chsets[i] == 1 && isValidAscii(i)) {
+            if (cend != i - 1) {
+                if (!cstack.empty()) {
+                    if (cend != cstack.top()) {
+                        regex.push_back('-');
+                        if (getControlCharAscii(cend) != '\0') {
+                            regex.push_back('\\');
+                            regex.push_back(getControlCharAscii(cend));
+                        } else {
+                            regex.push_back((char)cend);
+                        }
+                    }
+                    cstack.pop();
+                }
+                if (getControlCharAscii(i) != '\0') {
+                    regex.push_back(getControlCharAscii(i));
+                    regex.push_back('\\');
+                } else {
+                    regex.push_back((char)i);
+                }
+                cstack.push(i);
+                cend = i;
+            } else {
+                cend = i;
+            }
+        }
+    }
+    if (!cstack.empty()) {
+        cstack.pop();
+        regex.push_back('-');
+        if (getControlCharAscii(cend) != '\0') {
+            regex.push_back('\\');
+            regex.push_back(getControlCharAscii(cend));
+        } else {
+            regex.push_back((char)cend);
+        }
+    }
+    regex.push_back(']');
+    return regex;
 }

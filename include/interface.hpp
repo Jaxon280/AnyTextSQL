@@ -57,6 +57,7 @@ class KeyMap {
         } else if (sms->type == TEXT_PT) {
             keyType = TEXT;
         }
+        // sms->
         std::string keyName(sms->name, strlen(sms->name));
         Key key(id, keyType);
         map.insert(std::pair<std::string, Key>(keyName, key));
@@ -67,41 +68,34 @@ class KeyMap {
 class Table {
    public:
     Table(const std::string &name, const std::string &filename, NFA *nfa,
-          NFA *regexNFA, KeyMap &keyMap)
+          KeyMap &keyMap)
         : name(name),
           filename(filename),
           nfa(nfa),
-          regexNFA(regexNFA),
           keySize(0),
           keyNFAs(NULL),
-          keyRegexNFAs(NULL),
           keyMap(keyMap) {}
     Table(const std::string &name, const std::string &filename, int keySize,
-          NFA **keyNFAs, NFA **keyRegexNFAs, KeyMap &keyMap)
+          NFA **keyNFAs, KeyMap &keyMap)
         : name(name),
           filename(filename),
           nfa(NULL),
           keySize(keySize),
           keyNFAs(keyNFAs),
-          keyRegexNFAs(keyRegexNFAs),
           keyMap(keyMap) {}
     inline const KeyMap &getKeyMap() const { return keyMap; }
     inline bool isKeys() const { return keySize > 0 ? true : false; }
     inline NFA *getNFA() const { return nfa; }
-    inline NFA *getRegexNFA() const { return regexNFA; }
     inline int getKeySize() const { return keySize; }
     inline NFA **getKeyNFAs() const { return keyNFAs; }
-    inline NFA **getKeyRegexNFAs() const { return keyRegexNFAs; }
     inline const std::string &getFilename() const { return filename; }
 
    private:
     const std::string &name;
     const std::string &filename;
     NFA *nfa;
-    NFA *regexNFA;
     int keySize;
     NFA **keyNFAs;
-    NFA **keyRegexNFAs;
     KeyMap &keyMap;
 };
 

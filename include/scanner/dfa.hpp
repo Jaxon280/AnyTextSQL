@@ -11,12 +11,12 @@ class DFA {
         int id;
         Type type;
         int predID;
-        std::vector<DFA_ST_TYPE> startStates;
-        std::vector<DFA_ST_TYPE> endStates;
+        std::set<DFA_ST_TYPE> startStates;
+        std::set<DFA_ST_TYPE> endStates;
 
         SubMatchStates(int _id, Type _type, int _predID,
-                       std::vector<DFA_ST_TYPE> _startStates,
-                       std::vector<DFA_ST_TYPE> _endStates)
+                       std::set<DFA_ST_TYPE> _startStates,
+                       std::set<DFA_ST_TYPE> _endStates)
             : id(_id),
               type(_type),
               predID(_predID),
@@ -99,8 +99,9 @@ class DFAGenerator {
     void setEpsilonTable(Transition* trans, int transSize, int stateSize);
     void setPowsetTable(Transition* trans, int transSize);
     void initPowsetStates(const NFA* nfa);
+    void setSubMatchStates(const NFA* nfa);
     void setInvStates();
-    void minimize();
+    void minimize(const SubMatch* subms);
 
     std::vector<std::vector<int>> epsilonTable;  // NFA state -> NFA states
     std::vector<std::vector<std::set<int>>>
