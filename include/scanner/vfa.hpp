@@ -16,20 +16,23 @@ class VectFA {
     struct SubMatchStates {
         int id;
         Type type;
-        int predID;
+        int predUUID;
+        std::set<int> predIDs;
         std::set<DFA_ST_TYPE> charStartStates;
         std::set<DFA_ST_TYPE> charEndStates;
         std::set<DFA_ST_TYPE> anyStartStates;
         std::set<DFA_ST_TYPE> anyEndStates;
 
-        SubMatchStates(int _id, Type _type, int _predID,
+        SubMatchStates(int _id, Type _type, int _predUUID,
+                       std::set<int> _predIDs,
                        std::set<DFA_ST_TYPE> _charStartStates,
                        std::set<DFA_ST_TYPE> _charEndStates,
                        std::set<DFA_ST_TYPE> _anyStartStates,
                        std::set<DFA_ST_TYPE> _anyEndStates)
             : id(_id),
               type(_type),
-              predID(_predID),
+              predUUID(_predUUID),
+              predIDs(_predIDs),
               charStartStates(_charStartStates),
               charEndStates(_charEndStates),
               anyStartStates(_anyStartStates),

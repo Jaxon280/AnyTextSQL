@@ -7,6 +7,7 @@
 #if (defined VECEXEC)
 #include "queryVExecutor.hpp"
 #endif
+#include "bitset.hpp"
 #include "parser/query.hpp"
 
 namespace vlex {
@@ -68,14 +69,14 @@ class Executor {
     Executor::Context ctx;
     SIMD_TEXTTYPE *SIMDDatas;
     int *SIMDSizes;
-    SIMDKind *kindTable;  // State -> Kind
-    ST_TYPE *rTable;      // State -> State
-    ST_TYPE **charTable;  // State * char -> State
-    int *anyStartTable;   // State -> sub id or 0
-    int *anyEndTable;     // State -> sub id or 0
-    int *charStartTable;  // State -> sub id or 0
-    int *charEndTable;    // State -> sub id or 0
-    int *endPredIdTable;  // State -> Text Pred Id
+    SIMDKind *kindTable;       // State -> Kind
+    ST_TYPE *rTable;           // State -> State
+    ST_TYPE **charTable;       // State * char -> State
+    int *anyStartTable;        // State -> sub id or 0
+    int *anyEndTable;          // State -> sub id or 0
+    int *charStartTable;       // State -> sub id or 0
+    int *charEndTable;         // State -> sub id or 0
+    uint32_t *endPredIdTable;  // State -> Text Pred Id
     std::set<ST_TYPE> acceptStates;
 
     // Submatch
@@ -116,7 +117,7 @@ class Executor {
 
     // WHERE clause
     PredTree *ptree;
-    int *textPredResults;
+    BitSet *textPredResults;
     int textPredNum;
     // Aggregate functions and GROUP BY clause
     int gKeySize;

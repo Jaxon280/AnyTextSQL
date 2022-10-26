@@ -149,7 +149,8 @@ void RuntimeKeys::mergeKeys(DFA** keyDFAs, int keySize) {
     for (int i = 0; i < keySize; i++) {
         for (const DFA::SubMatchStates& sms : keyDFAs[i]->getSubMatches()) {
             DFA::SubMatchStates smss;
-            smss.id = sms.id, smss.predID = sms.predID, smss.type = sms.type;
+            smss.id = sms.id, smss.predUUID = sms.predUUID,
+            smss.predIDs = sms.predIDs, smss.type = sms.type;
             for (int s : sms.startStates) {
                 smss.startStates.insert(stateMaps[i][s]);
             }

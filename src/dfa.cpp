@@ -41,7 +41,8 @@ DFA::DFA(int _initState, const std::vector<int>& _powsStates,
     for (const SubMatchStates& sms : _smses) {
         SubMatchStates new_sms;
         new_sms.id = sms.id;
-        new_sms.predID = sms.predID;
+        new_sms.predUUID = sms.predUUID;
+        new_sms.predIDs = sms.predIDs;
         new_sms.type = sms.type;
         for (int ss : sms.startStates) {
             new_sms.startStates.insert(old2new_comp[ss]);
@@ -168,8 +169,9 @@ DFA::SubMatches DFAMerger::createSubMatches(const DFA::SubMatches& rsubms,
             }
         }
 
-        subms.push_back(DFA::SubMatchStates(rsms.id, rsms.type, rsms.predID,
-                                            startStates, endStates));
+        subms.push_back(DFA::SubMatchStates(rsms.id, rsms.type, rsms.predUUID,
+                                            rsms.predIDs, startStates,
+                                            endStates));
     }
     return subms;
 }
@@ -440,22 +442,66 @@ DFA* DFAGenerator::generate(const NFA* nfa, const KeyMap& keyMap) {
     setInvStates();
 
     std::vector<DFA::SubMatchStates> smses;
+    std::map<std::string, std::map<int, SubMatch*>> key2subms;
     for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
-        DFA::SubMatchStates sms;
-        sms.id = keyMap.at(s->name).id;
-        sms.type = keyMap.at(s->name).type;
-        sms.predID = s->predID;
-        for (const auto& [sid, ps] : powsetStates) {
-            if (ps.count(s->start) > 0) {
-                sms.startStates.insert(sid);
-            }
-
-            if (ps.count(s->end) > 0) {
-                sms.endStates.insert(sid);
-            }
+        std::string key(s->name, strlen(s->name));
+        if (key2subms.find(key) != key2subms.end()) {
+            key2subms[key].insert(std::pair<int, SubMatch*>(s->predID, s));
+        } else {
+            key2subms.insert(std::pair<std::string, std::map<int, SubMatch*>>(
+                key, std::map<int, SubMatch*>()));
+            key2subms[key].insert(std::pair<int, SubMatch*>(s->predID, s));
         }
-        smses.push_back(sms);
     }
+    for (const auto& [key, value] : key2subms) {
+        int vsize = value.size() - 1;
+        int size = (1 << vsize);
+        for (int puuid = 0; puuid < size; puuid++) {
+            DFA::SubMatchStates sms;
+            sms.id = keyMap.at(key).id;
+            sms.type = keyMap.at(key).type;
+            sms.predUUID = puuid;
+            sms.predIDs = std::set<int>();
+            for (int pid : bit2vector(puuid, vsize)) {
+                sms.predIDs.insert(pid);
+            }
+            for (const auto& [sid, ps] : powsetStates) {
+                bool bstart = true, bend = true;
+                for (int pid : bit2vector(puuid, vsize)) {
+                    if (ps.count(value.at(pid)->start) == 0) {
+                        bstart = false;
+                    }
+                    if (ps.count(value.at(pid)->end) == 0) {
+                        bend = false;
+                    }
+                }
+
+                if (bstart) {
+                    sms.startStates.insert(sid);
+                }
+                if (bend) {
+                    sms.endStates.insert(sid);
+                }
+            }
+            smses.push_back(sms);
+        }
+    }
+    // for (SubMatch* s = nfa->subms; s != NULL; s = s->next) {
+    //     DFA::SubMatchStates sms;
+    //     sms.id = keyMap.at(s->name).id;
+    //     sms.type = keyMap.at(s->name).type;
+    //     sms.predIDs = s->predIDs;
+    //     for (const auto& [sid, ps] : powsetStates) {
+    //         if (ps.count(s->start) > 0) {
+    //             sms.startStates.insert(sid);
+    //         }
+
+    //         if (ps.count(s->end) > 0) {
+    //             sms.endStates.insert(sid);
+    //         }
+    //     }
+    //     smses.push_back(sms);
+    // }
 
     DFA* dfa = new DFA(INIT_STATE, stateVec, default2mini, transTable,
                        acceptStates, smses);

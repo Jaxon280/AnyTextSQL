@@ -36,7 +36,7 @@ void Executor::setSubMatchTable(
     anyEndTable = new int[stateSize]();
     charStartTable = new int[stateSize]();
     charEndTable = new int[stateSize]();
-    endPredIdTable = new int[stateSize]();
+    endPredIdTable = new uint32_t[stateSize]();
 
     std::set<int> sset;
     for (const VectFA::SubMatchStates &sms : subMatchStates) {
@@ -51,8 +51,12 @@ void Executor::setSubMatchTable(
         }
         for (int es : sms.charEndStates) {
             charEndTable[es] = sms.id + 1;
-            if (sms.predID != 0 && endPredIdTable[es] == 0) {
-                endPredIdTable[es] = sms.predID;
+            if (sms.predIDs.size() > 0) {
+                uint32_t pid = 0UL;
+                for (int pi : sms.predIDs) {
+                    pid |= (1UL << (pi - 1));
+                }
+                endPredIdTable[es] = pid;
             }
         }
         for (int ss : sms.anyStartStates) {
@@ -60,8 +64,12 @@ void Executor::setSubMatchTable(
         }
         for (int es : sms.anyEndStates) {
             anyEndTable[es] = sms.id + 1;
-            if (sms.predID != 0 && endPredIdTable[es] == 0) {
-                endPredIdTable[es] = sms.predID;
+            if (sms.predIDs.size() > 0) {
+                uint32_t pid = 0UL;
+                for (int pi : sms.predIDs) {
+                    pid |= (1UL << (pi - 1));
+                }
+                endPredIdTable[es] = pid;
             }
         }
     }
@@ -180,7 +188,7 @@ void Executor::setStatements(const StatementList *stmts) {
 void Executor::setSelections(QueryContext *query) {
     ptree = query->getPredTree();
     textPredNum = query->getTextPredNum();
-    textPredResults = new int[textPredNum + 1];
+    textPredResults = new BitSet;
 }
 
 void Executor::setAggregations(const std::vector<Key> &gKeyVec) {
@@ -272,7 +280,7 @@ loop:
     if (anyEndTable[cur_state] > 0) {
         endSubMatch(anyEndTable[cur_state]);
         if (endPredIdTable[cur_state] > 0) {
-            textPredResults[endPredIdTable[cur_state]] = 1;
+            textPredResults->add(endPredIdTable[cur_state]);
         }
     }
     if (ctx.currentState == INIT_STATE) {
@@ -286,7 +294,7 @@ loop:
     if (charEndTable[ctx.currentState] > 0) {
         endSubMatch(charEndTable[ctx.currentState]);
         if (endPredIdTable[cur_state] > 0) {
-            textPredResults[endPredIdTable[cur_state]] = 1;
+            textPredResults->add(endPredIdTable[cur_state]);
         }
     }
 }
@@ -309,7 +317,7 @@ loop:
     if (anyEndTable[cur_state] > 0) {
         endSubMatch(anyEndTable[cur_state]);
         if (endPredIdTable[cur_state] > 0) {
-            textPredResults[endPredIdTable[cur_state]] = 1;
+            textPredResults->add(endPredIdTable[cur_state]);
         }
     }
     if (ctx.currentState == INIT_STATE) {
@@ -323,7 +331,7 @@ loop:
     if (charEndTable[ctx.currentState] > 0) {
         endSubMatch(charEndTable[ctx.currentState]);
         if (endPredIdTable[cur_state] > 0) {
-            textPredResults[endPredIdTable[cur_state]] = 1;
+            textPredResults->add(endPredIdTable[cur_state]);
         }
     }
 }
@@ -363,9 +371,7 @@ inline void Executor::resetContext() {
     ctx.currentState = INIT_STATE, ctx.recentAcceptState = 0,
     ctx.recentAcceptIndex = 0;
     end->id = 0;
-    for (int ti = 0; ti < textPredNum + 1; ti++) {
-        textPredResults[ti] = 0;
-    }
+    textPredResults->reset();
     while (!startStack.empty()) {
         startStack.pop();
     }
@@ -566,7 +572,9 @@ bool Executor::evalPred(const OpTree *tree) const {
                 return false;
             }
         } else if (tree->right->evalType == CONST) {
-            return textPredResults[tree->textPredId] > 0 ? true : false;
+            return textPredResults->find(tree->textPredId) ? true : false;
+            // return textPredResults[tree->textPredId] > 0 ? true : false;
+
             // if (tree->opType == EQUAL) {
             // SIMD_512iTYPE r =
             //     _mm512_loadu_epi8(tree->right->constData.p + 1);
@@ -941,7 +949,7 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
                 if (charEndTable[ctx.currentState] > 0) {
                     endSubMatch(charEndTable[ctx.currentState]);
                     if (endPredIdTable[ctx.currentState] > 0) {
-                        textPredResults[endPredIdTable[ctx.currentState]] = 1;
+                        textPredResults->add(endPredIdTable[ctx.currentState]);
                     }
                 }
                 break;

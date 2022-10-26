@@ -280,7 +280,10 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
         VectFA::SubMatchStates vsms;
         vsms.id = sms.id;
         vsms.type = sms.type;
-        vsms.predID = sms.predID;
+        vsms.predUUID = sms.predUUID;
+        for (int pid : sms.predIDs) {
+            vsms.predIDs.insert(pid);
+        }
         for (int ss : sms.startStates) {
             if (Qtilde.find(ss) != Qtilde.end()) {
                 vsms.anyStartStates.insert(old2new[ss]);
@@ -297,6 +300,14 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
         }
         subMatches.push_back(vsms);
     }
+
+    std::sort(
+        subMatches.begin(), subMatches.end(),
+        // Lambda expression begins
+        [](const VectFA::SubMatchStates &a, const VectFA::SubMatchStates &b) {
+            return (a.predUUID < b.predUUID);
+        }  // end of lambda expression
+    );
 
     constructDeltaOrds(Qstars, opt_poses);
     constructDeltaAnys(Qtilde, pfa);

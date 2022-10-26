@@ -10,16 +10,19 @@ class DFA {
     struct SubMatchStates {
         int id;
         Type type;
-        int predID;
+        int predUUID;
+        std::set<int> predIDs;
         std::set<DFA_ST_TYPE> startStates;
         std::set<DFA_ST_TYPE> endStates;
 
-        SubMatchStates(int _id, Type _type, int _predID,
+        SubMatchStates(int _id, Type _type, int _predUUID,
+                       std::set<int> _predIDs,
                        std::set<DFA_ST_TYPE> _startStates,
                        std::set<DFA_ST_TYPE> _endStates)
             : id(_id),
               type(_type),
-              predID(_predID),
+              predUUID(_predUUID),
+              predIDs(_predIDs),
               startStates(_startStates),
               endStates(_endStates) {}
         SubMatchStates() {}
@@ -102,6 +105,22 @@ class DFAGenerator {
     void setSubMatchStates(const NFA* nfa);
     void setInvStates();
     void minimize(const SubMatch* subms);
+    std::vector<int> bit2vector(int bit, int size) {
+        int bbit = bit;
+        std::vector<int> vec;
+        if (bbit == 0) {
+            vec.push_back(0);
+            return vec;
+        }
+
+        for (int b = size - 1; b >= 0; b--) {
+            if (bbit >= (1 << b)) {
+                bbit -= (1 << b);
+                vec.push_back(b + 1);
+            }
+        }
+        return vec;
+    }
 
     std::vector<std::vector<int>> epsilonTable;  // NFA state -> NFA states
     std::vector<std::vector<std::set<int>>>
