@@ -139,48 +139,56 @@ void Executor::setWildCardProjection() {
 }
 
 void Executor::setStatements(const StatementList *stmts) {
-    if (stmts->stmt->isWildCard) {
-        if (stmts->stmt->httype == COUNT_HT) {
-            stmtSize = 1;
-            gKeySize = -1;
-            count = 0;
-        } else {
-            setWildCardProjection();
-        }
-        return;
-    }
-
     int stSize = 0;
     for (const StatementList *s = stmts; s != NULL; s = s->next) {
-        stSize++;
+        if (s->stmt->isWildCard && s->stmt->httype == NONE_HT) {
+            stSize += subMatchSize;
+        } else {
+            stSize++;
+        }
     }
     stmtSize = stSize;
     stmtList = new Statement[stmtSize];
     aggContexts = new Aggregation[stmtSize];
     int si = 1, agi = 0;
     for (const StatementList *s = stmts; s != NULL; s = s->next) {
-        stmtList[stmtSize - si] = *s->stmt;
-        if (s->stmt->httype != NONE_HT) {
-            OpTree *op;
-            std::queue<OpTree *> bfsQueue;
-            bfsQueue.push(s->stmt->expr);
-            while (!bfsQueue.empty()) {
-                op = bfsQueue.front();
-                if (op->evalType == OP) {
-                    bfsQueue.push(op->left);
-                    bfsQueue.push(op->right);
-                } else if (op->evalType == AGGFUNC) {
-                    aggContexts[agi].type = op->type;
-                    aggContexts[agi].ftype = op->ftype;
-                    aggContexts[agi].keyId = op->varKeyId;
-                    op->aggId = agi;
-                    agi++;
+        if (s->stmt->isWildCard && s->stmt->httype == NONE_HT) {
+            // si += subMatchSize;
+            // for (int sii = 1; sii <= subMatchSize; sii++) {
+            //     Statement *stmt = new Statement(op, subMatches[sii]);
+            //     stmtList[stmtSize - si + sii] = stmt;
+            // }
+            // httype = NONE_HT;
+        } else {
+            stmtList[stmtSize - si] = *s->stmt;
+            if (s->stmt->httype != NONE_HT) {
+                OpTree *op;
+                std::queue<OpTree *> bfsQueue;
+                bfsQueue.push(s->stmt->expr);
+                while (!bfsQueue.empty()) {
+                    op = bfsQueue.front();
+                    if (op == NULL) {
+                        // COUNT(*)
+                        aggContexts[agi].type = INT;
+                        aggContexts[agi].ftype = COUNT;
+                        aggContexts[agi].isWildCard = true;
+                        agi++;
+                    } else if (op->evalType == OP) {
+                        bfsQueue.push(op->left);
+                        bfsQueue.push(op->right);
+                    } else if (op->evalType == AGGFUNC) {
+                        aggContexts[agi].type = op->type;
+                        aggContexts[agi].ftype = op->ftype;
+                        aggContexts[agi].keyId = op->varKeyId;
+                        op->aggId = agi;
+                        agi++;
+                    }
+                    bfsQueue.pop();
                 }
-                bfsQueue.pop();
             }
+            httype = intersectionHTType(s->stmt->httype, httype);
+            si++;
         }
-        httype = intersectionHTType(s->stmt->httype, httype);
-        si++;
     }
     aggSize = agi;
 }
@@ -208,24 +216,28 @@ void Executor::setAggregations(const std::vector<Key> &gKeyVec) {
         aggCount = new int[aggSize];
         for (int vk = 0; vk < aggSize; vk++) {
             AggFuncType ftype = aggContexts[vk].ftype;
-            if (aggContexts[vk].type == DOUBLE) {
-                if (ftype == MIN) {
-                    agg[vk].d = DBL_MAX;
-                } else if (ftype == MAX) {
-                    agg[vk].d = -DBL_MAX;
-                } else {
-                    agg[vk].d = 0.0;
+            if (aggContexts[vk].isWildCard) {
+                count = 0;
+            } else {
+                if (aggContexts[vk].type == DOUBLE) {
+                    if (ftype == MIN) {
+                        agg[vk].d = DBL_MAX;
+                    } else if (ftype == MAX) {
+                        agg[vk].d = -DBL_MAX;
+                    } else {
+                        agg[vk].d = 0.0;
+                    }
+                } else if (aggContexts[vk].type == INT) {
+                    if (ftype == MIN) {
+                        agg[vk].i = INT64_MAX;
+                    } else if (ftype == MAX) {
+                        agg[vk].i = INT64_MIN;
+                    } else {
+                        agg[vk].d = 0;
+                    }
                 }
-            } else if (aggContexts[vk].type == INT) {
-                if (ftype == MIN) {
-                    agg[vk].i = INT64_MAX;
-                } else if (ftype == MAX) {
-                    agg[vk].i = INT64_MIN;
-                } else {
-                    agg[vk].d = 0;
-                }
+                aggCount[vk] = 0;
             }
-            aggCount[vk] = 0;
         }
     }  // todo: multiple keys
 }
@@ -670,6 +682,9 @@ void Executor::projection() {
 
 void Executor::aggregation0() {
     for (int vk = 0; vk < aggSize; vk++) {
+        if (aggContexts[vk].isWildCard) {
+            continue;
+        }
         int vkk = aggContexts[vk].keyId;
         switch (aggContexts[vk].ftype) {
             case SUM:
@@ -781,8 +796,6 @@ void Executor::aggregation() {
         aggregation1();
     } else if (gKeySize == 0) {
         aggregation0();
-    } else {
-        count++;
     }
 }
 
@@ -802,11 +815,12 @@ void Executor::queryExec() {
 void Executor::printAggregation0() const {
     printf("|");
     for (int si = 0; si < stmtSize; si++) {
-        if (stmtList[si].expr->type == INT) {
+        if (stmtList[si].isWildCard) {
+            printf(" %d |", count);
+        } else if (stmtList[si].expr->type == INT) {
             printf(" %ld |", evalOp<int64_t>(stmtList[si].expr));
         } else if (stmtList[si].expr->type == DOUBLE) {
             printf(" %lf |", evalOp<double>(stmtList[si].expr));
-        } else {
         }
     }
     printf("\n");
@@ -909,9 +923,6 @@ void Executor::queryEndExec() const {
             printAggregation1();
         } else if (gKeySize == 0) {
             printAggregation0();
-        } else {
-            printf("| COUNT(*) |\n");
-            printf("| %d |\n", count);
         }
     }
 }

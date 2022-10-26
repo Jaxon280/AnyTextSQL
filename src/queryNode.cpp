@@ -7,9 +7,12 @@ StatementList *buildWildCard(bool isCount) {
     stmt->isWildCard = true;
     if (isCount) {
         stmt->httype = COUNT_HT;
+        stmt->name = strdup("COUNT(*)");
     } else {
         stmt->httype = NONE_HT;
+        stmt->name = strdup("*");
     }
+    stmt->expr = NULL;
     stmtList->stmt = stmt;
     return stmtList;
 }

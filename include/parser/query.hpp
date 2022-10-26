@@ -71,9 +71,12 @@ struct PredTree {
 };
 
 struct Statement {
+    Statement() {}
+    Statement(OpTree *expr, const char *name, HashTableType httype,
+              bool isWildCard)
+        : expr(expr), name(name), httype(httype), isWildCard(isWildCard) {}
     OpTree *expr;
     const char *name;
-
     HashTableType httype;
     bool isWildCard;
 };
@@ -87,6 +90,7 @@ struct Aggregation {
     Type type;
     AggFuncType ftype;
     int keyId;
+    bool isWildCard;
 };
 
 inline HashTableType intersectionHTType(const HashTableType a,
@@ -116,7 +120,7 @@ class QueryContext {
     void mapping(const KeyMap &keyMap) {
         for (StatementList *s = output; s != NULL; s = s->next) {
             mapOpTree(s->stmt->expr, keyMap);
-            addTypeOp(s->stmt->expr);
+            addType(s->stmt->expr);
         }
         if (pList.size() != 0) {
             mapPredTree(pList, keyMap);
@@ -158,6 +162,12 @@ class QueryContext {
     }
 
    private:
+    void addType(OpTree *tree) {
+        if (tree != NULL) {
+            addTypeOp(tree);
+        }
+    }
+
     Type addTypeOp(OpTree *tree) {
         if (tree->evalType == OP) {
             Type lt = addTypeOp(tree->left);
@@ -180,7 +190,9 @@ class QueryContext {
     void mapOpTree(OpTree *tree, const KeyMap &keyMap) {
         OpTree *t;
         std::queue<OpTree *> bfsQueue;
-        bfsQueue.push(tree);
+        if (tree != NULL) {
+            bfsQueue.push(tree);
+        }
         while (!bfsQueue.empty()) {
             t = bfsQueue.front();
             if (t->left != NULL) {
@@ -210,7 +222,7 @@ class QueryContext {
     void mapPredTree(std::vector<OpTree *> &pList, const KeyMap &keyMap) {
         for (OpTree *opt : pList) {
             mapOpTree(opt, keyMap);
-            addTypeOp(opt);
+            addType(opt);
         }
     }
 
