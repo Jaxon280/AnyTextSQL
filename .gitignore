@@ -9,3 +9,4 @@
 /example/experimental
 vfa_*.hpp
 .vscode/
+.venv/
