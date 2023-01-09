@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "interface.hpp"
+#include "table.hpp"
 #include "optimizer.hpp"
 #include "parser/command.hpp"
 #include "parser/nfa.hpp"
@@ -10,6 +10,7 @@
 #include "runtime.hpp"
 #include "scanner/dfa.hpp"
 #include "scanner/vfa.hpp"
+#include "spark.hpp"
 
 namespace vlex {
 
@@ -21,12 +22,15 @@ class CommandExecutor {
         qparser = new QueryParser();
         qopter = new QueryOptimizer();
     }
+
+    CommandContext* parseCommand(const std::string& input) const;
+    void execScan(CommandContext *cmd);
+    void execParseWithSpark(const std::string &query, SparkContext *sctx);
     void exec();
 
    private:
     void initialize() const;
     NFA* constructRegexNFA(NFA* nfa) const;
-    CommandContext* parseCommand(const std::string& input) const;
     void execCommand(CommandContext* ctx);
 
     double version = 1.0;

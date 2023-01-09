@@ -254,6 +254,17 @@ void Executor::setQuery(QueryContext *query) {
     limit = query->getLimit();
 }
 
+void Executor::setSparkContext(SparkContext *sctx) {
+    baseDF = (void *)sctx->ptr;
+    curDF = baseDF;
+    sizeInRow = sctx->sizeInRow;
+    varSize = sctx->varSize, varlens = new int[varSize], varoffsets = new int[varSize];
+    for (int ci = 0; ci < varSize; ci++) {
+        varlens[ci] = sctx->varCols[ci].size;
+        varoffsets[ci] = sctx->varCols[ci].offset;
+    }
+}
+
 inline void Executor::cmpestriOrd(ST_TYPE cur_state) {
 loop:
     if (i >= size) return;
@@ -291,9 +302,9 @@ loop:
     i += r;
     if (anyEndTable[cur_state] > 0) {
         endSubMatch(anyEndTable[cur_state]);
-        if (endPredIdTable[cur_state] > 0) {
-            textPredResults->add(endPredIdTable[cur_state]);
-        }
+        // if (endPredIdTable[cur_state] > 0) {
+        //     textPredResults->add(endPredIdTable[cur_state]);
+        // } TODO: fix this
     }
     if (ctx.currentState == INIT_STATE) {
         resetContext();
@@ -305,9 +316,9 @@ loop:
     ctx.currentState = charTable[cur_state][(int)data[i++]];
     if (charEndTable[ctx.currentState] > 0) {
         endSubMatch(charEndTable[ctx.currentState]);
-        if (endPredIdTable[cur_state] > 0) {
-            textPredResults->add(endPredIdTable[cur_state]);
-        }
+        // if (endPredIdTable[cur_state] > 0) {
+        //     textPredResults->add(endPredIdTable[cur_state]);
+        // } TODO: fix this
     }
 }
 
@@ -328,9 +339,9 @@ loop:
     i += r;
     if (anyEndTable[cur_state] > 0) {
         endSubMatch(anyEndTable[cur_state]);
-        if (endPredIdTable[cur_state] > 0) {
-            textPredResults->add(endPredIdTable[cur_state]);
-        }
+        // if (endPredIdTable[cur_state] > 0) {
+        //     textPredResults->add(endPredIdTable[cur_state]);
+        // } TODO: fix this
     }
     if (ctx.currentState == INIT_STATE) {
         resetContext();
@@ -342,9 +353,9 @@ loop:
     ctx.currentState = charTable[cur_state][(int)data[i++]];
     if (charEndTable[ctx.currentState] > 0) {
         endSubMatch(charEndTable[ctx.currentState]);
-        if (endPredIdTable[cur_state] > 0) {
-            textPredResults->add(endPredIdTable[cur_state]);
-        }
+        // if (endPredIdTable[cur_state] > 0) {
+        //     textPredResults->add(endPredIdTable[cur_state]);
+        // } TODO: fix this
     }
 }
 
@@ -383,7 +394,6 @@ inline void Executor::resetContext() {
     ctx.currentState = INIT_STATE, ctx.recentAcceptState = 0,
     ctx.recentAcceptIndex = 0;
     end->id = 0;
-    textPredResults->reset();
     while (!startStack.empty()) {
         startStack.pop();
     }
@@ -927,6 +937,50 @@ void Executor::queryEndExec() const {
     }
 }
 
+// follow memory layout of UnsafeRow
+void Executor::storeToDataFrame() {
+    // 1. Null bit (8bytes)
+    // 2. Add String/Int/Double flags
+    // 3. Add Varlen data
+    int offset = 0;
+    int ti = 0;
+    memset(curDF, 0, 8); // TODO: add Null variance.
+    offset += 8;
+    DATA_TYPE buf[128];
+    double d;
+    long long l;
+    for (int s = 0; s < subMatchSize; s++) {
+        uint32_t start = subMatches[s].start;
+        uint32_t size = subMatches[s].end - subMatches[s].start;
+        switch (keyTypes[s]) {
+            case DOUBLE:
+                memcpy(buf, &data[start], size);
+                buf[size] = (DATA_TYPE)0;
+                d = atof((char *)buf);
+                memcpy(curDF + offset, &d, sizeof(double));
+                break;
+            case INT:
+                memcpy(buf, &data[start], size);
+                buf[size] = (DATA_TYPE)0;
+                l = atoll((char *)buf);
+                memcpy(curDF + offset, &l, sizeof(long long));
+                break;
+            case TEXT:
+                memcpy(curDF + offset, &varlens[ti], sizeof(int)); // size
+                memcpy(curDF + offset + sizeof(int), &varoffsets[ti], sizeof(int)); // offset
+                memcpy(curDF + varoffsets[ti], &data[start], varlens[ti]); // TODO: what if size is over varsizes?
+                ti++;
+                break;
+            default:
+                break;
+        }
+        offset += 8;
+    }
+
+    curDF += sizeInRow;
+    rowCount++;
+}
+
 void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
     data = _data, size = _size;
 
@@ -951,6 +1005,7 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
             case C:
                 if (ctx.currentState == INIT_STATE) {
                     resetContext();
+                    textPredResults->reset();
                 }
 
                 if (charStartTable[ctx.currentState] > 0) {
@@ -1006,5 +1061,75 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size) {
         (lex2.tv_sec - lex1.tv_sec) + (lex2.tv_usec - lex1.tv_usec) * 0.000001;
     printf("#BENCH_exec: %lf s\n\n", ex_time);
 #endif
+}
+
+int Executor::execWithSpark(DATA_TYPE *_data, SIZE_TYPE _size) {
+    data = _data, size = _size;
+
+#if (defined BENCH)
+    double ex_time = 0.0;
+    timeval lex1, lex2;
+    gettimeofday(&lex1, NULL);
+#endif
+
+    while (i < size) {
+        switch (kindTable[ctx.currentState]) {
+            case ORDERED:
+                cmpestriOrd(ctx.currentState);
+                break;
+            case ANY:
+                cmpestriAny(ctx.currentState);
+                break;
+            case RANGES:
+                cmpestriRanges(ctx.currentState);
+                break;
+            case C:
+                if (ctx.currentState == INIT_STATE) {
+                    resetContext();
+                }
+
+                if (charStartTable[ctx.currentState] > 0) {
+                    startSubMatch(charStartTable[ctx.currentState]);
+                }
+                ctx.currentState = charTable[ctx.currentState][(int)data[i++]];
+                if (charEndTable[ctx.currentState] > 0) {
+                    endSubMatch(charEndTable[ctx.currentState]);
+                }
+                break;
+            default:
+                if (ctx.recentAcceptState) {
+                    if (end->id > 0) {
+                        while (!startStack.empty()) {
+                            if (startStack.top().id == end->id) {
+                                subMatches[end->id - 1].start =
+                                    startStack.top().index;
+                                subMatches[end->id - 1].end = end->index;
+                            }
+                            startStack.pop();
+                        }
+                        end->id = 0;
+                    }
+            
+                    storeToDataFrame();
+                    i = ctx.recentAcceptIndex + 1;
+                }
+                ctx.currentState = INIT_STATE;
+                break;
+        }
+
+        if (acceptStates.find(ctx.currentState) != acceptStates.end()) {
+            ctx.recentAcceptState = ctx.currentState;
+            ctx.recentAcceptIndex = i;
+        }
+    }
+
+#if (defined BENCH)
+    gettimeofday(&lex2, NULL);
+    ex_time =
+        (lex2.tv_sec - lex1.tv_sec) + (lex2.tv_usec - lex1.tv_usec) * 0.000001;
+    printf("#BENCH_exec: %lf s\n\n", ex_time);
+#endif
+
+    return rowCount;
 }
 }  // namespace vlex
