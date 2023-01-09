@@ -2,11 +2,15 @@
 *.json
 *.csv
 *.txt
+*.log
 *.o
 *.out
 *.output
-~/.vscode
-/example/experimental
+*.so
+.metals/
+.vscode/
 vfa_*.hpp
 .vscode/
 .venv/
+*.class
+spark/target/
