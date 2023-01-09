@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../interface.hpp"
 #include "common.hpp"
+#include "table.hpp"
 #include "parser/nfa.hpp"
 
 namespace vlex {

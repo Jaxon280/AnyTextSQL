@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "interface.hpp"
+#include "table.hpp"
 #include "parser/nfa.hpp"
 #include "parser/parser.hpp"
 #include "parser/query.hpp"

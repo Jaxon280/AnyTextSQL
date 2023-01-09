@@ -56,6 +56,13 @@ void RuntimeBase::exec(QueryContext* query) {
     executor->exec(data, size);
 }
 
+void RuntimeBase::execWithSpark(QueryContext *ctx, SparkContext *sctx) {
+    executor->setSparkContext(sctx);
+    ios->readFile(0, size);
+    data = ios->getData();
+    sctx->count = executor->execWithSpark(data, size);
+}
+
 void RuntimeBase::makePartitions(SIZE_TYPE size) {
     SIZE_TYPE psize = size / PARTITION_SIZE;
     SIZE_TYPE i = 0;

@@ -113,6 +113,68 @@ void CommandExecutor::execCommand(CommandContext* cmd) {
     }
 }
 
+
+void CommandExecutor::execScan(CommandContext *cmd) {
+    if (cmd->isKeys()) {
+        int ksize = cmd->getPatternKeys().size();
+        NFA** keyNFAs = new NFA*[ksize];
+        for (int pi = 0; pi < ksize; pi++) {
+            keyNFAs[pi] = rparser->parse(cmd->getPatternKeys()[pi]);
+        }
+        KeyMap* keyMap = new KeyMap(keyNFAs, ksize);
+        tableMap.insert(std::pair<std::string, Table>(
+            cmd->getTablename(),
+            Table(cmd->getTablename(), cmd->getFilename(), ksize, keyNFAs,
+                    *keyMap)));
+    } else {
+        NFA* nfa = rparser->parse(cmd->getPattern());
+        if (nfa != NULL) {
+            KeyMap* keyMap = new KeyMap(nfa);
+            tableMap.insert(std::pair<std::string, Table>(
+                cmd->getTablename(),
+                Table(cmd->getTablename(), cmd->getFilename(), nfa,
+                        *keyMap)));
+        } else {
+            return;
+        }
+    }
+}
+
+void CommandExecutor::execParseWithSpark(const std::string &query, SparkContext *sctx) {
+    QueryContext* ctx = qparser->parse(query);
+    if (ctx != NULL) {
+        for (const StringList* tbn = ctx->getTables(); tbn != NULL;
+                tbn = tbn->next) {
+            std::string s(tbn->str, strlen(tbn->str));
+            Table& table = tableMap.find(s)->second;
+            ctx->mapping(table.getKeyMap());
+            if (table.isKeys()) {
+                qopter->initialize();
+                NFA** keyNFAs = qopter->optimize(table.getKeyNFAs(),
+                                                    table.getKeySize(), ctx);
+                NFA** keyRegexNFAs = new NFA*[table.getKeySize()];
+                for (int k = 0; k < table.getKeySize(); k++) {
+                    keyRegexNFAs[k] = constructRegexNFA(keyNFAs[k]);
+                }
+                RuntimeKeys runtime(table);
+                runtime.constructDFA(keyNFAs, keyRegexNFAs);
+                runtime.constructVFA(0.0002);
+                runtime.execWithSpark(ctx, sctx);
+            } else {
+                qopter->initialize();
+                NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                NFA* regexNFA = constructRegexNFA(nfa);
+                RuntimeExpression runtime(table);
+                runtime.constructDFA(nfa, regexNFA);
+                runtime.constructVFA(0.0002);
+                runtime.execWithSpark(ctx, sctx);
+            }
+        }
+    } else {
+        return;
+    }
+}
+
 void CommandExecutor::exec() {
     initialize();
     while (true) {

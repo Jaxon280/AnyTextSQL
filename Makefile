@@ -14,7 +14,6 @@ INCLUDES = -I./include -I./include/parser/query -I./include/parser/regex
 FLAGS = $(CFLAGS) $(INCLUDES) $(QEXECFLAGS)
 
 CPP_CODES = $(filter-out src/codegen.cpp, $(filter-out src/queryVExecutor.cpp, $(wildcard src/*.cpp))) main.cpp
-CPP_PROGRAM = $(basename $(CPP_CODES))
 
 ifeq ($(QEXECFLAGS), -DVECEXEC)
 	CPP_CODES += src/queryVExecutor.cpp

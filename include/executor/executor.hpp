@@ -9,6 +9,7 @@
 #endif
 #include "bitset.hpp"
 #include "parser/query.hpp"
+#include "spark.hpp"
 
 namespace vlex {
 class Executor {
@@ -17,7 +18,9 @@ class Executor {
     ~Executor();
     void setFA(VectFA *vfa, SIZE_TYPE _start);
     void setQuery(QueryContext *query);
+    void setSparkContext(SparkContext *sctx);
     void exec(DATA_TYPE *_data, SIZE_TYPE size);
+    int execWithSpark(DATA_TYPE *_data, SIZE_TYPE _size);
 
    private:
     // VFA runner
@@ -65,6 +68,8 @@ class Executor {
     void printAggregation0() const;
     void printAggregation1() const;
     void queryEndExec() const;
+
+    void storeToDataFrame();
 
     Executor::Context ctx;
     SIMD_TEXTTYPE *SIMDDatas;
@@ -134,5 +139,14 @@ class Executor {
 
     // LIMIT clause
     int limit;
+
+    // Apache Spark
+    void *baseDF;
+    void *curDF;
+    int rowCount = 0;
+    int sizeInRow;
+    int varSize = 0;
+    int *varlens;
+    int *varoffsets;
 };
 }  // namespace vlex

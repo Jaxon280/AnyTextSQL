@@ -3,11 +3,12 @@
 #include "common.hpp"
 #include "executor/executor.hpp"
 #include "general/ios.hpp"
-#include "interface.hpp"
+#include "table.hpp"
 #include "parser/nfa.hpp"
 #include "parser/query.hpp"
 #include "scanner/dfa.hpp"
 #include "scanner/vfa.hpp"
+#include "spark.hpp"
 
 #define PARTITION_SIZE (SIZE_TYPE)(1 << 31)  // 1024MB
 
@@ -18,6 +19,7 @@ class RuntimeBase {
     void constructVFA(double lr);
     void iexec(QueryContext* query);
     void exec(QueryContext* query);
+    void execWithSpark(QueryContext *ctx, SparkContext *sctx);
 
    protected:
     void makePartitions(SIZE_TYPE size);
