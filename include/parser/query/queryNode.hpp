@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "interface.hpp"
+#include "table.hpp"
 #include "parser/query.hpp"
 
 using namespace vlex;

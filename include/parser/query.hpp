@@ -1,7 +1,7 @@
 #pragma once
 
 #include "command.hpp"
-#include "interface.hpp"
+#include "table.hpp"
 
 namespace vlex {
 

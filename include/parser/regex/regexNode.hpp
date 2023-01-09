@@ -2,7 +2,7 @@
 
 #include "charCode.hpp"
 #include "common.hpp"
-#include "interface.hpp"
+#include "table.hpp"
 #include "parser/nfa.hpp"
 
 using namespace vlex;
