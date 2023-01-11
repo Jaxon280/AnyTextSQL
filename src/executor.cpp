@@ -949,6 +949,8 @@ void Executor::storeToDataFrame() {
     DATA_TYPE buf[128];
     double d;
     long long l;
+
+    int ssize;
     for (int s = 0; s < subMatchSize; s++) {
         uint32_t start = subMatches[s].start;
         uint32_t size = subMatches[s].end - subMatches[s].start;
@@ -966,9 +968,10 @@ void Executor::storeToDataFrame() {
                 memcpy(curDF + offset, &l, sizeof(long long));
                 break;
             case TEXT:
-                memcpy(curDF + offset, &varlens[ti], sizeof(int)); // size
-                memcpy(curDF + offset + sizeof(int), &varoffsets[ti], sizeof(int)); // offset
-                memcpy(curDF + varoffsets[ti], &data[start], varlens[ti]); // TODO: what if size is over varsizes?
+                ssize = size > varlens[ti] ? varlens[ti] : size;
+                memcpy(curDF + offset, &ssize , sizeof(int)); // size part
+                memcpy(curDF + offset + sizeof(int), &varoffsets[ti], sizeof(int)); // offset part
+                memcpy(curDF + varoffsets[ti], &data[start], ssize);
                 ti++;
                 break;
             default:

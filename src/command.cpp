@@ -140,7 +140,26 @@ void CommandExecutor::execScan(CommandContext *cmd) {
     }
 }
 
-void CommandExecutor::execParseWithSpark(const std::string &query, SparkContext *sctx) {
+void constructSparkSchema(QueryContext *qctx, SparkContext *sctx) {
+    int offset = 8; // todo: if col size is over 64...
+    const int stringSize = 64; // TODO: get max string size
+    int ci = 0;
+    for (const Type& t : qctx->getKeyTypes()) {
+        std::cout << t << std::endl;
+        if (t == DOUBLE) {
+            offset += sizeof(double);
+        } else if (t == INT) {
+            offset += sizeof(long long);
+        } else if (t == TEXT) {
+            sctx->varCols[ci].size = stringSize;
+            sctx->varCols[ci].offset = offset;
+            offset += stringSize;
+            ci++;
+        }
+    }
+}
+
+void CommandExecutor::execWithSpark(const std::string &query, SparkContext *sctx) {
     QueryContext* ctx = qparser->parse(query);
     if (ctx != NULL) {
         for (const StringList* tbn = ctx->getTables(); tbn != NULL;
@@ -152,6 +171,8 @@ void CommandExecutor::execParseWithSpark(const std::string &query, SparkContext 
                 qopter->initialize();
                 NFA** keyNFAs = qopter->optimize(table.getKeyNFAs(),
                                                     table.getKeySize(), ctx);
+                constructSparkSchema(ctx, sctx);
+
                 NFA** keyRegexNFAs = new NFA*[table.getKeySize()];
                 for (int k = 0; k < table.getKeySize(); k++) {
                     keyRegexNFAs[k] = constructRegexNFA(keyNFAs[k]);
@@ -163,6 +184,7 @@ void CommandExecutor::execParseWithSpark(const std::string &query, SparkContext 
             } else {
                 qopter->initialize();
                 NFA* nfa = qopter->optimize(table.getNFA(), ctx);
+                constructSparkSchema(ctx, sctx);
                 NFA* regexNFA = constructRegexNFA(nfa);
                 RuntimeExpression runtime(table);
                 runtime.constructDFA(nfa, regexNFA);

@@ -25,7 +25,7 @@ class CommandExecutor {
 
     CommandContext* parseCommand(const std::string& input) const;
     void execScan(CommandContext *cmd);
-    void execParseWithSpark(const std::string &query, SparkContext *sctx);
+    void execWithSpark(const std::string &query, SparkContext *sctx);
     void exec();
 
    private:
