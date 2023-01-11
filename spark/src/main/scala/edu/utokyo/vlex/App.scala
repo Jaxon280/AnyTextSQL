@@ -13,11 +13,10 @@ object App {
         val before = System.currentTimeMillis()
         
         val queryOp = query.queryStrToQuery(spark, queryStr)
-        // val df = spark.read.format("edu.utokyo.vlex").schema(query.queryStrToSchema(queryStr)).options(Map("pattern" -> Query.queryStrToPattern(queryStr), "keyOption" -> "-e", "query" -> queryStr)).load(filename)
-        val df = spark.read.format("edu.utokyo.vlex").schema(query.queryStrToSchema(queryStr)).options(Map("pattern" -> "\"stars\":(?P<stars>DOUBLE)", "keyOption" -> "-e", "query" -> "select COUNT(stars) from yelp where stars > 4.5;")).load(filename) // TODO: fix this
+        val df = spark.read.format("edu.utokyo.vlex").schema(query.queryStrToSchema(queryStr)).options(Map("pattern" -> Query.queryStrToPattern(queryStr), "keyOption" -> Query.queryStrToKeyOp(queryStr), "query" -> Query.queryStrToQuery(queryStr))).load(filename)
         
         val startTime = System.currentTimeMillis()
-        println(queryOp(df))
+        queryOp(df).show()
         val queryTime = System.currentTimeMillis() - startTime
         println("Query Time: " + queryTime / 1000.0)
         

@@ -5,7 +5,7 @@ import java.nio.{ByteBuffer, ByteOrder}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.UnsafeRow
 
-class Vlex(val numFields: Int = 1, val recordSizeInBytes: Int = 16, val varSize: Int = 0, val maxRecords: Long = 16777216) {
+class Vlex(val numFields: Int = 1, val recordSizeInBytes: Int = 16, val varSize: Int = 0, val maxRecords: Long = 3000000) {
   val vlexNative = new VlexNative()
   var rawAddress: Long = 0L
   var recordsParsed: Long = 0L
