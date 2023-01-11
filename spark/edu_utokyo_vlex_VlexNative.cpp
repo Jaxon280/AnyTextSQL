@@ -19,9 +19,7 @@ JNIEXPORT jlong JNICALL Java_edu_utokyo_vlex_VlexNative_parse
     } else {
         cmdStr += " -e ";
     }
-    cmdStr += "'";
     cmdStr += pattern_c;
-    cmdStr += "'";
 
     cmdStr += " -t ";
     cmdStr += "yelp"; // TODO: fix this
@@ -38,7 +36,7 @@ JNIEXPORT jlong JNICALL Java_edu_utokyo_vlex_VlexNative_parse
 
     void* buffer_addr = env->GetDirectBufferAddress(buffer);
     SparkContext *sctx = new SparkContext(buffer_addr, sizeInRow, varSize);
-    cmd->execParseWithSpark(query_c, sctx);
+    cmd->execWithSpark(query_c, sctx);
 
 #if (defined BENCH)
     gettimeofday(&lex2, NULL);
