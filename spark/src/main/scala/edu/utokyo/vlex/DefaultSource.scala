@@ -107,21 +107,15 @@ private[vlex] class DefaultSource extends TextFileFormat with DataSourceRegister
      */
     val numFields = dataSchema.fields.length
     println("Num fields: " + numFields)
-
-    val varSizes : List[Int] = List()
-    dataSchema.fields.map { field =>
+    val varSize = dataSchema.fields.map { field =>
       field.dataType match {
-        case StringType => varSizes :+ field.metadata.getLong("length").toInt
-        case _ => varSizes
+        case StringType => 1
+        case _ => 0
       }
-    }
+    }.sum
     val recordSizeInBytes = dataSchema.fields.map { field =>
       field.dataType match {
-        case ByteType => 1
-        case ShortType => 2
-        case IntegerType => 4
-        case FloatType => 4
-        case BooleanType => 4
+        case BooleanType => 8
         case LongType => 8
         case DoubleType => 8
         case StringType => field.metadata.getLong("length").toInt + 8
@@ -133,11 +127,10 @@ private[vlex] class DefaultSource extends TextFileFormat with DataSourceRegister
 
     (file: PartitionedFile) => {
       println(file.filePath)
-      val patternStr = options("pattern")
-      val isKeys: Boolean = options("keyOption").equals("-k")
+      val commandStr = options("command")
       val queryStr = options("query")
-      val vlex = new Vlex(numFields, recordSizeInBytes, varSizes.length)
-      vlex.parse(file.filePath, patternStr, isKeys, queryStr)
+      val vlex = new Vlex(numFields, recordSizeInBytes, varSize)
+      vlex.parse(commandStr, queryStr)
       vlex.iterator()
     }
   }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-if [ "$#" -lt 3 ]; then
-    echo "At least five arguments required: [--local | --yarn] [query ID] [Filename]"
+if [ "$#" -lt 1 ]; then
+    echo "At least five arguments required: [--local | --yarn]"
     exit 1
 fi
 
@@ -25,5 +25,4 @@ $SPARK_HOME/bin/spark-submit \
     --class edu.utokyo.vlex.App \
     --master $MASTER \
     --conf spark.sql.files.maxPartitionBytes=100000000000 \
-    target/vlex-1.0.jar \
-    ${@:2}
+    target/vlex-1.0.jar 

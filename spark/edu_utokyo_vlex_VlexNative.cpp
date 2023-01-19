@@ -7,22 +7,9 @@
 #include "spark.hpp"
 
 JNIEXPORT jlong JNICALL Java_edu_utokyo_vlex_VlexNative_parse
-  (JNIEnv *env, jobject, jstring filename_java, jint filename_length, jobject buffer, jint sizeInRow, jint varSize, jstring pattern_java, jint pattern_length, jboolean isKeys, jstring query_java, jint query_length) {
-    std::string filename_c(env->GetStringUTFChars(filename_java, NULL), filename_length);
-    std::string pattern_c(env->GetStringUTFChars(pattern_java, NULL), pattern_length);
+  (JNIEnv *env, jobject, jobject buffer, jint sizeInRow, jint colSize, jint varSize, jstring command_java, jint command_length, jstring query_java, jint query_length) {
+    std::string command_c(env->GetStringUTFChars(command_java, NULL), command_length);
     std::string query_c(env->GetStringUTFChars(query_java, NULL), query_length);
-
-    std::string cmdStr = ".scan ";
-    cmdStr += "yelp.json"; // TODO: fix this
-    if (isKeys) {
-        cmdStr += " -k ";
-    } else {
-        cmdStr += " -e ";
-    }
-    cmdStr += pattern_c;
-
-    cmdStr += " -t ";
-    cmdStr += "yelp"; // TODO: fix this
 
 #if (defined BENCH)
     double ex_time = 0.0;
@@ -31,11 +18,11 @@ JNIEXPORT jlong JNICALL Java_edu_utokyo_vlex_VlexNative_parse
 #endif
 
     CommandExecutor *cmd = new CommandExecutor();
-    CommandContext *cmdCtx = cmd->parseCommand(cmdStr);
+    CommandContext *cmdCtx = cmd->parseCommand(command_c);
     cmd->execScan(cmdCtx);
 
     void* buffer_addr = env->GetDirectBufferAddress(buffer);
-    SparkContext *sctx = new SparkContext(buffer_addr, sizeInRow, varSize);
+    SparkContext *sctx = new SparkContext(buffer_addr, sizeInRow, colSize, varSize);
     cmd->execWithSpark(query_c, sctx);
 
 #if (defined BENCH)

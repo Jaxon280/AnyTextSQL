@@ -34,7 +34,7 @@ target/classes/edu/utokyo/vlex/VlexNative.class:
 	mvn package
 
 run:
-	bash ./run.sh --local yelp0 /home/natsuoiida/research/vlex/example/JSON/yelp.json
+	bash ./run.sh --local
 
 test:
 	make && make run
