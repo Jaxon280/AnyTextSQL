@@ -14,3 +14,4 @@ vfa_*.hpp
 .venv/
 *.class
 spark/target/
+include/rapidjson

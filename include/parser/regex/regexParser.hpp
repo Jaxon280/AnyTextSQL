@@ -48,7 +48,7 @@
 extern int regex_yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 10 "generator/regex.ypp" /* yacc.c:1909  */
+#line 10 "../generator/regex.ypp" /* yacc.c:1909  */
 
 #include "parser/nfa.hpp"
 
@@ -76,7 +76,7 @@ extern int regex_yydebug;
 
 union REGEX_YYSTYPE
 {
-#line 30 "generator/regex.ypp" /* yacc.c:1909  */
+#line 30 "../generator/regex.ypp" /* yacc.c:1909  */
 
     vlex::NFA *nfa;
     int ivalue;
@@ -98,7 +98,7 @@ extern REGEX_YYSTYPE regex_yylval;
 
 int regex_yyparse (vlex::NFA** nfa);
 /* "%code provides" blocks.  */
-#line 18 "generator/regex.ypp" /* yacc.c:1909  */
+#line 18 "../generator/regex.ypp" /* yacc.c:1909  */
 
 typedef union REGEX_YYSTYPE REGEX_YYSTYPE;
 

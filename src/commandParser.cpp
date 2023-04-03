@@ -71,7 +71,7 @@
 #define yychar          command_yychar
 
 /* Copy the first part of user declarations.  */
-#line 2 "generator/command.ypp" /* yacc.c:339  */
+#line 2 "../generator/command.ypp" /* yacc.c:339  */
 
 #include <stdio.h>
 #include <string.h>
@@ -116,7 +116,7 @@
 extern int command_yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 24 "generator/command.ypp" /* yacc.c:355  */
+#line 24 "../generator/command.ypp" /* yacc.c:355  */
 
 #include "parser/command.hpp"
 
@@ -143,7 +143,7 @@ extern int command_yydebug;
 
 union COMMAND_YYSTYPE
 {
-#line 29 "generator/command.ypp" /* yacc.c:355  */
+#line 29 "../generator/command.ypp" /* yacc.c:355  */
 
     char *svalue;
     vlex::StringList *slist;
@@ -161,7 +161,7 @@ extern COMMAND_YYSTYPE command_yylval;
 
 int command_yyparse (vlex::CommandContext& ctx);
 /* "%code provides" blocks.  */
-#line 12 "generator/command.ypp" /* yacc.c:355  */
+#line 12 "../generator/command.ypp" /* yacc.c:355  */
 
 typedef union COMMAND_YYSTYPE COMMAND_YYSTYPE;
 
@@ -177,7 +177,7 @@ int command_yyerror(vlex::CommandContext &ctx, const char *s);
 #endif /* !YY_COMMAND_YY_COMMANDPARSER_HPP_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
-#line 33 "generator/command.ypp" /* yacc.c:358  */
+#line 33 "../generator/command.ypp" /* yacc.c:358  */
 
 #include "parser/cmd/commandNode.hpp"
 
@@ -1263,55 +1263,55 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 46 "generator/command.ypp" /* yacc.c:1646  */
+#line 46 "../generator/command.ypp" /* yacc.c:1646  */
     { ctx.assignFilename((yyvsp[-1].svalue)); }
 #line 1269 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 48 "generator/command.ypp" /* yacc.c:1646  */
+#line 48 "../generator/command.ypp" /* yacc.c:1646  */
     { ctx.assignTable((yyvsp[0].svalue)); }
 #line 1275 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 50 "generator/command.ypp" /* yacc.c:1646  */
+#line 50 "../generator/command.ypp" /* yacc.c:1646  */
     { ctx.assignExp((yyvsp[0].svalue)); }
 #line 1281 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 51 "generator/command.ypp" /* yacc.c:1646  */
+#line 51 "../generator/command.ypp" /* yacc.c:1646  */
     { ctx.assignKeys((yyvsp[-1].slist)); }
 #line 1287 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 58 "generator/command.ypp" /* yacc.c:1646  */
+#line 58 "../generator/command.ypp" /* yacc.c:1646  */
     {(yyval.svalue) = (yyvsp[0].svalue);}
 #line 1293 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 60 "generator/command.ypp" /* yacc.c:1646  */
+#line 60 "../generator/command.ypp" /* yacc.c:1646  */
     {(yyval.svalue) = (yyvsp[0].svalue);}
 #line 1299 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 62 "generator/command.ypp" /* yacc.c:1646  */
+#line 62 "../generator/command.ypp" /* yacc.c:1646  */
     {(yyval.slist) = buildPatterns(NULL, (yyvsp[0].svalue));}
 #line 1305 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 63 "generator/command.ypp" /* yacc.c:1646  */
+#line 63 "../generator/command.ypp" /* yacc.c:1646  */
     {(yyval.slist) = buildPatterns((yyvsp[-2].slist), (yyvsp[0].svalue));}
 #line 1311 "commandParser.cpp" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 66 "generator/command.ypp" /* yacc.c:1646  */
+#line 66 "../generator/command.ypp" /* yacc.c:1646  */
     {(yyval.svalue) = (yyvsp[0].svalue);}
 #line 1317 "commandParser.cpp" /* yacc.c:1646  */
     break;
@@ -1545,7 +1545,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 68 "generator/command.ypp" /* yacc.c:1906  */
+#line 68 "../generator/command.ypp" /* yacc.c:1906  */
 
 int command_yyerror(vlex::CommandContext &ctx, const char *s){
     ctx.grammarError(s);

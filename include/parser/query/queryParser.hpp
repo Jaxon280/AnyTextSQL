@@ -48,7 +48,7 @@
 extern int query_yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 24 "generator/query.ypp" /* yacc.c:1909  */
+#line 24 "../generator/query.ypp" /* yacc.c:1909  */
 
 #include "parser/query.hpp"
 
@@ -100,7 +100,7 @@ extern int query_yydebug;
 
 union QUERY_YYSTYPE
 {
-#line 29 "generator/query.ypp" /* yacc.c:1909  */
+#line 29 "../generator/query.ypp" /* yacc.c:1909  */
 
     vlex::OpTree *opt;
     vlex::PredTree *prt;
@@ -124,7 +124,7 @@ extern QUERY_YYSTYPE query_yylval;
 
 int query_yyparse (vlex::QueryContext& ctx);
 /* "%code provides" blocks.  */
-#line 12 "generator/query.ypp" /* yacc.c:1909  */
+#line 12 "../generator/query.ypp" /* yacc.c:1909  */
 
 typedef union QUERY_YYSTYPE QUERY_YYSTYPE;
 

@@ -6,8 +6,16 @@
 #include "parser/command.hpp"
 #include "spark.hpp"
 
+#include "sys/types.h"
+#include "unistd.h"
+
 JNIEXPORT jlong JNICALL Java_edu_utokyo_vlex_VlexNative_parse
   (JNIEnv *env, jobject, jobject buffer, jint sizeInRow, jint colSize, jint varSize, jstring command_java, jint command_length, jstring query_java, jint query_length) {
+#if (defined DEBUG)
+    pid_t pid = getpid();
+    std::cout << "pid:" << pid << "\n" << std::endl;
+    sleep(20);
+#endif
     std::string command_c(env->GetStringUTFChars(command_java, NULL), command_length);
     std::string query_c(env->GetStringUTFChars(query_java, NULL), query_length);
 

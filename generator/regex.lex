@@ -6,6 +6,8 @@
 #include "parser/regex/regexParser.hpp"
 #include "parser/regex/regexNode.hpp"
 
+#include <iostream>
+
 #undef yywrap
 #define yywrap() 1
 
@@ -55,7 +57,7 @@ using rtoken = regex_yytokentype;
     return rtoken::RCNUM_TK;
 }
 
-([ -#&/0-9:->A-Z_`a-z~]|\\[$%\'-\+\-\.?@\[-^nt\{-\}]) {
+([ -#&,/0-9:->A-Z_`a-z~]|\\[$%\'-\+\-\.?@\[-^nt\{-\}]) {
     int size = strlen(yytext);
     if (size > 1){
         if(yytext[size - 1] == 'n'){

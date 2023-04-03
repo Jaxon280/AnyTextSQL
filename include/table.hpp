@@ -46,6 +46,7 @@ class KeyMap {
     inline bool find(const std::string &name) const {
         return map.find(name) != map.end();
     }
+    inline std::map<std::string, Key> getKeyMap() const { return map; }
 
    private:
     void addKey(const SubMatch *sms, int id) {
@@ -57,7 +58,6 @@ class KeyMap {
         } else if (sms->type == TEXT_PT) {
             keyType = TEXT;
         }
-        // sms->
         std::string keyName(sms->name, strlen(sms->name));
         Key key(id, keyType);
         map.insert(std::pair<std::string, Key>(keyName, key));

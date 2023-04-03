@@ -48,7 +48,7 @@
 extern int command_yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 24 "generator/command.ypp" /* yacc.c:1909  */
+#line 24 "../generator/command.ypp" /* yacc.c:1909  */
 
 #include "parser/command.hpp"
 
@@ -75,7 +75,7 @@ extern int command_yydebug;
 
 union COMMAND_YYSTYPE
 {
-#line 29 "generator/command.ypp" /* yacc.c:1909  */
+#line 29 "../generator/command.ypp" /* yacc.c:1909  */
 
     char *svalue;
     vlex::StringList *slist;
@@ -93,7 +93,7 @@ extern COMMAND_YYSTYPE command_yylval;
 
 int command_yyparse (vlex::CommandContext& ctx);
 /* "%code provides" blocks.  */
-#line 12 "generator/command.ypp" /* yacc.c:1909  */
+#line 12 "../generator/command.ypp" /* yacc.c:1909  */
 
 typedef union COMMAND_YYSTYPE COMMAND_YYSTYPE;
 

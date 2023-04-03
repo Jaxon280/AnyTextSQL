@@ -33,7 +33,9 @@ int ioStream::readFile(SIZE_TYPE start, SIZE_TYPE rsize) {
         return 0;
     } else if ((SIZE_TYPE)rsz != rsize) {
         printf("Error: Read size\n");
-        return 0;
+        printf("%ld\n", rsz);
+        printf("%ld\n", rsize);
+        // return 0;
     }
 
     return rsz;

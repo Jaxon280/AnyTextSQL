@@ -1,21 +1,5 @@
 #!/usr/bin/env bash
-
-if [ "$#" -lt 1 ]; then
-    echo "At least five arguments required: [--local | --yarn]"
-    exit 1
-fi
-
-MASTER=$1
 SPARK_HOME=/home/natsuoiida/research/spark-2.2.0-bin-hadoop2.7
-
-if [ $MASTER == "--local" ]; then
-    MASTER=local[1]
-elif [ $MASTER == "--yarn" ]; then
-    MASTER=yarn
-else
-    echo "First argument must be either --local or --yarn"
-    exit 1
-fi
 
 set -x
   # --conf "spark.dynamicAllocation.enabled=false" \
@@ -23,6 +7,7 @@ set -x
 
 $SPARK_HOME/bin/spark-submit \
     --class edu.utokyo.vlex.App \
-    --master $MASTER \
+    --master local[1] \
     --conf spark.sql.files.maxPartitionBytes=100000000000 \
+    --driver-memory 3G \
     target/vlex-1.0.jar 
