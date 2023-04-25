@@ -44,8 +44,8 @@ object App {
         // spark.time(df.filter($"text".contains("Obama")).select($"author_id", $"retweet_count").groupBy($"author_id").agg(sum($"retweet_count")).show(truncate=false))
 
         // Vlex / Twitter / ç
-        val df = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("created_at", StringType, nullable=false, json1).add("text", StringType, nullable=false, json2)).options(Map("command" -> ".scan tweet_34GB.json -k ['\"created_at\": \"(?P<created_at>[^\"]+)\"', '\"text\": \"(?P<text>[^\"]+)\"'] -t tweet", "query" ->"select text from tweet where text LIKE '%Donald Trump%' AND created_at LIKE '%0913%';")).load("tweet_34GB.json")
-        println(df.filter($"text".contains("Donald Trump") && $"created_at".contains("2023")).count())
+        // val df = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("created_at", StringType, nullable=false, json1).add("text", StringType, nullable=false, json2)).options(Map("command" -> ".scan tweet_34GB.json -k ['\"created_at\": \"(?P<created_at>[^\"]+)\"', '\"text\": \"(?P<text>[^\"]+)\"'] -t tweet", "query" ->"select text from tweet where text LIKE '%Donald Trump%' AND created_at LIKE '%0913%';")).load("tweet_34GB.json")
+        // println(df.filter($"text".contains("Donald Trump") && $"created_at".contains("2023")).count())
         
         // xSIG Twitter
         // val df = spark.read.format("edu.utokyo.vlex").options(Map("command" -> ".scan tweet.json -k [ '\"id\": \"[^\"]*\"', '\"text\": \"[^\"]*football[^\"]*\"'] -t tweet", "query" ->"select * from tweet;")).load("tweet.json")
@@ -63,6 +63,8 @@ object App {
         // val df = spark.read.format("edu.utokyo.vlex").options(Map("command" -> ".scan review.csv -e '\\n5,[^,]*,[^,]*,\"[^\"]*lol[^\"]*\",[^,]*,DOUBLE,[^\\n]*' -t usac", "query" ->"select * from usac;")).load("review.csv")
         // println(df.count())
 
+        val df = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("city", StringType, nullable=false, json1)).options(Map("command" -> ".scan US_Accidents_Dec21_updated.csv -e '\\n[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,(?P<city>[^,]*),' -t usac", "query" ->"select city from usac;")).load("US_Accidents_Dec21_updated.csv")
+        println(df.filter($"city".contains("Cleveland")).count())
         
         val totalTime = System.currentTimeMillis() - startTime
         println("Job Time: " + totalTime / 1000.0)

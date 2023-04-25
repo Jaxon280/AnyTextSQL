@@ -827,8 +827,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "../generator/query.lex"
-#line 2 "../generator/query.lex"
+#line 1 "generator/query.lex"
+#line 2 "generator/query.lex"
 #include "common.hpp"
 #include "parser/query/queryParser.hpp"
 #include "parser/query/queryNode.hpp"
@@ -1056,7 +1056,7 @@ YY_DECL
 		}
 
 	{
-#line 18 "../generator/query.lex"
+#line 18 "generator/query.lex"
 
 
 #line 1063 "queryScanner.cpp"
@@ -1114,202 +1114,202 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 20 "../generator/query.lex"
+#line 20 "generator/query.lex"
 return qtoken::SELECT_TK;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 21 "../generator/query.lex"
+#line 21 "generator/query.lex"
 return qtoken::SUM_TK;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 22 "../generator/query.lex"
+#line 22 "generator/query.lex"
 return qtoken::COUNT_TK;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 23 "../generator/query.lex"
+#line 23 "generator/query.lex"
 return qtoken::AVG_TK;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 24 "../generator/query.lex"
+#line 24 "generator/query.lex"
 return qtoken::MIN_TK;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 25 "../generator/query.lex"
+#line 25 "generator/query.lex"
 return qtoken::MAX_TK;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 26 "../generator/query.lex"
+#line 26 "generator/query.lex"
 return qtoken::DISTINCT_TK;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 27 "../generator/query.lex"
+#line 27 "generator/query.lex"
 return qtoken::AS_TK;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 28 "../generator/query.lex"
+#line 28 "generator/query.lex"
 return qtoken::FROM_TK;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 29 "../generator/query.lex"
+#line 29 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 30 "../generator/query.lex"
+#line 30 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 31 "../generator/query.lex"
+#line 31 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 32 "../generator/query.lex"
+#line 32 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 33 "../generator/query.lex"
+#line 33 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 34 "../generator/query.lex"
+#line 34 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 35 "../generator/query.lex"
+#line 35 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 36 "../generator/query.lex"
+#line 36 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 37 "../generator/query.lex"
+#line 37 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 38 "../generator/query.lex"
+#line 38 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 39 "../generator/query.lex"
+#line 39 "generator/query.lex"
 return *yytext;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 40 "../generator/query.lex"
+#line 40 "generator/query.lex"
 return qtoken::WHERE_TK;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 41 "../generator/query.lex"
+#line 41 "generator/query.lex"
 return qtoken::AND_TK;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 42 "../generator/query.lex"
+#line 42 "generator/query.lex"
 return qtoken::OR_TK;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 43 "../generator/query.lex"
+#line 43 "generator/query.lex"
 return qtoken::NOT_TK;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 44 "../generator/query.lex"
+#line 44 "generator/query.lex"
 return qtoken::IS_TK;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 45 "../generator/query.lex"
+#line 45 "generator/query.lex"
 return qtoken::NIL_TK;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 46 "../generator/query.lex"
+#line 46 "generator/query.lex"
 return qtoken::BETWEEN_TK;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 47 "../generator/query.lex"
+#line 47 "generator/query.lex"
 return qtoken::REGEXP_TK;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 48 "../generator/query.lex"
+#line 48 "generator/query.lex"
 return qtoken::LIKE_TK;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 49 "../generator/query.lex"
+#line 49 "generator/query.lex"
 return qtoken::EQ_TK;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 50 "../generator/query.lex"
+#line 50 "generator/query.lex"
 return qtoken::NOTEQ_TK;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 51 "../generator/query.lex"
+#line 51 "generator/query.lex"
 return qtoken::LESS_TK;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 52 "../generator/query.lex"
+#line 52 "generator/query.lex"
 return qtoken::GREAT_TK;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 53 "../generator/query.lex"
+#line 53 "generator/query.lex"
 return qtoken::LESSEQ_TK;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 54 "../generator/query.lex"
+#line 54 "generator/query.lex"
 return qtoken::GREATEQ_TK;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 55 "../generator/query.lex"
+#line 55 "generator/query.lex"
 return qtoken::GROUP_TK;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 56 "../generator/query.lex"
+#line 56 "generator/query.lex"
 return qtoken::BY_TK;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 57 "../generator/query.lex"
+#line 57 "generator/query.lex"
 return qtoken::ORDER_TK;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 58 "../generator/query.lex"
+#line 58 "generator/query.lex"
 return qtoken::LIMIT_TK;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 60 "../generator/query.lex"
+#line 60 "generator/query.lex"
 {
     yylval.svalue = strdup(yytext);
     return qtoken::IDENTIFIER_TK;
@@ -1317,7 +1317,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 64 "../generator/query.lex"
+#line 64 "generator/query.lex"
 {
     double temp;
     sscanf(yytext, "%lf", &temp);
@@ -1327,7 +1327,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 70 "../generator/query.lex"
+#line 70 "generator/query.lex"
 {
     int temp;
     sscanf(yytext, "%d", &temp);
@@ -1337,7 +1337,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 77 "../generator/query.lex"
+#line 77 "generator/query.lex"
 {
     yylval.svalue = strdup(yytext);
     return qtoken::STRING_TK;
@@ -1345,12 +1345,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 83 "../generator/query.lex"
+#line 83 "generator/query.lex"
 {}               /* ignore whitespace */
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 84 "../generator/query.lex"
+#line 84 "generator/query.lex"
 ECHO;
 	YY_BREAK
 #line 1357 "queryScanner.cpp"
@@ -2322,6 +2322,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 84 "../generator/query.lex"
+#line 84 "generator/query.lex"
 
 

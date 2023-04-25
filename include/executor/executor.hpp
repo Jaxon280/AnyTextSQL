@@ -43,12 +43,14 @@ class Executor {
     void setSelections(QueryContext *query);
     void setAggregations(const std::vector<Key> &gKeyVec);
 
-    inline void cmpestriOrd(ST_TYPE cur_state);
-    inline void cmpestriAny(ST_TYPE cur_state);
-    inline void cmpestriRanges(ST_TYPE cur_state);
-    inline void startSubMatch(int id);
-    inline void endSubMatch(int id);
-    inline void resetContext();
+    void cmpestriOrd(ST_TYPE curState);
+    void cmpestriAny(ST_TYPE curState);
+    void cmpestriRanges(ST_TYPE curState);
+    // void cmpestrmAny(ST_TYPE curState);
+    // void cmpestrmRanges(ST_TYPE curState);
+    void startSubMatch(int id);
+    void endSubMatch(int id);
+    void resetContext();
 
     void printColumnNames() const;
     void queryStartExec() const;
@@ -78,6 +80,7 @@ class Executor {
     Executor::Context ctx;
     SIMD_TEXTTYPE *SIMDDatas;
     int *SIMDSizes;
+    // int *SIMDCounts;
     SIMDKind *kindTable;       // State -> Kind
     ST_TYPE *rTable;           // State -> State
     ST_TYPE **charTable;       // State * char -> State

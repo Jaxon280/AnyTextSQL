@@ -3,9 +3,9 @@ CC = g++
 CFLAGS = -c -std=c++17 -fPIC -mavx512f -mavx512bw -mavx512vl -mavx512dq
 
 EXECFLAGS = -Wall
-EXECFLAGS += -O3 -DBENCH 
-EXECFLAGS += -g
-# EXECFLAGS += -O0 -g -Wextra -DDEBUG -DBENCH
+# EXECFLAGS += -O3 -DBENCH 
+# EXECFLAGS += -g
+EXECFLAGS += -O0 -g -Wextra -DDEBUG -DBENCH
 
 LDFLAGS = -shared
 # BENCHFLAGS = -DBENCH

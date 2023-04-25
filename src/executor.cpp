@@ -78,6 +78,7 @@ void Executor::setSubMatchTable(
 void Executor::setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize) {
     SIMDDatas = new SIMD_TEXTTYPE[stateSize];
     SIMDSizes = new int[stateSize]();
+    // SIMDCounts = new int[stateSize]();
     int iter = 0;
     for (const Qlabel &it : qlabels) {
         if (it.kind == ORDERED || it.kind == ANY || it.kind == RANGES) {
@@ -94,6 +95,11 @@ void Executor::setVecDatas(const std::vector<Qlabel> &qlabels, int stateSize) {
                 _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(strdata));
             SIMDSizes[iter] = (int)it.delta->str.size();
         }
+        // if (it.kind == ANY_MASK || it.kind == RANGES_MASK) {
+        //     SIMDCounts[iter] = it.delta->count;
+        // } else {
+        //     SIMDCounts[iter] = 0;
+        // }
         iter++;
     }
 }
@@ -361,15 +367,78 @@ loop:
         // if (endPredIdTable[curState] > 0) {
         //     textPredBits->add(endPredIdTable[curState]);
         // }
-        }
-    }
-
-}
-
-    if (charEndTable[ctx.currentState] > 0) {
-        endSubMatch(charEndTable[ctx.currentState]);
     }
 }
+
+// // void Executor::cmpestrmAny(ST_TYPE curState) {
+// //     int cnt = 0;
+// // loop:
+// //     if (i >= size) return;
+// //     SIMD_TEXTTYPE text =
+// //         _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
+// //     __m128i mm = _mm_cmpestrm(SIMDDatas[curState], SIMDSizes[curState], text, 16,
+// //                          _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+// //     int m = _mm_extract_epi16(mm, 0);
+// //     cnt += __builtin_popcount(m);
+// //     if (cnt < SIMDCounts[curState]) {
+// //         i += 16;
+// //         goto loop;
+// //     } else if (cnt > SIMDCounts[curState]) {
+// //         int cm;
+// //         while (cnt != SIMDCounts[curState]) {
+// //             cm = __builtin_ctz(m);
+// //             m = m ^ (1 << cm);
+// //             cnt--;
+// //         }
+// //         i += cm;
+// //     } else {
+// //         i += 31 - __builtin_clz(m);
+// //     }
+
+// //     if (charStartTable[ctx.currentState] > 0) {
+// //         startSubMatch(charStartTable[ctx.currentState]);
+// //     }
+// //     if (i >= size) return;
+// //     ctx.currentState = charTable[curState][(int)data[i++]];
+// //     if (charEndTable[ctx.currentState] > 0) {
+// //         endSubMatch(charEndTable[ctx.currentState]);
+// //     }
+// // }
+
+// // void Executor::cmpestrmRanges(ST_TYPE curState) {
+// //     int cnt = 0;
+// // loop:
+// //     if (i >= size) return;
+// //     SIMD_TEXTTYPE text =
+// //         _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
+// //     __m128i mm = _mm_cmpestrm(SIMDDatas[curState], SIMDSizes[curState], text, 16,
+// //                          _SIDD_CMP_RANGES | _SIDD_BIT_MASK);
+// //     int m = _mm_extract_epi16(mm, 0);
+// //     cnt += __builtin_popcount(m);
+// //     if (cnt < SIMDCounts[curState]) {
+// //         i += 16;
+// //         goto loop;
+// //     } else if (cnt > SIMDCounts[curState]) {
+// //         int cm;
+// //         while (cnt != SIMDCounts[curState]) {
+// //             cm = __builtin_ctz(m);
+// //             m = m ^ (1 << cm);
+// //             cnt--;
+// //         }
+// //         i += cm;
+// //     } else {
+// //         i += 31 - __builtin_clz(m);
+// //     }
+    
+// //     if (charStartTable[ctx.currentState] > 0) {
+// //         startSubMatch(charStartTable[ctx.currentState]);
+// //     }
+// //     if (i >= size) return;
+// //     ctx.currentState = charTable[curState][(int)data[i++]];
+//     if (charEndTable[ctx.currentState] > 0) {
+//         endSubMatch(charEndTable[ctx.currentState]);
+//     }
+// }
 
 void Executor::startSubMatch(int id) {
     if (end->id > 0) {
@@ -1172,6 +1241,12 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE start) {
             case RANGES:
                 cmpestriRanges(ctx.currentState);
                 break;
+            // case ANY_MASK:
+            //     cmpestrmAny(ctx.currentState);
+            //     break;
+            // case RANGES_MASK:
+            //     cmpestrmRanges(ctx.currentState);
+            //     break;
             case C:
                 if (ctx.currentState == INIT_STATE) {
                     resetContext();
@@ -1253,6 +1328,12 @@ int Executor::execWithSpark(DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE start) 
             case RANGES:
                 cmpestriRanges(ctx.currentState);
                 break;
+            // case ANY_MASK:
+            //     cmpestrmAny(ctx.currentState);
+            //     break;
+            // case RANGES_MASK:
+            //     cmpestrmRanges(ctx.currentState);
+            //     break;
             case C:
                 if (ctx.currentState == INIT_STATE) {
                     resetContext();

@@ -720,8 +720,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "../generator/command.lex"
-#line 2 "../generator/command.lex"
+#line 1 "generator/command.lex"
+#line 2 "generator/command.lex"
 #include "common.hpp"
 #include "parser/cmd/commandParser.hpp"
 #include "parser/cmd/commandNode.hpp"
@@ -949,7 +949,7 @@ YY_DECL
 		}
 
 	{
-#line 18 "../generator/command.lex"
+#line 18 "generator/command.lex"
 
 
 #line 956 "commandScanner.cpp"
@@ -1007,42 +1007,42 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 20 "../generator/command.lex"
+#line 20 "generator/command.lex"
 return ctoken::CSCAN_TK;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 21 "../generator/command.lex"
+#line 21 "generator/command.lex"
 return ctoken::CTABLE_TK;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 22 "../generator/command.lex"
+#line 22 "generator/command.lex"
 return ctoken::CEXP_TK;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 23 "../generator/command.lex"
+#line 23 "generator/command.lex"
 return ctoken::CKEYS_TK;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 24 "../generator/command.lex"
+#line 24 "generator/command.lex"
 return *yytext;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 25 "../generator/command.lex"
+#line 25 "generator/command.lex"
 return *yytext;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 26 "../generator/command.lex"
+#line 26 "generator/command.lex"
 return *yytext;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 28 "../generator/command.lex"
+#line 28 "generator/command.lex"
 {
     yylval.svalue = strdup(yytext);
     return ctoken::CIDENTIFIER_TK;
@@ -1050,7 +1050,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 33 "../generator/command.lex"
+#line 33 "generator/command.lex"
 {
     yylval.svalue = strdup(yytext);
     return ctoken::CFILENAME_TK;
@@ -1059,7 +1059,7 @@ YY_RULE_SETUP
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 38 "../generator/command.lex"
+#line 38 "generator/command.lex"
 {
     yylval.svalue = strdup(yytext);
     return ctoken::CPATTERN_TK;
@@ -1067,12 +1067,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 44 "../generator/command.lex"
+#line 44 "generator/command.lex"
 {}               /* ignore whitespace */
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 45 "../generator/command.lex"
+#line 45 "generator/command.lex"
 ECHO;
 	YY_BREAK
 #line 1079 "commandScanner.cpp"
@@ -2044,6 +2044,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 45 "../generator/command.lex"
+#line 45 "generator/command.lex"
 
 
