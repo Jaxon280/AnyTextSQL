@@ -3,9 +3,9 @@ CC = g++
 CFLAGS = -c -std=c++17 -fPIC -mavx512f -mavx512bw -mavx512vl -mavx512dq
 
 EXECFLAGS = -Wall
-# EXECFLAGS += -O3 -DBENCH 
+EXECFLAGS += -O3 -DBENCH 
 # EXECFLAGS += -g
-EXECFLAGS += -O0 -g -Wextra -DDEBUG -DBENCH
+# EXECFLAGS += -O0 -g -Wextra -DDEBUG -DBENCH
 
 LDFLAGS = -shared
 # BENCHFLAGS = -DBENCH
@@ -55,7 +55,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(INCLUDES) -o $(TARGET) $(LIBRARIES) $(LDFLAGS) $^
 
 $(ODIR)/edu_utokyo_vlex_VlexNative.o: edu_utokyo_vlex_VlexNative.cpp
-	$(CC) $(CFLAGS) $(EXECFLAGS) $(INCLUDES) -o $@ $<
+	mkdir -p $(ODIR) && $(CC) $(CFLAGS) $(EXECFLAGS) $(INCLUDES) -o $@ $<
 
 edu_utokyo_vlex_VlexNative.cpp: target/classes/edu/utokyo/vlex/VlexNative.class
 	javah -cp target/classes edu.utokyo.vlex.VlexNative

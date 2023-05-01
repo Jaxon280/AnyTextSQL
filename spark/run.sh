@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-SPARK_HOME=/home/natsuoiida/research/spark-2.2.0-bin-hadoop2.7
 
-set -x
+# set -x
   # --conf "spark.dynamicAllocation.enabled=false" \
   # --num-executors 2 \
 
