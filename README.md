@@ -6,10 +6,19 @@ This code base implements AnyDB, parser and query executor for the raw data. Any
 
 The code in a root directory is for CLI execution. We also support execution with Apache Spark in `/spark` directory. If you want to run AnyDB with Apache Spark, go to `/spark` directory and follow the instructions in `/spark/README.md`.
 
+## Prerequisites (CLI execution)
+
+- g++ (12.0.0) and above
+- An Intel processor that supports AVX-512
+    - `rigel` node in Taura laboratory
+- Flex
+- Bison
+- Also, you should set PATH to `g++`, `flex`, `bison`, `javah` and `mvn` commands.
+
 ## Quick Start
 ```console
 make
-./anydb
+./vlex
 ```
 
 Then give the raw data and extraciton pattern like following one.
