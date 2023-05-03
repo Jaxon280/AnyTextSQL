@@ -5,6 +5,8 @@ AnyDB is integrated with Apache Spark for the query execution on the parsed file
 ## Prerequisites
 
 - g++ (12.0.0) and above
+- An Intel processor that supports AVX-512
+  - rigel node in Taura laboratory
 - Java 8 (note: **You cannot run Apache Spark code by using Java 11 and above**)
 - JNI (1.8.0)
   - You can get Java 8 and JNI from OpenJDK[https://wiki.openjdk.org/display/jdk8u/Main]
