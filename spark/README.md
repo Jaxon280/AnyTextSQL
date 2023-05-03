@@ -2,7 +2,7 @@
 
 AnyDB is integrated with Apache Spark for the query execution on the parsed file. The main code is `spark/src/main/scala/edu/utokyo/vlex/App.scala` and `JNI` is used for the integration of C++ code and Java/Scala code.
 
-## Prerequisite
+## Prerequisites
 
 - g++ (12.0.0) and above
 - Java 8 (note: **You cannot run Apache Spark code by using Java 11 and above**)
