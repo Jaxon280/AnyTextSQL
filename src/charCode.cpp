@@ -1,7 +1,12 @@
 #include "charCode.hpp"
 
 bool isValidAscii(int c) {
-    if (c == NEWLINE || c == TAB || (c >= SPACE && c < DEL)) {
+    // if (c == NEWLINE || c == TAB || (c >= SPACE && c < DEL)) {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
+    if (c < ASCII_SZ && c >= 0) {
         return true;
     } else {
         return false;
@@ -10,7 +15,7 @@ bool isValidAscii(int c) {
 
 char getControlCharAscii(int c) {
     if (c == NEWLINE) {
-        return 'c';
+        return 'n';
     } else if (c == TAB) {
         return 't';
     } else {

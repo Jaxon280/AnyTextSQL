@@ -10,7 +10,7 @@
 #include "scanner/vfa.hpp"
 #include "spark.hpp"
 
-#define PARTITION_SIZE (SIZE_TYPE)(1 << 31)  // 1024MB
+#define PARTITION_SIZE (SIZE_TYPE)(1 << 30)  // 1024MB
 
 namespace vlex {
 class RuntimeBase {
@@ -18,8 +18,10 @@ class RuntimeBase {
     RuntimeBase(const Table& table);
     void constructVFA(double lr);
     void iexec(QueryContext* query);
+    void iexecWithSpark(QueryContext *ctx, SparkContext * sctx);
     void exec(QueryContext* query);
     void execWithSpark(QueryContext *ctx, SparkContext *sctx);
+    inline bool isInterleaved() { return partitions.size() > 1 ? true : false; }
 
    protected:
     void makePartitions(SIZE_TYPE size);

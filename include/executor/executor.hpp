@@ -18,9 +18,12 @@ class Executor {
     ~Executor();
     void setFA(VectFA *vfa, SIZE_TYPE _start);
     void setQuery(QueryContext *query);
-    void setSparkContext(SparkContext *sctx);
-    void exec(DATA_TYPE *_data, SIZE_TYPE size);
-    int execWithSpark(DATA_TYPE *_data, SIZE_TYPE _size);
+    void setSparkContext(SparkContext *sctx, QueryContext *qctx);
+    void exec(DATA_TYPE *_data, SIZE_TYPE size, SIZE_TYPE start);
+    int execWithSpark(DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE start);
+
+    SIZE_TYPE preExec(DATA_TYPE *_data, SIZE_TYPE _size);
+    void postExec();
 
    private:
     // VFA runner
@@ -40,12 +43,14 @@ class Executor {
     void setSelections(QueryContext *query);
     void setAggregations(const std::vector<Key> &gKeyVec);
 
-    inline void cmpestriOrd(ST_TYPE cur_state);
-    inline void cmpestriAny(ST_TYPE cur_state);
-    inline void cmpestriRanges(ST_TYPE cur_state);
-    inline void startSubMatch(int id);
-    inline void endSubMatch(int id);
-    inline void resetContext();
+    void cmpestriOrd(ST_TYPE curState);
+    void cmpestriAny(ST_TYPE curState);
+    void cmpestriRanges(ST_TYPE curState);
+    // void cmpestrmAny(ST_TYPE curState);
+    // void cmpestrmRanges(ST_TYPE curState);
+    void startSubMatch(int id);
+    void endSubMatch(int id);
+    void resetContext();
 
     void printColumnNames() const;
     void queryStartExec() const;
@@ -70,10 +75,12 @@ class Executor {
     void queryEndExec() const;
 
     void storeToDataFrame();
+    void preStoreToDataFrame();
 
     Executor::Context ctx;
     SIMD_TEXTTYPE *SIMDDatas;
     int *SIMDSizes;
+    // int *SIMDCounts;
     SIMDKind *kindTable;       // State -> Kind
     ST_TYPE *rTable;           // State -> State
     ST_TYPE **charTable;       // State * char -> State
@@ -102,6 +109,9 @@ class Executor {
 
     // Data
     DATA_TYPE *data;
+    DATA_TYPE *prevData = NULL;
+    SIZE_TYPE prevStart;
+    SIZE_TYPE prevSize;
     SIZE_TYPE size;
     SIZE_TYPE i;
 
@@ -109,6 +119,11 @@ class Executor {
 #if (defined VECEXEC)
     QueryVExecutor *qexec;
 #else
+#endif
+
+#if (defined BENCH)
+    int chunk = 1;
+    double execTotal = 0.0;
 #endif
 
     data64 *tuple;     // key -> 64bit data (used only for tuple-at-once)
@@ -122,7 +137,7 @@ class Executor {
 
     // WHERE clause
     PredTree *ptree;
-    BitSet *textPredResults;
+    BitSet *textPredBits;
     int textPredNum;
     // Aggregate functions and GROUP BY clause
     int gKeySize;

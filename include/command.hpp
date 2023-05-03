@@ -2,7 +2,6 @@
 
 #include "common.hpp"
 #include "table.hpp"
-#include "optimizer.hpp"
 #include "parser/command.hpp"
 #include "parser/nfa.hpp"
 #include "parser/parser.hpp"
@@ -20,12 +19,11 @@ class CommandExecutor {
         cparser = new CommandParser();
         rparser = new RegexParser();
         qparser = new QueryParser();
-        qopter = new QueryOptimizer();
     }
 
     CommandContext* parseCommand(const std::string& input) const;
     void execScan(CommandContext *cmd);
-    void execParseWithSpark(const std::string &query, SparkContext *sctx);
+    void execWithSpark(const std::string &query, SparkContext *sctx);
     void exec();
 
    private:
@@ -38,7 +36,6 @@ class CommandExecutor {
     CommandParser* cparser;
     RegexParser* rparser;
     QueryParser* qparser;
-    QueryOptimizer* qopter;
     std::map<std::string, Table> tableMap;
 };
 

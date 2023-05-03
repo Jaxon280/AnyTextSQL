@@ -90,19 +90,19 @@ void VectFA::constructDeltaOrds(const std::vector<Qstar> &Qstar_set,
                                 std::map<ST_TYPE, int> opt_poses) {
     for (const Qstar &Qs : Qstar_set) {
         Delta *new_ord = new Delta;
-        new_ord->startState = old2new[Qs.source];
+        new_ord->startState = dfas2vfas[Qs.source];
         new_ord->str = Qs.str.substr(opt_poses[Qs.source]);
         new_ord->backStr = Qs.str.substr(0, opt_poses[Qs.source]);
         for (int i = 0; i <= 16; i++) {
             if (i <= 16 - (int)new_ord->str.size()) {
-                new_ord->rTable.push_back(old2new[Qs.sink]);
+                new_ord->rTable.push_back(dfas2vfas[Qs.sink]);
             } else {
-                new_ord->rTable.push_back(old2new[Qs.source]);
+                new_ord->rTable.push_back(dfas2vfas[Qs.source]);
             }
         }
 
-        qlabels[old2new[Qs.source]].kind = ORDERED;
-        qlabels[old2new[Qs.source]].delta = new_ord;
+        qlabels[dfas2vfas[Qs.source]].kind = ORDERED;
+        qlabels[dfas2vfas[Qs.source]].delta = new_ord;
     }
 }
 
@@ -133,6 +133,122 @@ int VectFA::constructDeltaRanges(Delta *trans, const std::vector<int> &chars) {
     }
 }
 
+// std::vector<std::list<ST_TYPE>> VectFA::constructQtildeChain(std::set<ST_TYPE> &Qtilde) {
+//     std::map<ST_TYPE, ST_TYPE> singleQtilde;
+//     std::map<ST_TYPE, std::set<int>> singleQtildeCharset;
+
+//     for (auto it = Qtilde.begin(); it != Qtilde.end(); ++it) {
+//         ST_TYPE q = *it;
+//         std::set<ST_TYPE> qs;
+//         std::set<int> QtildeCharset;
+//         for (int c = 0; c < ASCII_SZ; c++) {
+//             if (transTable[q][c] != q) {
+//                 qs.insert(transTable[q][c]);
+//                 QtildeCharset.insert(c);
+//             }
+//         } // exclude 0, 1
+
+//         if (qs.size() == 1 && charSMStates.find(q) == charSMStates.end()) {
+//             auto start = qs.begin();
+//             singleQtilde[q] = *start;
+//             singleQtildeCharset[q] = QtildeCharset;
+//         }
+//     }
+
+//     std::vector<std::list<ST_TYPE>> QtildeChainList;
+//     for (const auto& [sq, q] : singleQtilde) {
+//         int flag = 0;
+//         for (std::list<ST_TYPE> &l : QtildeChainList) {
+//             if (q == l.front() && singleQtildeCharset[sq] == singleQtildeCharset[l.front()]) {
+//                 l.push_front(sq);
+//                 flag = 1;
+//                 break;
+//             } else if (sq == l.back() && singleQtildeCharset[sq] == singleQtildeCharset[l.front()]) {
+//                 l.push_back(q);
+//                 flag = 1;
+//                 break;
+//             }
+//         }
+//         if (!flag) QtildeChainList.push_back({sq, q});
+//     }
+
+//     for (auto it = QtildeChainList.begin(); it != QtildeChainList.end();) {
+//         int flag = 0;
+//         for (std::list<ST_TYPE> &l : QtildeChainList) {
+//             if (it->front() == l.back()) {
+//                 auto itt = it->begin();
+//                 ++itt;
+//                 for (; itt != it->end(); ++itt) {
+//                     l.push_back(*itt);
+//                 }
+//                 flag = 1;
+//                 break;
+//             } else if (it->back() == l.front()) {
+//                 auto itt = it->rbegin();
+//                 ++itt;
+//                 for (; itt != it->rend(); ++itt) {
+//                     l.push_front(*itt);
+//                 }
+//                 flag = 1;
+//                 break;
+//             }
+//         }   
+//         if (flag) {
+//             it = QtildeChainList.erase(it);
+//         } else {
+//             ++it;
+//         }
+//     }
+
+//     std::vector<std::list<ST_TYPE>> QtildeChains;
+//     for (const std::list<ST_TYPE> &l : QtildeChainList) {
+//         if (l.size() > 200) {
+//             QtildeChains.push_back(l);
+//             for (auto it = l.begin(); it != l.end(); ++it) {
+//                 if (it != l.end()) {
+//                     Qtilde.erase(*it);
+//                 }
+//                 if (it != l.begin() && it != l.end()) {
+//                     states.erase(*it);
+//                 }
+//             }
+//         }
+//     }
+//     return QtildeChains;
+// }
+
+// void VectFA::constructDeltaAnyMasks(std::vector<std::list<ST_TYPE>> &QtildeChains) {
+//     for (const std::list<ST_TYPE> &l : QtildeChains) {
+//         Delta *new_trans = new Delta;
+//         new_trans->startState = dfas2vfas[l.front()];
+//         new_trans->count = l.size() - 1;
+//         new_trans->charTable.resize(ASCII_SZ);
+//         for (int c = 0; c < ASCII_SZ; c++) {
+//             new_trans->charTable[c] = dfas2vfas[transTable[l.back()][c]];
+//         }
+
+//         std::vector<int> chars;
+//         for (int c = 0; c < ASCII_SZ; c++) {
+//             if (l.front() != transTable[l.front()][c]) {
+//                 chars.push_back(c);
+//             }
+//         }
+
+//         if (chars.size() > 16) {
+//             if (constructDeltaRanges(new_trans, chars)) {
+//                 qlabels[dfas2vfas[l.front()]].delta = new_trans;
+//                 qlabels[dfas2vfas[l.front()]].kind = RANGES_MASK;
+//             }
+//         } else {
+//             for (int c : chars) {
+//                 new_trans->str += (char)c;
+//                 qlabels[dfas2vfas[l.front()]].delta = new_trans;
+//                 qlabels[dfas2vfas[l.front()]].kind = ANY_MASK;
+//             }
+//         }
+//     }
+// }
+
 void VectFA::constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
     const double p = 0.75;
     for (auto it = Qtilde.begin(); it != Qtilde.end();) {
@@ -143,12 +259,12 @@ void VectFA::constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
         } else {
 #endif
             Delta *new_trans = new Delta;
-            new_trans->startState = old2new[q];
+            new_trans->startState = dfas2vfas[q];
             new_trans->charTable.resize(ASCII_SZ);
 
             std::vector<int> chars;
             for (int c = 0; c < ASCII_SZ; c++) {
-                new_trans->charTable[c] = old2new[transTable[q][c]];
+                new_trans->charTable[c] = dfas2vfas[transTable[q][c]];
                 if (transTable[q][c] != q) {
                     chars.push_back(c);
                 }
@@ -156,14 +272,14 @@ void VectFA::constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
 
             if (chars.size() > 16) {
                 if (constructDeltaRanges(new_trans, chars)) {
-                    qlabels[old2new[q]].delta = new_trans;
-                    qlabels[old2new[q]].kind = RANGES;
+                    qlabels[dfas2vfas[q]].delta = new_trans;
+                    qlabels[dfas2vfas[q]].kind = RANGES;
                 }
             } else {
                 for (int c : chars) {
                     new_trans->str += (char)c;
-                    qlabels[old2new[q]].delta = new_trans;
-                    qlabels[old2new[q]].kind = ANY;
+                    qlabels[dfas2vfas[q]].delta = new_trans;
+                    qlabels[dfas2vfas[q]].kind = ANY;
                 }
             }
             ++it;
@@ -176,17 +292,16 @@ void VectFA::constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
 void VectFA::constructDeltaCs(const std::set<ST_TYPE> &QstarSource,
                               const std::set<ST_TYPE> &Qtilde) {
     for (ST_TYPE q : states) {
-        if (QstarSource.find(q) == QstarSource.end() &&
-            Qtilde.find(q) == Qtilde.end()) {
+        if (qlabels[q].kind != ORDERED && qlabels[q].kind != ORDERED && qlabels[q].kind != ANY && qlabels[q].kind != RANGES) {
             Delta *new_c = new Delta;
-            new_c->startState = old2new[q];
+            new_c->startState = dfas2vfas[q];
             new_c->charTable.resize(ASCII_SZ);
             for (int c = 0; c < ASCII_SZ; c++) {
-                new_c->charTable[c] = old2new[transTable[q][c]];
+                new_c->charTable[c] = dfas2vfas[transTable[q][c]];
             }
 
-            qlabels[old2new[q]].delta = new_c;
-            qlabels[old2new[q]].kind = C;
+            qlabels[dfas2vfas[q]].delta = new_c;
+            qlabels[dfas2vfas[q]].kind = C;
         }
     }
 }
@@ -216,6 +331,43 @@ VectFA::VectFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
         }
     }
     constructVFA(dfa, data, size);
+}
+
+void VectFA::mapStateDFA2VFA() {
+    int i = 0;
+    for (ST_TYPE q : states) {
+        Qlabel qlabel;
+        if (acceptStates.find(q) != acceptStates.end()) {
+            qlabel.isAccept = true;
+        }
+        qlabel.kind = INV;
+        qlabels.push_back(qlabel);
+        dfas2vfas[q] = i;
+        i++;
+    }
+}
+
+void VectFA::constructSubmatches(const std::vector<DFA::SubMatchStates> &SMSs) {
+    for (DFA::SubMatchStates sms : SMSs) {
+        VectFA::SubMatchStates vsms;
+        vsms.id = sms.id;
+        vsms.type = sms.type;
+        for (int ss : sms.startStates) {
+            if (Qtilde.find(ss) != Qtilde.end()) {
+                vsms.anyStartStates.insert(dfas2vfas[ss]);
+            } else {
+                vsms.charStartStates.insert(dfas2vfas[ss]);
+            }
+        }
+        for (int es : sms.endStates) {
+            if (Qtilde.find(es) != Qtilde.end()) {
+                vsms.anyEndStates.insert(dfas2vfas[es]);
+            } else {
+                vsms.charEndStates.insert(dfas2vfas[es]);
+            }
+        }
+        subMatches.push_back(vsms);
+    }
 }
 
 void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
@@ -262,56 +414,17 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
             }
         }
     }
-
     std::set<ST_TYPE> Qtilde = constructQtilde(QstarSource);
+    // std::vector<std::list<ST_TYPE>> QtildeChains = constructQtildeChain(Qtilde);
+    
+    mapStateDFA2VFA();
 
-    int i = 0;
-    for (ST_TYPE q : states) {
-        Qlabel qlabel;
-        if (acceptStates.find(q) != acceptStates.end()) {
-            qlabel.isAccept = true;
-        }
-        qlabels.push_back(qlabel);
-        old2new[q] = i;
-        i++;
-    }
-
-    for (DFA::SubMatchStates sms : SMSs) {
-        VectFA::SubMatchStates vsms;
-        vsms.id = sms.id;
-        vsms.type = sms.type;
-        vsms.predUUID = sms.predUUID;
-        for (int pid : sms.predIDs) {
-            vsms.predIDs.insert(pid);
-        }
-        for (int ss : sms.startStates) {
-            if (Qtilde.find(ss) != Qtilde.end()) {
-                vsms.anyStartStates.insert(old2new[ss]);
-            } else {
-                vsms.charStartStates.insert(old2new[ss]);
-            }
-        }
-        for (int es : sms.endStates) {
-            if (Qtilde.find(es) != Qtilde.end()) {
-                vsms.anyEndStates.insert(old2new[es]);
-            } else {
-                vsms.charEndStates.insert(old2new[es]);
-            }
-        }
-        subMatches.push_back(vsms);
-    }
-
-    std::sort(
-        subMatches.begin(), subMatches.end(),
-        // Lambda expression begins
-        [](const VectFA::SubMatchStates &a, const VectFA::SubMatchStates &b) {
-            return (a.predUUID < b.predUUID);
-        }  // end of lambda expression
-    );
-
+    constructSubmatches(SMSs);
     constructDeltaOrds(Qstars, opt_poses);
+    // constructDeltaAnyMasks(QtildeChains);
     constructDeltaAnys(Qtilde, pfa);
     constructDeltaCs(QstarSource, Qtilde);
+
     qlabels[INV_STATE].kind = INV;
 }
 

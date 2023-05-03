@@ -38,7 +38,7 @@
 #define SIMD_TEXTTYPE __m128i
 #define SIMD_BYTES 16
 #define DATA_TYPE uint8_t
-#define SIZE_TYPE uint32_t
+#define SIZE_TYPE uint64_t
 #define MAX_64BYTE (int64_t)0xffffffffffffffff
 
 #define SIMD_128iTYPE __m128i

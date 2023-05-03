@@ -67,7 +67,6 @@ NFA *buildCharsetsNFA(const uint8_t *chsets) {
     }
 
     std::string regex = restoreChsetRegex(chsets);
-
     NFA *nfa = new NFA(NULL, transVec, tsize, 0, 1, 2, TEXT_PT, regex);
     return nfa;
 }
@@ -438,8 +437,8 @@ std::string restoreChsetRegex(const uint8_t *chsets) {
                     cstack.pop();
                 }
                 if (getControlCharAscii(i) != '\0') {
-                    regex.push_back(getControlCharAscii(i));
                     regex.push_back('\\');
+                    regex.push_back(getControlCharAscii(i));
                 } else {
                     regex.push_back((char)i);
                 }

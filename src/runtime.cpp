@@ -34,49 +34,46 @@ void RuntimeBase::constructVFA(double lr) {
 #endif
 }
 
-void RuntimeBase::iexec(QueryContext* query) {
-    // interleave
-    executor->setQuery(query);
-
-    int i = 0;
-    while (i < (int)partitions.size() - 1) {
-        SIZE_TYPE off = partitions[i], next_off = partitions[i + 1];
-        i++;
-        SIZE_TYPE rsize = next_off - off;
-        ios->readFile(off, rsize);
-        data = ios->getData();
-        executor->exec(data, rsize);
-    }
-}
-
 void RuntimeBase::exec(QueryContext* query) {
     executor->setQuery(query);
     ios->readFile(0, size);
     data = ios->getData();
-    executor->exec(data, size);
+    executor->exec(data, size, 0);
 }
 
 void RuntimeBase::execWithSpark(QueryContext *ctx, SparkContext *sctx) {
-    executor->setSparkContext(sctx);
+    executor->setSparkContext(sctx, ctx);
     ios->readFile(0, size);
     data = ios->getData();
-    sctx->count = executor->execWithSpark(data, size);
+    sctx->count = executor->execWithSpark(data, size, 0);
+}
+
+void RuntimeBase::iexecWithSpark(QueryContext *ctx, SparkContext *sctx) {
+    executor->setSparkContext(sctx, ctx);
+
+    for (int i = 0; i < partitions.size() - 1; i++) {
+        SIZE_TYPE off = partitions[i], nextOff = partitions[i + 1];
+        SIZE_TYPE rsize = nextOff - off;
+        ios->readFile(off, rsize);
+        data = ios->getData();
+        SIZE_TYPE start = executor->preExec(data, rsize);
+        sctx->count = executor->execWithSpark(data, rsize, start);
+        executor->postExec();
+    }
 }
 
 void RuntimeBase::makePartitions(SIZE_TYPE size) {
-    SIZE_TYPE psize = size / PARTITION_SIZE;
-    SIZE_TYPE i = 0;
     SIZE_TYPE offset = 0;
-    while (i < psize) {
-        partitions.push_back(offset);
-        if (i >= psize) {
-            offset += size - offset;
-        } else {
+    while (offset < size) {
+        if (size - offset > PARTITION_SIZE) {
+            partitions.push_back(offset);
             offset += PARTITION_SIZE;
+        } else {
+            partitions.push_back(offset);
+            offset = size;
         }
-        i++;
     }
-    partitions.push_back(size - 1);
+    partitions.push_back(size);
 }
 
 void RuntimeExpression::constructDFA(const NFA* nfa, const NFA* regexNFA) {

@@ -7,5 +7,5 @@ public class VlexNative {
         System.loadLibrary("vlex"); // Load native library at runtime
     }
 
-    public native long parse(String filename, int filename_length, ByteBuffer addr, int sizeInRow, int varSize, String pattern, int pattern_length, boolean isKeys, String query, int query_length);
+    public native long parse(ByteBuffer addr, int sizeInRow, int colSize, int varSize, String command, int command_length, String query, int query_length);
 }

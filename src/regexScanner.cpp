@@ -638,7 +638,7 @@ static const YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    2,    2,    2,    3,    4,    2,    3,    5,
-        6,    7,    8,    1,    9,   10,    2,   11,   12,   12,
+        6,    7,    8,    2,    9,   10,    2,   11,   12,   12,
        12,   12,   12,   12,   12,   12,   12,    2,    2,   13,
         2,   14,   15,   16,   17,   18,   17,   19,   20,   17,
        17,   17,   21,   17,   17,   22,   17,   23,   24,   25,
@@ -756,15 +756,17 @@ char *yytext;
 #include "parser/regex/regexParser.hpp"
 #include "parser/regex/regexNode.hpp"
 
+#include <iostream>
+
 #undef yywrap
 #define yywrap() 1
 
 using rtoken = regex_yytokentype;
 
 #define yyterminate()   return rtoken::REOF_TK
-#line 766 "regexScanner.cpp"
-#define YY_NO_UNISTD_H 1
 #line 768 "regexScanner.cpp"
+#define YY_NO_UNISTD_H 1
+#line 770 "regexScanner.cpp"
 
 #define INITIAL 0
 
@@ -979,10 +981,10 @@ YY_DECL
 		}
 
 	{
-#line 22 "generator/regex.lex"
+#line 24 "generator/regex.lex"
 
 
-#line 986 "regexScanner.cpp"
+#line 988 "regexScanner.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1037,97 +1039,97 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 24 "generator/regex.lex"
+#line 26 "generator/regex.lex"
 return rtoken::RINT_TK;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 25 "generator/regex.lex"
+#line 27 "generator/regex.lex"
 return rtoken::RDOUBLE_TK;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 26 "generator/regex.lex"
+#line 28 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 27 "generator/regex.lex"
+#line 29 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 28 "generator/regex.lex"
+#line 30 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 29 "generator/regex.lex"
+#line 31 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 30 "generator/regex.lex"
+#line 32 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 31 "generator/regex.lex"
+#line 33 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 32 "generator/regex.lex"
+#line 34 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 33 "generator/regex.lex"
+#line 35 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 34 "generator/regex.lex"
+#line 36 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 35 "generator/regex.lex"
+#line 37 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 36 "generator/regex.lex"
+#line 38 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 37 "generator/regex.lex"
+#line 39 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 38 "generator/regex.lex"
+#line 40 "generator/regex.lex"
 return *yytext;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 39 "generator/regex.lex"
+#line 41 "generator/regex.lex"
 return rtoken::RALPH_TK;
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 40 "generator/regex.lex"
+#line 42 "generator/regex.lex"
 return rtoken::RCAPT_TK;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 41 "generator/regex.lex"
+#line 43 "generator/regex.lex"
 return rtoken::RDIGIT_TK;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 43 "generator/regex.lex"
+#line 45 "generator/regex.lex"
 {
     char buf[128];
     char rst[128];
@@ -1145,7 +1147,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 58 "generator/regex.lex"
+#line 60 "generator/regex.lex"
 {
     int size = strlen(yytext);
     if (size > 1){
@@ -1164,7 +1166,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 74 "generator/regex.lex"
+#line 76 "generator/regex.lex"
 {
     char buf1[128];
     char buf2[128];
@@ -1180,10 +1182,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 86 "generator/regex.lex"
+#line 88 "generator/regex.lex"
 ECHO;
 	YY_BREAK
-#line 1187 "regexScanner.cpp"
+#line 1189 "regexScanner.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2152,6 +2154,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 86 "generator/regex.lex"
+#line 88 "generator/regex.lex"
 
 

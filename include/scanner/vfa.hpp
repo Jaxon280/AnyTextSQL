@@ -51,7 +51,7 @@ class VectFA {
     inline const std::vector<VectFA::SubMatchStates> &getSubMatches() const {
         return subMatches;
     }
-    inline const std::map<ST_TYPE, DFA_ST_TYPE> &getStateMap() const {
+    inline const std::map<ST_TYPE, ST_TYPE> &getStateMap() const {
         return dfas2vfas;
     }
 #if (defined CODEGEN)
@@ -62,12 +62,18 @@ class VectFA {
     std::vector<ST_TYPE> constructQs() const;
     std::vector<Qstar> constructQstars() const;
     std::set<ST_TYPE> constructQtilde(const std::set<ST_TYPE> &QstarSource);
+    // std::vector<std::list<ST_TYPE>> constructQtildeChain(std::set<ST_TYPE> &Qtilde);
     void constructDeltaOrds(const std::vector<Qstar> &Qstar_set,
                             std::map<ST_TYPE, int> opt_poses);
     int constructDeltaRanges(Delta *trans, const std::vector<int> &chars);
     void constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa);
+    // void constructDeltaAnyMasks(std::vector<std::list<ST_TYPE>> &QtildeChains);
     void constructDeltaCs(const std::set<ST_TYPE> &QstarSource,
                           const std::set<ST_TYPE> &Qtilde);
+    void mapStateDFA2VFA();
+    void constructSubmatches(const std::vector<DFA::SubMatchStates> &SMSs);
+
+    std::map<ST_TYPE, std::vector<ST_TYPE>> Qtilde;
 
     std::vector<std::vector<ST_TYPE>> transTable;
     std::set<ST_TYPE> states;
@@ -75,7 +81,6 @@ class VectFA {
     std::vector<Qlabel> qlabels;
     std::vector<VectFA::SubMatchStates> subMatches;
     std::set<ST_TYPE> charSMStates;
-    std::map<ST_TYPE, ST_TYPE> old2new;
-    std::map<ST_TYPE, DFA_ST_TYPE> dfas2vfas;
+    std::map<ST_TYPE, ST_TYPE> dfas2vfas;
 };
 }  // namespace vlex

@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     edu_utokyo_vlex_VlexNative
  * Method:    parse
- * Signature: (Ljava/lang/String;ILjava/nio/ByteBuffer;IILjava/lang/String;IZLjava/lang/String;I)J
+ * Signature: (Ljava/nio/ByteBuffer;IIILjava/lang/String;ILjava/lang/String;I)J
  */
 JNIEXPORT jlong JNICALL Java_edu_utokyo_vlex_VlexNative_parse
-  (JNIEnv *, jobject, jstring, jint, jobject, jint, jint, jstring, jint, jboolean, jstring, jint);
+  (JNIEnv *, jobject, jobject, jint, jint, jint, jstring, jint, jstring, jint);
 
 #ifdef __cplusplus
 }
