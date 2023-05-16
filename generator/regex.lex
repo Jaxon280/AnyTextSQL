@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "parser/regex/regexParser.hpp"
-#include "parser/regex/regexNode.hpp"
+#include "parser/regex/regex-node.hpp"
+#include "parser/regex/regex-parser.hpp"
 
 #include <iostream>
 

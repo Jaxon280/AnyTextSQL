@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common.hpp"
-#include "sets.hpp"
+#include "common/common.hpp"
+#include "scanner/sets.hpp"
 
 namespace vlex {
 class PFA {

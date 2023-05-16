@@ -1,8 +1,8 @@
 #pragma once
 
-#include "common.hpp"
-#include "table.hpp"
-#include "parser/nfa.hpp"
+#include "common/common.hpp"
+#include "parser/inter/nfa.hpp"
+#include "runner/table.hpp"
 
 namespace vlex {
 class DFA {

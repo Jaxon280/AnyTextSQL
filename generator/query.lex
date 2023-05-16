@@ -1,7 +1,7 @@
 %{
-#include "common.hpp"
-#include "parser/query/queryParser.hpp"
-#include "parser/query/queryNode.hpp"
+#include "common/common.hpp"
+#include "parser/query/query-parser.hpp"
+#include "parser/query/query-node.hpp"
 
 #undef yywrap
 #define yywrap() 1

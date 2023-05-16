@@ -10,52 +10,51 @@ EXECFLAGS = -O3
 DEBUGFLAGS = -O0 -g
 DEBUGFLAGS += -Wall -Wextra
 BENCHFLAGS = -DBENCH
-INCLUDES = -I./include -I./include/parser/query -I./include/parser/regex
+INCLUDES = -I./include
 FLAGS = $(CFLAGS) $(INCLUDES) $(QEXECFLAGS)
+SDIR = src
 
-CPP_CODES = $(filter-out src/codegen.cpp, $(filter-out src/queryVExecutor.cpp, $(wildcard src/*.cpp))) main.cpp
+CPP_CODES = $(filter-out src/codegen.cpp, $(filter-out src/query-vexecutor.cpp, $(wildcard src/*.cpp))) main.cpp
 
 ifeq ($(QEXECFLAGS), -DVECEXEC)
-	CPP_CODES += src/queryVExecutor.cpp
+	CPP_CODES += src/query-vexecutor.cpp
 endif
 
 PROGRAM = vlex.exe
 
-GEN = cparser clexer rparser rlexer qparser qlexer
+GEN_CODES = $(SDIR)/command-parser.cpp $(SDIR)/command-scanner.cpp $(SDIR)/regex-parser.cpp $(SDIR)/regex-scanner.cpp $(SDIR)/query-parser.cpp $(SDIR)/query-scanner.cpp
 
 all: $(PROGRAM)
 
-$(PROGRAM): $(CPP_CODES)
-	$(MAKE) $(GEN)
+$(PROGRAM): $(CPP_CODES) $(GEN_CODES)
 	$(CC) $(FLAGS) $(EXECFLAGS) $(BENCHFLAGS)  $^ -o $@
 
-debug: $(CPP_CODES)
-	$(MAKE) $(GEN)
-	$(CC) $(FLAGS) $(DEBUGFLAGS) $^ -o vlex_debug.exe
+debug: $(CPP_CODES) $(GEN_CODES)
+	$(CC) $(FLAGS) $(DEBUGFLAGS) $^ -o vlex-debug.exe
 
-cparser: generator/command.ypp
-	bison -d -ocommandParser.cpp generator/command.ypp
-	(mv commandParser.cpp src/; mv commandParser.hpp include/parser/cmd/;)
+$(SDIR)/command-parser.cpp: generator/command.ypp
+	bison -d -o command-parser.cpp $<
+	(mv -f command-parser.cpp $(SDIR)/; mv -f command-parser.hpp ../include/parser/cmd/;)
 
-clexer: generator/command.lex
-	flex -8 -ocommandScanner.cpp generator/command.lex
-	(mv commandScanner.cpp src/)
+$(SDIR)/command-scanner.cpp: generator/command.lex
+	flex -8 -o command-scanner.cpp $<
+	(mv -f command-scanner.cpp $(SDIR)/)
 
-rparser: generator/regex.ypp
-	bison -d -oregexParser.cpp generator/regex.ypp
-	(mv regexParser.cpp src/; mv regexParser.hpp include/parser/regex/;)
+$(SDIR)/regex-parser.cpp: generator/regex.ypp
+	bison -d -o regex-parser.cpp $<
+	(mv -f regex-parser.cpp $(SDIR)/; mv -f regex-parser.hpp ../include/parser/regex/;)
 
-rlexer: generator/regex.lex
-	flex -8 -oregexScanner.cpp generator/regex.lex
-	(mv regexScanner.cpp src/)
+$(SDIR)/regex-scanner.cpp: generator/regex.lex
+	flex -8 -o regex-scanner.cpp $<
+	(mv -f regex-scanner.cpp $(SDIR)/)
 
-qparser: generator/query.ypp
-	bison -d -oqueryParser.cpp generator/query.ypp
-	(mv queryParser.cpp src/; mv queryParser.hpp include/parser/query/;)
+$(SDIR)/query-parser.cpp: generator/query.ypp
+	bison -d -o query-parser.cpp $<
+	(mv -f query-parser.cpp $(SDIR)/; mv -f query-parser.hpp ../include/parser/query/;)
 
-qlexer: generator/query.lex
-	flex -8 -oqueryScanner.cpp generator/query.lex
-	(mv queryScanner.cpp src/)
+$(SDIR)/query-scanner.cpp: generator/query.lex
+	flex -8 -o query-scanner.cpp $<
+	(mv -f query-scanner.cpp $(SDIR)/)
 
 run:
 	./$(PROGRAM)

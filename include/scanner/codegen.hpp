@@ -1,7 +1,9 @@
 #pragma once
 
-#include "common.hpp"
-#include "scanner/interface.hpp"
+// We no longer support codegen because VFA execution system is swtiched to runtime-base approach.
+
+#include "common/common.hpp"
+#include "scanner/vfa.hpp"
 
 namespace vlex {
 

@@ -1,16 +1,31 @@
 #pragma once
 
-#include "common.hpp"
-#if (defined CODEGEN)
-#include "scanner/codegen.hpp"
-#endif
+#include "common/common.hpp"
 #include "scanner/dfa.hpp"
-#include "scanner/interface.hpp"
 #include "scanner/pfa.hpp"
+#include "scanner/sets.hpp"
 
 #define ORD_LENGTH 4
 
 namespace vlex {
+struct Delta {
+    ST_TYPE startState;
+    std::string str;
+    std::string backStr;  // for delta_ord
+    std::vector<ST_TYPE> charTable;// for delta_{any, c}
+    std::vector<ST_TYPE> rTable; // for delta_ord
+    // int count; // for *_MASK
+};
+
+typedef enum _simd_kind { ORDERED, ANY, RANGES, CMPEQ, C, INV } SIMDKind;
+
+struct Qlabel {
+    SIMDKind kind;
+    Delta *delta;
+
+    bool isAccept = false;
+};
+
 class VectFA {
    public:
     struct SubMatchStates {
@@ -45,9 +60,6 @@ class VectFA {
     inline const std::map<ST_TYPE, ST_TYPE> &getStateMap() const {
         return dfas2vfas;
     }
-#if (defined CODEGEN)
-    int codegen(const std::string &filename);
-#endif
 
    private:
     std::vector<ST_TYPE> constructQs() const;

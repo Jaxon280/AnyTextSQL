@@ -9,10 +9,7 @@ object App {
     def main(args: Array[String]): Unit = {
         val spark = SparkSession.builder.appName("Vlex Spark").getOrCreate()
         import spark.implicits._
-        val query = Query()
-
-        val json1 = Metadata.fromJson("""{"length": 64}""")     
-        val json2 = Metadata.fromJson("""{"length": 64}""")        
+        val query = Query()        
         val startTime = System.currentTimeMillis()
         // val df = spark.read.format("json").load{"../sample.json"}
         // val df1 = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("b_business_id", StringType, nullable=false, json).add("b_stars", DoubleType)).options(Map("command" -> ".scan yelp_b.json -k ['\"business_id\":\"(?P<b_business_id>[^\"]+)\"', '\"stars\":(?P<b_stars>DOUBLE)'] -t yelp_b", "query" ->"select b_business_id, b_stars from yelp_b where b_stars > 3.5 group by b_business_id;")).load("yelp_b.json")
@@ -38,15 +35,6 @@ object App {
         // println(df.filter($"text".contains("Donald Trump") && $"created_at".contains("2023")).count())
         // spark.time(df.filter($"text".contains("Obama")).select($"author_id", $"retweet_count").groupBy($"author_id").agg(sum($"retweet_count")).show(truncate=false))
      
-
-        // Vlex / Twitter / sum retweets by author
-        // val df = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("author_id", StringType, nullable=false, json1).add("retweet_count", LongType).add("text", StringType, nullable=false, json2)).options(Map("command" -> ".scan tweet_34GB.json -k ['\"author_id\": \"(?P<author_id>[^\"]+)\"', '\"retweet_count\": (?P<retweet_count>INT)', '\"text\": \"(?P<text>[^\"]+)\"'] -t tweet", "query" ->"select author_id, SUM(retweet_count) from tweet where text LIKE '%Obama%' group by author_id;")).load("tweet_34GB.json")
-        // spark.time(df.filter($"text".contains("Obama")).select($"author_id", $"retweet_count").groupBy($"author_id").agg(sum($"retweet_count")).show(truncate=false))
-
-        // Vlex / Twitter / ç
-        // val df = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("created_at", StringType, nullable=false, json1).add("text", StringType, nullable=false, json2)).options(Map("command" -> ".scan tweet_34GB.json -k ['\"created_at\": \"(?P<created_at>[^\"]+)\"', '\"text\": \"(?P<text>[^\"]+)\"'] -t tweet", "query" ->"select text from tweet where text LIKE '%Donald Trump%' AND created_at LIKE '%0913%';")).load("tweet_34GB.json")
-        // println(df.filter($"text".contains("Donald Trump") && $"created_at".contains("2023")).count())
-        
         // xSIG Twitter
         // val df = spark.read.format("edu.utokyo.vlex").options(Map("command" -> ".scan tweet.json -k [ '\"id\": \"[^\"]*\"', '\"text\": \"[^\"]*football[^\"]*\"'] -t tweet", "query" ->"select * from tweet;")).load("tweet.json")
         // println(df.count())
@@ -63,8 +51,9 @@ object App {
         // val df = spark.read.format("edu.utokyo.vlex").options(Map("command" -> ".scan review.csv -e '\\n5,[^,]*,[^,]*,\"[^\"]*lol[^\"]*\",[^,]*,DOUBLE,[^\\n]*' -t usac", "query" ->"select * from usac;")).load("review.csv")
         // println(df.count())
 
-        val df = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("city", StringType, nullable=false, json1)).options(Map("command" -> ".scan US_Accidents_Dec21_updated.csv -e '\\n[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,(?P<city>[^,]*),' -t usac", "query" ->"select city from usac;")).load("US_Accidents_Dec21_updated.csv")
-        println(df.filter($"city".contains("Cleveland")).count())
+        // val df = spark.read.format("edu.utokyo.vlex").schema(new StructType().add("city", StringType, nullable=false, json1)).options(Map("command" -> ".scan US_Accidents_Dec21_updated.csv -e '\\n[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,(?P<city>[^,]*),' -t usac", "query" ->"select city from usac;")).load("US_Accidents_Dec21_updated.csv")
+        // println(df.filter($"city".contains("Cleveland")).count())
+        query.vlexTwitter3(spark)
         
         val totalTime = System.currentTimeMillis() - startTime
         println("Job Time: " + totalTime / 1000.0)

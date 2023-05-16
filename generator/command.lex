@@ -1,7 +1,7 @@
 %{
-#include "common.hpp"
-#include "parser/cmd/commandParser.hpp"
-#include "parser/cmd/commandNode.hpp"
+#include "common/common.hpp"
+#include "parser/cmd/command-parser.hpp"
+#include "parser/cmd/command-node.hpp"
 
 #undef yywrap
 #define yywrap() 1

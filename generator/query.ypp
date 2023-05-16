@@ -22,7 +22,7 @@ int query_yyerror(vlex::QueryContext &ctx, const char *s);
 
 %code requires
 {
-#include "parser/query.hpp"
+#include "parser/inter/query.hpp"
 }
 
 %union
@@ -37,7 +37,7 @@ int query_yyerror(vlex::QueryContext &ctx, const char *s);
     vlex::StringList *slist;
 };
 %{
-#include "parser/query/queryNode.hpp"
+#include "parser/query/query-node.hpp"
 %}
 %token <dvalue> DOUBLE_TK
 %token <ivalue> INT_TK

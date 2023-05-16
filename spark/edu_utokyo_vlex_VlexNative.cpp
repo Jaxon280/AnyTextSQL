@@ -1,13 +1,10 @@
 #include "edu_utokyo_vlex_VlexNative.h"
 #include <jni.h>
 
-#include "command.hpp"
-#include "common.hpp"
-#include "parser/command.hpp"
-#include "spark.hpp"
-
-#include "sys/types.h"
-#include "unistd.h"
+#include "common/spark.hpp"
+#include "common/common.hpp"
+#include "parser/inter/command.hpp"
+#include "runner/command.hpp"
 
 JNIEXPORT jlong JNICALL Java_edu_utokyo_vlex_VlexNative_parse
   (JNIEnv *env, jobject, jobject buffer, jint sizeInRow, jint colSize, jint varSize, jstring command_java, jint command_length, jstring query_java, jint query_length) {

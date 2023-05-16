@@ -1,7 +1,5 @@
 #include "scanner/vfa.hpp"
 
-#include <iostream>
-
 namespace vlex {
 
 std::vector<ST_TYPE> VectFA::constructQs() const {

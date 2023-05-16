@@ -1,12 +1,12 @@
 #pragma once
 
-#include "common.hpp"
-#include "parser/cmd/commandNode.hpp"
-#include "parser/cmd/commandParser.hpp"
-#include "parser/query/queryNode.hpp"
-#include "parser/query/queryParser.hpp"
-#include "parser/regex/regexNode.hpp"
-#include "parser/regex/regexParser.hpp"
+#include "common/common.hpp"
+#include "parser/cmd/command-node.hpp"
+#include "parser/cmd/command-parser.hpp"
+#include "parser/query/query-node.hpp"
+#include "parser/query/query-parser.hpp"
+#include "parser/regex/regex-node.hpp"
+#include "parser/regex/regex-parser.hpp"
 
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 typedef size_t yy_size_t;

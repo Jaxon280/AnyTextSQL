@@ -8,7 +8,7 @@
 
 %code requires
 {
-#include "parser/nfa.hpp"
+#include "parser/inter/nfa.hpp"
 }
 
 %parse-param { vlex::NFA** nfa }
@@ -37,7 +37,7 @@ int regex_yyerror(vlex::NFA **nfa, const char *s);
 };
 
 %{
-#include "parser/regex/regexNode.hpp"
+#include "parser/regex/regex-node.hpp"
 %}
 %token <cvalue> RCHAR_TK
 %token <ivalue> RCNUM_TK

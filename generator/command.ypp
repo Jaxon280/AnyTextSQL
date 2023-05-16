@@ -22,7 +22,7 @@ int command_yyerror(vlex::CommandContext &ctx, const char *s);
 
 %code requires
 {
-#include "parser/command.hpp"
+#include "parser/inter/command.hpp"
 }
 
 %union
@@ -31,7 +31,7 @@ int command_yyerror(vlex::CommandContext &ctx, const char *s);
     vlex::StringList *slist;
 };
 %{
-#include "parser/cmd/commandNode.hpp"
+#include "parser/cmd/command-node.hpp"
 %}
 %token <svalue> CFILENAME_TK CIDENTIFIER_TK CPATTERN_TK ',' '[' ']'
 %token CSCAN_TK CTABLE_TK CEXP_TK CKEYS_TK
