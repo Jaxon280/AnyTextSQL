@@ -53,7 +53,7 @@ std::vector<Qstar> VectFA::constructQstars() const {
                     if (N > 1) goto end_dfs;
                 }
             }
-            if (charSMStates.find(qnext) != charSMStates.end()) break;
+            if (SMStates.find(qnext) != SMStates.end()) break;
             Qs.states.insert(qnext);
             Qs.sink = qnext;
             Qs.str += (char)cnext;
@@ -292,7 +292,7 @@ void VectFA::constructDeltaAnys(std::set<ST_TYPE> &Qtilde, const PFA &pfa) {
 void VectFA::constructDeltaCs(const std::set<ST_TYPE> &QstarSource,
                               const std::set<ST_TYPE> &Qtilde) {
     for (ST_TYPE q : states) {
-        if (qlabels[q].kind != ORDERED && qlabels[q].kind != ORDERED && qlabels[q].kind != ANY && qlabels[q].kind != RANGES) {
+        if (qlabels[dfas2vfas[q]].kind != ORDERED && qlabels[dfas2vfas[q]].kind != ANY && qlabels[dfas2vfas[q]].kind != RANGES) {
             Delta *new_c = new Delta;
             new_c->startState = dfas2vfas[q];
             new_c->charTable.resize(ASCII_SZ);
@@ -353,18 +353,10 @@ void VectFA::constructSubmatches(const std::vector<DFA::SubMatchStates> &SMSs) {
         vsms.id = sms.id;
         vsms.type = sms.type;
         for (int ss : sms.startStates) {
-            if (Qtilde.find(ss) != Qtilde.end()) {
-                vsms.anyStartStates.insert(dfas2vfas[ss]);
-            } else {
-                vsms.charStartStates.insert(dfas2vfas[ss]);
-            }
+            vsms.startStates.insert(dfas2vfas[ss]);
         }
-        for (int es : sms.endStates) {
-            if (Qtilde.find(es) != Qtilde.end()) {
-                vsms.anyEndStates.insert(dfas2vfas[es]);
-            } else {
-                vsms.charEndStates.insert(dfas2vfas[es]);
-            }
+        for (int es : sms.states) {
+            vsms.states.insert(dfas2vfas[es]);
         }
         subMatches.push_back(vsms);
     }
@@ -380,10 +372,7 @@ void VectFA::constructVFA(DFA &dfa, DATA_TYPE *data, SIZE_TYPE size) {
     const std::vector<DFA::SubMatchStates> &SMSs = dfa.getSubMatches();
     for (const DFA::SubMatchStates &sms : SMSs) {
         for (int ss : sms.startStates) {
-            charSMStates.insert(ss);
-        }
-        for (int es : sms.endStates) {
-            charSMStates.insert(es);
+            SMStates.insert(ss);
         }
     }
 

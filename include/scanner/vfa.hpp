@@ -16,27 +16,18 @@ class VectFA {
     struct SubMatchStates {
         int id;
         Type type;
-        int predUUID;
-        std::set<int> predIDs;
-        std::set<DFA_ST_TYPE> charStartStates;
-        std::set<DFA_ST_TYPE> charEndStates;
-        std::set<DFA_ST_TYPE> anyStartStates;
-        std::set<DFA_ST_TYPE> anyEndStates;
+        // int predUUID;
+        // std::set<int> predIDs;
+        std::set<DFA_ST_TYPE> startStates;
+        std::set<DFA_ST_TYPE> states;
 
-        SubMatchStates(int _id, Type _type, int _predUUID,
-                       std::set<int> _predIDs,
-                       std::set<DFA_ST_TYPE> _charStartStates,
-                       std::set<DFA_ST_TYPE> _charEndStates,
-                       std::set<DFA_ST_TYPE> _anyStartStates,
-                       std::set<DFA_ST_TYPE> _anyEndStates)
+        SubMatchStates(int _id, Type _type,
+                       std::set<DFA_ST_TYPE> _startStates,
+                       std::set<DFA_ST_TYPE> _states)
             : id(_id),
               type(_type),
-              predUUID(_predUUID),
-              predIDs(_predIDs),
-              charStartStates(_charStartStates),
-              charEndStates(_charEndStates),
-              anyStartStates(_anyStartStates),
-              anyEndStates(_anyEndStates) {}
+              startStates(_startStates),
+              states(_states) {}
         SubMatchStates() {}
     };
     VectFA(const DFA &dfa);
@@ -80,7 +71,7 @@ class VectFA {
     std::set<ST_TYPE> acceptStates;
     std::vector<Qlabel> qlabels;
     std::vector<VectFA::SubMatchStates> subMatches;
-    std::set<ST_TYPE> charSMStates;
+    std::set<ST_TYPE> SMStates;
     std::map<ST_TYPE, ST_TYPE> dfas2vfas;
 };
 }  // namespace vlex

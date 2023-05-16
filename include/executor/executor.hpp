@@ -84,11 +84,9 @@ class Executor {
     SIMDKind *kindTable;       // State -> Kind
     ST_TYPE *rTable;           // State -> State
     ST_TYPE **charTable;       // State * char -> State
-    int *anyStartTable;        // State -> sub id or 0
-    int *anyEndTable;          // State -> sub id or 0
-    int *charStartTable;       // State -> sub id or 0
-    int *charEndTable;         // State -> sub id or 0
-    uint32_t *endPredIdTable;  // State -> Text Pred Id
+    int *startTable;        // State -> sub id
+    BitSet *endTable;       // State -> sub id sets
+    // uint32_t *endPredIdTable;  // State -> Text Pred Id
     std::set<ST_TYPE> acceptStates;
 
     // Submatch
@@ -102,8 +100,7 @@ class Executor {
         SIZE_TYPE end;
     };
 
-    std::stack<SubMatchNode> startStack;
-    SubMatchNode *end;
+    SubMatchNode *startSMS;
     SubMatch *subMatches;  // id -> SubMatch
     int subMatchSize;
 
@@ -137,8 +134,6 @@ class Executor {
 
     // WHERE clause
     PredTree *ptree;
-    BitSet *textPredBits;
-    int textPredNum;
     // Aggregate functions and GROUP BY clause
     int gKeySize;
     Key *gKeys;

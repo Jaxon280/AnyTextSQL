@@ -192,7 +192,7 @@ NFA *buildDOUBLE() {
 }
 
 NFA *buildSubmatchNFA(NFA *nfa, const char *name) {
-    SubMatch *new_sub = new SubMatch(nfa->initState, nfa->acceptState, 0,
+    SubMatch *new_sub = new SubMatch(nfa->initState, nfa->acceptState - nfa->initState + 1,
                                      strdup(name), nfa->type, nfa->regex);
     new_sub->next = nfa->subms;
     nfa->subms = new_sub;
