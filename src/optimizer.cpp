@@ -124,8 +124,7 @@ NFA *QueryOptimizer::optimizeNFA(NFA *originalNFA) {
                 snfa.predNFAs.push_back(*pNFA);
 
                 SubMatch *new_sms = new SubMatch(
-                    pNFA->snfas2nfas[pNFA->start], pNFA->snfas2nfas[pNFA->end],
-                    opt->textPredId, snfa.tsms->name, TEXT_PT, pNFA->regex);
+                    pNFA->snfas2nfas[pNFA->start], pNFA->snfas2nfas[pNFA->end], snfa.tsms->name, TEXT_PT, pNFA->regex);
                 new_sms->next = subms;
                 subms = new_sms;
             }

@@ -2,20 +2,28 @@
 
 #include "common.hpp"
 
+const uint8_t nmask = 63;
+
 class BitSet {
    public:
     BitSet() { reset(); }
-    inline bool find(int n) const {
-        uint32_t b = (1UL << (n - 1));
-        return ((bit & b) != 0UL) ? true : false;
+    inline bool find(const uint8_t n) const {
+        int nn = n & nmask;
+        unsigned long long b = (1ULL << nn);
+        return ((data & b) != 0ULL) ? true : false;
     }
-    inline bool find(uint32_t n) const {
-        return (bit & n) > 0UL ? true : false;
+    inline void add(const uint8_t n) {
+        int nn = n & nmask;
+        data |= (1ULL << nn);
     }
-    inline void add(int n) { bit |= (1UL << (n - 1)); }
-    inline void add(uint32_t n) { bit |= n; }
-    inline void reset() { bit = 0UL; }
+    inline void remove(const uint8_t n) {
+        int nn = n & nmask;
+        data &= (UINT64_MAX - (1ULL << nn));
+    }
+    inline void reset() {
+        data = 0ULL;
+    }
 
    private:
-    uint32_t bit;
+    unsigned long long data;
 };

@@ -32,11 +32,8 @@ void Executor::setTransTable(const std::vector<Qlabel> &qlabels,
 
 void Executor::setSubMatchTable(
     const std::vector<VectFA::SubMatchStates> &subMatchStates, int stateSize) {
-    anyStartTable = new int[stateSize]();
-    anyEndTable = new int[stateSize]();
-    charStartTable = new int[stateSize]();
-    charEndTable = new int[stateSize]();
-    endPredIdTable = new uint32_t[stateSize]();
+    startTable = new int[stateSize]();
+    endTable = new BitSet[stateSize]();
 
     std::set<int> sset;
     for (const VectFA::SubMatchStates &sms : subMatchStates) {
@@ -46,31 +43,11 @@ void Executor::setSubMatchTable(
     keyTypes = new Type[subMatchSize];
     for (const VectFA::SubMatchStates &sms : subMatchStates) {
         keyTypes[sms.id] = sms.type;
-        for (int ss : sms.charStartStates) {
-            charStartTable[ss] = sms.id + 1;
+        for (int ss : sms.startStates) {
+            startTable[ss] = sms.id + 1;
         }
-        for (int es : sms.charEndStates) {
-            charEndTable[es] = sms.id + 1;
-            if (sms.predIDs.size() > 0) {
-                uint32_t pid = 0UL;
-                for (int pi : sms.predIDs) {
-                    pid |= (1UL << (pi - 1));
-                }
-                endPredIdTable[es] = pid;
-            }
-        }
-        for (int ss : sms.anyStartStates) {
-            anyStartTable[ss] = sms.id + 1;
-        }
-        for (int es : sms.anyEndStates) {
-            anyEndTable[es] = sms.id + 1;
-            if (sms.predIDs.size() > 0) {
-                uint32_t pid = 0UL;
-                for (int pi : sms.predIDs) {
-                    pid |= (1UL << (pi - 1));
-                }
-                endPredIdTable[es] = pid;
-            }
+        for (int es : sms.states) {
+            endTable[es].add(sms.id + 1);
         }
     }
 }
@@ -121,7 +98,7 @@ void Executor::setFA(VectFA *vfa, SIZE_TYPE _start) {
     const std::vector<VectFA::SubMatchStates> &subMatchStates =
         vfa->getSubMatches();
     setSubMatchTable(subMatchStates, stateSize);
-    end = new SubMatchNode;
+    startSMS = new SubMatchNode;
     if (subMatchSize > 0) {
         subMatches = new SubMatch[subMatchSize];
     } else {
@@ -201,8 +178,6 @@ void Executor::setStatements(const StatementList *stmts) {
 
 void Executor::setSelections(QueryContext *query) {
     ptree = query->getPredTree();
-    textPredNum = query->getTextPredNum();
-    textPredBits = new BitSet;
 }
 
 void Executor::setAggregations(const std::vector<Key> &gKeyVec) {
@@ -269,9 +244,6 @@ void Executor::setSparkContext(SparkContext *sctx, QueryContext *qctx) {
         varlens[ci] = sctx->varCols[ci].size;
         varoffsets[ci] = sctx->varCols[ci].offset;
     }
-
-    // textPredNum = qctx->getTextPredNum();
-    // textPredBits = new BitSet;
 }
 
 void Executor::cmpestriOrd(ST_TYPE curState) {
@@ -295,8 +267,8 @@ loop:
 }
 
 void Executor::cmpestriAny(ST_TYPE curState) {
-    if (anyStartTable[curState] > 0) {
-        startSubMatch(anyStartTable[curState]);
+    if (startTable[curState] > 0) {
+        startSubMatch(startTable[curState]);
     }
 loop:
     if (i >= size) return;
@@ -309,32 +281,19 @@ loop:
         goto loop;
     }
     i += r;
-    if (anyEndTable[curState] > 0) {
-        endSubMatch(anyEndTable[curState]);
-        // if (endPredIdTable[curState] > 0) {
-        //     textPredBits->add(endPredIdTable[curState]);
-        // } 
-    }
     if (ctx.currentState == INIT_STATE) {
         resetContext();
     }
-
-    if (charStartTable[ctx.currentState] > 0) {
-        startSubMatch(charStartTable[ctx.currentState]);
-    }
     if (i >= size) return;
     ctx.currentState = charTable[curState][(int)data[i++]];
-    if (charEndTable[ctx.currentState] > 0) {
-        endSubMatch(charEndTable[ctx.currentState]);
-        // if (endPredIdTable[curState] > 0) {
-        //     textPredBits->add(endPredIdTable[curState]);
-        // } 
+    if (startSMS->id > 0 && !endTable[ctx.currentState].find(startSMS->id)) {
+        endSubMatch(startSMS->id);
     }
 }
 
 void Executor::cmpestriRanges(ST_TYPE curState) {
-    if (anyStartTable[curState] > 0) {
-        startSubMatch(anyStartTable[curState]);
+    if (startTable[curState] > 0) {
+        startSubMatch(startTable[curState]);
     }
 loop:
     if (i >= size) return;
@@ -347,26 +306,13 @@ loop:
         goto loop;
     }
     i += r;
-    if (anyEndTable[curState] > 0) {
-        endSubMatch(anyEndTable[curState]);
-        // if (endPredIdTable[curState] > 0) {
-        //     textPredBits->add(endPredIdTable[curState]);
-        // } 
-    }
     if (ctx.currentState == INIT_STATE) {
         resetContext();
     }
-
-    if (charStartTable[ctx.currentState] > 0) {
-        startSubMatch(charStartTable[ctx.currentState]);
-    }
     if (i >= size) return;
     ctx.currentState = charTable[curState][(int)data[i++]];
-    if (charEndTable[ctx.currentState] > 0) {
-        endSubMatch(charEndTable[ctx.currentState]);
-        // if (endPredIdTable[curState] > 0) {
-        //     textPredBits->add(endPredIdTable[curState]);
-        // }
+    if (startSMS->id > 0 && !endTable[ctx.currentState].find(startSMS->id)) {
+        endSubMatch(startSMS->id);
     }
 }
 
@@ -441,43 +387,20 @@ loop:
 // }
 
 void Executor::startSubMatch(int id) {
-    if (end->id > 0) {
-        while (!startStack.empty()) {
-            if (startStack.top().id == end->id) {
-                subMatches[end->id - 1].start = startStack.top().index;
-                subMatches[end->id - 1].end = end->index;
-                break;
-            }
-            startStack.pop();
-        }
-        end->id = 0;
-    }
-    startStack.push({id, i});
+    startSMS->id = id;
+    startSMS->index = i;
 }
 
 void Executor::endSubMatch(int id) {
-    if (end->id > 0 && end->id != id) {
-        while (!startStack.empty()) {
-            if (startStack.top().id == end->id) {
-                subMatches[end->id - 1].start = startStack.top().index;
-                subMatches[end->id - 1].end = end->index;
-                startStack.pop();
-                break;
-            }
-            startStack.pop();
-        }
-    }
-    end->id = id;
-    end->index = i;
+    subMatches[id - 1].start = startSMS->index;
+    subMatches[id - 1].end = i - 1;
+    startSMS->id = 0;
 }
 
 void Executor::resetContext() {
     ctx.currentState = INIT_STATE, ctx.recentAcceptState = 0,
     ctx.recentAcceptIndex = 0;
-    end->id = 0;
-    while (!startStack.empty()) {
-        startStack.pop();
-    }
+    startSMS->id = 0;
 
     for (int si = 0; si < subMatchSize; si++) {
         subMatches[si].start = UINT64_MAX;
@@ -680,51 +603,7 @@ bool Executor::evalPred(const OpTree *tree) const {
                 return false;
             }
         } else if (tree->right->evalType == CONST) {
-            return textPredBits->find(tree->textPredId) ? true : false;
-            // return textPredResults[tree->textPredId] > 0 ? true : false;
-
-            // if (tree->opType == EQUAL) {
-            // SIMD_512iTYPE r =
-            //     _mm512_loadu_epi8(tree->right->constData.p + 1);
-            // SIMD_512iTYPE l =
-            //     _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
-            // uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
-            // if (__builtin_ffsll(~m | ((uint64_t)1 << 63)) >
-            //     tsize[tree->left->varKeyId]) {
-            //     return true;
-            // } else {
-            //     return false;
-            // }
-            // } else if (tree->opType == NEQUAL) {
-            // SIMD_512iTYPE r =
-            //     _mm512_loadu_epi8(tree->right->constData.p + 1);
-            // SIMD_512iTYPE l =
-            //     _mm512_loadu_epi8(tuple[tree->left->varKeyId].p);
-            // uint64_t m = _mm512_cmpeq_epi8_mask(l, r);
-            // if (__builtin_ffsll(m | ((uint64_t)1 << 63)) >
-            //     tsize[tree->left->varKeyId]) {
-            //     return true;
-            // } else {
-            //     return false;
-            // }
-            // } else {
-            // if (re2::RE2::FullMatch(
-            //         re2::StringPiece((char
-            //         *)tuple[tree->left->varKeyId].p,
-            //                          32),
-            //         pt1, &s, &t)) {
-            //     return true;
-            // } else {
-            //     return false;
-            // }
-            // if (std::regex_search(
-            //         std::string((char *)tuple[tree->left->varKey].p, 32),
-            //         pattern[tree->left->varKey])) {
-            //     return true;
-            // } else {
-            //     return false;
-            // }
-            // }
+            return true;
         }
     }
     return false;
@@ -1155,26 +1034,20 @@ SIZE_TYPE Executor::preExec(DATA_TYPE *_data, SIZE_TYPE _size) {
                     resetContext();
                 }
 
-                if (charStartTable[ctx.currentState] > 0) {
-                    startSubMatch(charStartTable[ctx.currentState]);
+                if (startTable[ctx.currentState] > 0) {
+                    startSubMatch(startTable[ctx.currentState]);
                 }
                 ctx.currentState = charTable[ctx.currentState][(int)data[i++]];
-                if (charEndTable[ctx.currentState] > 0) {
-                    endSubMatch(charEndTable[ctx.currentState]);
+                if (startSMS->id > 0 && !endTable[ctx.currentState].find(startSMS->id)) {
+                    endSubMatch(startSMS->id);
                 }
                 break;
             default:
                 if (ctx.recentAcceptState) {
-                    if (end->id > 0) {
-                        while (!startStack.empty()) {
-                            if (startStack.top().id == end->id) {
-                                subMatches[end->id - 1].start =
-                                    startStack.top().index;
-                                subMatches[end->id - 1].end = end->index;
-                            }
-                            startStack.pop();
-                        }
-                        end->id = 0;
+                    if (startSMS->id > 0) {
+                        subMatches[startSMS->id - 1].start = startSMS->index;
+                        subMatches[startSMS->id - 1].end = i - 1;
+                        startSMS->id = 0;
                     }
                     // preStoreToDataFrame();
                     if (ctx.recentAcceptIndex > prevStart) {
@@ -1250,33 +1123,23 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE start) {
             case C:
                 if (ctx.currentState == INIT_STATE) {
                     resetContext();
-                    textPredBits->reset();
                 }
 
-                if (charStartTable[ctx.currentState] > 0) {
-                    startSubMatch(charStartTable[ctx.currentState]);
+                if (startTable[ctx.currentState] > 0) {
+                    startSubMatch(startTable[ctx.currentState]);
                 }
                 ctx.currentState = charTable[ctx.currentState][(int)data[i++]];
-                if (charEndTable[ctx.currentState] > 0) {
-                    endSubMatch(charEndTable[ctx.currentState]);
-                    if (endPredIdTable[ctx.currentState] > 0) {
-                        textPredBits->add(endPredIdTable[ctx.currentState]);
-                    }
+                if (startSMS->id > 0 && !endTable[ctx.currentState].find(startSMS->id)) {
+                    endSubMatch(startSMS->id);
                 }
                 break;
             default:
                 if (ctx.recentAcceptState) {
                     // todo: change it according to query plan
-                    if (end->id > 0) {
-                        while (!startStack.empty()) {
-                            if (startStack.top().id == end->id) {
-                                subMatches[end->id - 1].start =
-                                    startStack.top().index;
-                                subMatches[end->id - 1].end = end->index;
-                            }
-                            startStack.pop();
-                        }
-                        end->id = 0;
+                    if (startSMS->id > 0) {
+                        subMatches[startSMS->id - 1].start = startSMS->index;
+                        subMatches[startSMS->id - 1].end = i - 1;
+                        startSMS->id = 0;
                     }
 #if (defined VECEXEC)
                     qexec->materialize(tid);
@@ -1339,26 +1202,20 @@ int Executor::execWithSpark(DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE start) 
                     resetContext();
                 }
 
-                if (charStartTable[ctx.currentState] > 0) {
-                    startSubMatch(charStartTable[ctx.currentState]);
+                if (startTable[ctx.currentState] > 0) {
+                    startSubMatch(startTable[ctx.currentState]);
                 }
                 ctx.currentState = charTable[ctx.currentState][(int)data[i++]];
-                if (charEndTable[ctx.currentState] > 0) {
-                    endSubMatch(charEndTable[ctx.currentState]);
+                if (startSMS->id > 0 && !endTable[ctx.currentState].find(startSMS->id)) {
+                    endSubMatch(startSMS->id);
                 }
                 break;
             default:
                 if (ctx.recentAcceptState) {
-                    if (end->id > 0) {
-                        while (!startStack.empty()) {
-                            if (startStack.top().id == end->id) {
-                                subMatches[end->id - 1].start =
-                                    startStack.top().index;
-                                subMatches[end->id - 1].end = end->index;
-                            }
-                            startStack.pop();
-                        }
-                        end->id = 0;
+                    if (startSMS->id > 0) {
+                        subMatches[startSMS->id - 1].start = startSMS->index;
+                        subMatches[startSMS->id - 1].end = i - 1;
+                        startSMS->id = 0;
                     }
                     storeToDataFrame();
                     i = ctx.recentAcceptIndex + 1;

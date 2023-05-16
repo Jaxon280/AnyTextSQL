@@ -10,21 +10,18 @@ class DFA {
     struct SubMatchStates {
         int id;
         Type type;
-        int predUUID;
-        std::set<int> predIDs;
+        // int predUUID;
+        // std::set<int> predIDs;
         std::set<DFA_ST_TYPE> startStates;
-        std::set<DFA_ST_TYPE> endStates;
+        std::set<DFA_ST_TYPE> states;
 
-        SubMatchStates(int _id, Type _type, int _predUUID,
-                       std::set<int> _predIDs,
+        SubMatchStates(int _id, Type _type,
                        std::set<DFA_ST_TYPE> _startStates,
-                       std::set<DFA_ST_TYPE> _endStates)
+                       std::set<DFA_ST_TYPE> _states)
             : id(_id),
               type(_type),
-              predUUID(_predUUID),
-              predIDs(_predIDs),
               startStates(_startStates),
-              endStates(_endStates) {}
+              states(_states) {}
         SubMatchStates() {}
     };
     using TransTable = std::vector<std::vector<DFA_ST_TYPE>>;
