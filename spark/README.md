@@ -17,6 +17,16 @@ AnyDB is integrated with Apache Spark for the query execution on the parsed file
 - Bison
 - Also, you should set PATH to `g++`, `flex`, `bison`, `javah` and `mvn` commands.
 
+ref: I set PATHs and `SPARK_HOME` as in the following script.
+```sh
+export PATH="/home/natsuoiida/local/bin:$PATH" # PATH for local libraries including g++, flex and bison
+export PATH="/home/natsuoiida/local/apache-maven-3.8.6/bin:$PATH" # PATH for mvn (Apache Maven)
+
+export JAVA_HOME="/home/natsuoiida/local/jdk8u352-b08" 
+export PATH="$JAVA_HOME/bin:$PATH" # PATH for javah and Java libraries
+export SPARK_HOME="/home/natsuoiida/research/spark-2.2.0-bin-hadoop2.7" # $SPARK_HOME for Apache Spark
+```
+
 ## Quick Start
 
 ```Makefile
