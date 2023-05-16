@@ -15,6 +15,17 @@ The code in a root directory is for CLI execution. We also support execution wit
 - Bison
 - Also, you should set PATH to `g++`, `flex`, `bison`, `javah` and `mvn` commands.
 
+## Directories
+```
+ |-include (C++ header files)
+ |-src (C++ code files)
+ |-generator (Grammar files of Flex & Bison for parsing commands in CLI, regexes and queries)
+ |-spark (Implementations of AnyDB with Apache Spark)
+ |-example
+ |-dataset
+ |-tools
+```
+
 ## Quick Start
 ```console
 make
