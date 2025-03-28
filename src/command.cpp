@@ -5,10 +5,6 @@ namespace vlex {
 void CommandExecutor::initialize() const {
     std::cout << "Welcome to AnyDB " << version << std::endl;
     std::cout << "Main commands are:" << std::endl;
-    // std::cout
-    //     << "\".import <filename> <tablename>\": import your raw data
-    //     file."
-    //     << std::endl;
     std::cout << "\".scan <filename> -t <tablename> -e <pattern>\": give "
                  "the regular "
                  "expression to scan file."

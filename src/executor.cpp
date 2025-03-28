@@ -107,20 +107,6 @@ void Executor::setFA(VectFA *vfa, SIZE_TYPE _start) {
     setVecDatas(qlabels, stateSize);
 }
 
-void Executor::setWildCardProjection() {
-    // stmtSize = subMatchSize;
-    // stmtList = new Statement[stmtSize];
-    // for (int i = 0; i < subMatchSize; i++) {
-    //     OpTree *op = new OpTree;
-    //     op->evalType = VAR;
-    //     op->type;
-    //     op->varKeyId = i;
-    //     stmtList[i].expr = op;
-    //     stmtList[i].httype = NONE_HT;
-    //     stmtList[i].name;
-    // }
-}
-
 void Executor::setStatements(const StatementList *stmts) {
     int stSize = 0;
     for (const StatementList *s = stmts; s != NULL; s = s->next) {
@@ -135,43 +121,34 @@ void Executor::setStatements(const StatementList *stmts) {
     aggContexts = new Aggregation[stmtSize];
     int si = 1, agi = 0;
     for (const StatementList *s = stmts; s != NULL; s = s->next) {
-        if (s->stmt->isWildCard && s->stmt->httype == NONE_HT) {
-            // si += subMatchSize;
-            // for (int sii = 1; sii <= subMatchSize; sii++) {
-            //     Statement *stmt = new Statement(op, subMatches[sii]);
-            //     stmtList[stmtSize - si + sii] = stmt;
-            // }
-            // httype = NONE_HT;
-        } else {
-            stmtList[stmtSize - si] = *s->stmt;
-            if (s->stmt->httype != NONE_HT) {
-                OpTree *op;
-                std::queue<OpTree *> bfsQueue;
-                bfsQueue.push(s->stmt->expr);
-                while (!bfsQueue.empty()) {
-                    op = bfsQueue.front();
-                    if (op == NULL) {
-                        // COUNT(*)
-                        aggContexts[agi].type = INT;
-                        aggContexts[agi].ftype = COUNT;
-                        aggContexts[agi].isWildCard = true;
-                        agi++;
-                    } else if (op->evalType == OP) {
-                        bfsQueue.push(op->left);
-                        bfsQueue.push(op->right);
-                    } else if (op->evalType == AGGFUNC) {
-                        aggContexts[agi].type = op->type;
-                        aggContexts[agi].ftype = op->ftype;
-                        aggContexts[agi].keyId = op->varKeyId;
-                        op->aggId = agi;
-                        agi++;
-                    }
-                    bfsQueue.pop();
+        stmtList[stmtSize - si] = *s->stmt;
+        if (s->stmt->httype != NONE_HT) {
+            OpTree *op;
+            std::queue<OpTree *> bfsQueue;
+            bfsQueue.push(s->stmt->expr);
+            while (!bfsQueue.empty()) {
+                op = bfsQueue.front();
+                if (op == NULL) {
+                    // COUNT(*)
+                    aggContexts[agi].type = INT;
+                    aggContexts[agi].ftype = COUNT;
+                    aggContexts[agi].isWildCard = true;
+                    agi++;
+                } else if (op->evalType == OP) {
+                    bfsQueue.push(op->left);
+                    bfsQueue.push(op->right);
+                } else if (op->evalType == AGGFUNC) {
+                    aggContexts[agi].type = op->type;
+                    aggContexts[agi].ftype = op->ftype;
+                    aggContexts[agi].keyId = op->varKeyId;
+                    op->aggId = agi;
+                    agi++;
                 }
+                bfsQueue.pop();
             }
-            httype = intersectionHTType(s->stmt->httype, httype);
-            si++;
         }
+        httype = intersectionHTType(s->stmt->httype, httype);
+        si++; 
     }
     aggSize = agi;
 }
@@ -315,76 +292,6 @@ loop:
         endSubMatch(startSMS->id);
     }
 }
-
-// // void Executor::cmpestrmAny(ST_TYPE curState) {
-// //     int cnt = 0;
-// // loop:
-// //     if (i >= size) return;
-// //     SIMD_TEXTTYPE text =
-// //         _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
-// //     __m128i mm = _mm_cmpestrm(SIMDDatas[curState], SIMDSizes[curState], text, 16,
-// //                          _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-// //     int m = _mm_extract_epi16(mm, 0);
-// //     cnt += __builtin_popcount(m);
-// //     if (cnt < SIMDCounts[curState]) {
-// //         i += 16;
-// //         goto loop;
-// //     } else if (cnt > SIMDCounts[curState]) {
-// //         int cm;
-// //         while (cnt != SIMDCounts[curState]) {
-// //             cm = __builtin_ctz(m);
-// //             m = m ^ (1 << cm);
-// //             cnt--;
-// //         }
-// //         i += cm;
-// //     } else {
-// //         i += 31 - __builtin_clz(m);
-// //     }
-
-// //     if (charStartTable[ctx.currentState] > 0) {
-// //         startSubMatch(charStartTable[ctx.currentState]);
-// //     }
-// //     if (i >= size) return;
-// //     ctx.currentState = charTable[curState][(int)data[i++]];
-// //     if (charEndTable[ctx.currentState] > 0) {
-// //         endSubMatch(charEndTable[ctx.currentState]);
-// //     }
-// // }
-
-// // void Executor::cmpestrmRanges(ST_TYPE curState) {
-// //     int cnt = 0;
-// // loop:
-// //     if (i >= size) return;
-// //     SIMD_TEXTTYPE text =
-// //         _mm_loadu_si128(reinterpret_cast<SIMD_TEXTTYPE *>(&data[i]));
-// //     __m128i mm = _mm_cmpestrm(SIMDDatas[curState], SIMDSizes[curState], text, 16,
-// //                          _SIDD_CMP_RANGES | _SIDD_BIT_MASK);
-// //     int m = _mm_extract_epi16(mm, 0);
-// //     cnt += __builtin_popcount(m);
-// //     if (cnt < SIMDCounts[curState]) {
-// //         i += 16;
-// //         goto loop;
-// //     } else if (cnt > SIMDCounts[curState]) {
-// //         int cm;
-// //         while (cnt != SIMDCounts[curState]) {
-// //             cm = __builtin_ctz(m);
-// //             m = m ^ (1 << cm);
-// //             cnt--;
-// //         }
-// //         i += cm;
-// //     } else {
-// //         i += 31 - __builtin_clz(m);
-// //     }
-    
-// //     if (charStartTable[ctx.currentState] > 0) {
-// //         startSubMatch(charStartTable[ctx.currentState]);
-// //     }
-// //     if (i >= size) return;
-// //     ctx.currentState = charTable[curState][(int)data[i++]];
-//     if (charEndTable[ctx.currentState] > 0) {
-//         endSubMatch(charEndTable[ctx.currentState]);
-//     }
-// }
 
 void Executor::startSubMatch(int id) {
     startSMS->id = id;
@@ -1114,12 +1021,6 @@ void Executor::exec(DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE start) {
             case RANGES:
                 cmpestriRanges(ctx.currentState);
                 break;
-            // case ANY_MASK:
-            //     cmpestrmAny(ctx.currentState);
-            //     break;
-            // case RANGES_MASK:
-            //     cmpestrmRanges(ctx.currentState);
-            //     break;
             case C:
                 if (ctx.currentState == INIT_STATE) {
                     resetContext();
@@ -1191,12 +1092,6 @@ int Executor::execWithSpark(DATA_TYPE *_data, SIZE_TYPE _size, SIZE_TYPE start) 
             case RANGES:
                 cmpestriRanges(ctx.currentState);
                 break;
-            // case ANY_MASK:
-            //     cmpestrmAny(ctx.currentState);
-            //     break;
-            // case RANGES_MASK:
-            //     cmpestrmRanges(ctx.currentState);
-            //     break;
             case C:
                 if (ctx.currentState == INIT_STATE) {
                     resetContext();

@@ -2,59 +2,6 @@
 
 namespace vlex {
 
-// void Executor::setVQuery(QueryContext *query) {
-// indexes = new SIZE_TYPE *[subMatchSize];
-// sizes = new SIZE_TYPE *[subMatchSize];
-// for (int k = 0; k < subMatchSize; k++) {
-//     indexes[k] = new (std::align_val_t{VECEX_SIZE});
-//     sizes[k] = new (std::align_val_t{VECEX_SIZE}) SIZE_TYPE[VECEX_BYTE];
-// }
-
-// bufArray = new data64 *[subMatchSize];
-// for (int k = 0; k < subMatchSize; k++) {
-//     bufArray[k] = new (std::align_val_t{VECEX_SIZE}) data64[VECEX_BYTE];
-// }
-
-// predMasks = new uint8_t *[numPreds];
-// for (int k = 0; k < numPreds; k++) {
-//     predMasks[k] = new (std::align_val_t{VECEX_SIZE}) uint8_t[VECEX_BYTE4];
-// }
-// mask = new (std::align_val_t{VECEX_SIZE}) uint16_t[VECEX_BYTE16];
-
-// tupleIds = new (std::align_val_t{VECEX_SIZE}) int[VECEX_BYTE];
-// for (int i = 0; i < VECEX_BYTE; i++) {
-//     tupleIds[i] = i;
-// }
-// selectionVector = new int[VECEX_BYTE];
-
-// QueryContext::Selection &sel = query->getSelection();
-// isCNF = sel.isCNF;
-// numPreds = sel.numPreds;
-// if (isCNF) {
-//     predANDsize = sel.preds.size();
-//     predORsize = new int[predANDsize];
-//     for (int ai = 0; ai < predANDsize; ai++) {
-//         predORsize[ai] = sel.preds[ai].size();
-//     }
-//     preds = new int *[predANDsize];
-//     for (int ai = 0; ai < predANDsize; ai++) {
-//         preds[ai] = new int[predORsize[ai]];
-//         for (int oi = 0; oi < predORsize[ai]; oi++) {
-//             preds[ai][oi] = sel.preds[ai][oi];
-//         }
-//     }
-// } else {
-//     // todo: add to DNF
-// }
-
-// predTypes = new Type[numPreds];
-// predTrees = new QueryContext::OpTree[numPreds];
-// for (int k = 0; k < numPreds; k++) {
-//     predTypes[k] = sel.predTypes[k];
-//     predTrees[k] = sel.predTrees[k];
-// }
-// }
-
 void QueryVExecutor::materialize(int tid) {
     DATA_TYPE buf[128];
     for (int s = 0; s < subMatchSize; s++) {
